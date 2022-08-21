@@ -1,0 +1,72 @@
+{
+    "uk":{
+        "keyboard":{
+            "exchange rate":"📊 Курс валют",
+            "converter":"💱 Конвертор",
+            "back":"Повернутися ⬅️",
+            "menu":"Меню ⏭",
+            "UAH":"Гривня",
+            "crypto":"Криптовалюта",
+            "communication":"Зв'язок"
+        },
+        "time":{
+            "morning":"Добрий ранок",
+            "day":"Добрий день", 
+            "evening":"Доброго вечора", 
+            "night":"Доброї ночі"
+        },
+        "menu":"Меню, оберіть потрібну функцію:",
+        "exchange rate":{
+            "menu":"Меню",
+            "choose":"Оберіть потрібну валюту:",
+            "user_error":">_< Незрозуміла команда, виберіть дію з клавіш!",
+            "server_error":">_< Сервер тимчасово не працює, спробуйте пізніше",
+            "course":"Курс на"
+        },
+        "converter":{
+            "menu":"Меню",
+            "choose":"Оберіть валюту конвертації:",
+            "currency":"відправте суму конвертації:",
+            "server_error":">_< Сервер на даний момент не працює, будь ласка спробуйте пізніше",
+            "user_error":">_< Помилка запису! Будь ласка, ведіть лише число без тексту",
+            "during":"при курсі"
+        },
+        "help":"Якщо у вас виникла проблема або пропозиція нових функцій, зв'яжіться зі мною",
+        "warning":"Схоже у вас російськомовний інтерфейс, якщо ви хочете користуватися цим ботом. Будь ласка, змініть мову інтерфейсу: \nМеню -> налаштування -> мова -> обираєте іншу мову інтерфейсу (Рекомендовано Українську)"
+    },
+    "en":{
+        "keyboard":{
+            "exchange rate":"📊 Exchange rate",
+            "converter":"💱 Converter",
+            "back":"Back ⬅️",
+            "menu":"Menu ⏭",
+            "UAH":"UAH",
+            "crypto":"Crypto",
+            "communication":"Communication"
+        },
+        "time":{
+            "morning":"Good morning", 
+            "day":"Good day", 
+            "evening":"Good evening", 
+            "night":"Good night"
+        },
+        "menu":"Menu, choose the desired function:",
+        "exchange rate":{
+            "menu":"Menu",
+            "choose":"Select the required currency:",
+            "user_error":">_< Unclear command, select an action from the keys!",
+            "server_error":">_< The server is temporarily down, try again later",
+            "course":"Course on"
+        },
+        "converter":{
+            "menu":"Menu",
+            "choose":"Select the conversion currency:",
+            "currency":"send the conversion amount:",
+            "server_error":">_< The server is currently down, please try again later",
+            "user_error":">_< Write error! Please enter only a number without text",
+            "during":"during the course"
+        },
+        "help":"If you have a problem or a suggestion for a new feature, please contact me:",
+        "warning":"It looks like you have a Russian-language interface, if you want to use this bot. Please change the interface language: \nMenu -> settings -> language -> choose another interface language (Ukrainian is recommended)"
+    }
+}
