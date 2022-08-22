@@ -66,7 +66,20 @@ def exchange_rate(message):
 def converter(message):
     global user_language
 
+    user_id = '{0.id}'.format(message.from_user)
+    user_name = '{0.first_name}'.format(message.from_user)
+    username = '{0.username}'.format(message.from_user)
     user_language = '{0.language_code}'.format(message.from_user)
+
+    cursor.execute(f"SELECT id FROM user_data WHERE id = {user_id}")
+    data = cursor.fetchone()
+
+    if data is None:
+        info = [user_name, username, user_id, user_language, 0, 0]
+        cursor.execute("""INSERT INTO user_data VALUES(?, ?, ?, ?, ?, ?)""", info)
+        connect.commit()
+    else:
+        pass
     
     language.converter()
     keyboard.translate()
@@ -82,6 +95,7 @@ def currency(message):
     
     user_message = message.text
     
+    parser.course()
     language.converter()
     keyboard.translate()
 
@@ -157,6 +171,15 @@ def help(message):
     user_language = "{0.language_code}".format(message.from_user)
 
     language.help()
+
+@bot.message_handler(commands=['github'])
+def github(message):
+    global user_language, mes
+
+    user_language = '{0.language_code}'.format(message.from_user)
+    mes = message
+    
+    language.github()
 
 if __name__ == "__main__":
     bot.polling(none_stop=True)

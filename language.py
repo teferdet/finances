@@ -1,15 +1,16 @@
-import json, time
+import json, time, datetime, pytz
 import __main__, parser, keyboard
+from datetime import datetime
 
 main = __main__
 
 s = open('translation.json', 'rb')
 translation = json.load(s)
 
-date = time.strftime("%d/%m/%y")
-time = int(time.strftime("%H"))
-
 def welcome():
+    x = datetime.now(pytz.timezone("Europe/Kyiv"))
+    time = int(x.strftime("%H"))
+
     bot = main.bot
     message = main.mes
 
@@ -46,6 +47,8 @@ def welcome():
 def exchange_rate():
     global uah, crypto, choose, user_error, menu
 
+    date = time.strftime("%d/%m/%y")
+
     if main.user_language == "uk":
         x = translation['uk']['exchange rate']
     else:
@@ -56,6 +59,8 @@ def exchange_rate():
     choose = x["choose"]
     user_error = x["user_error"]
     server_error = x["server_error"]
+
+    parser.course()
 
     if parser.ubank.status_code == 200:
         uah = f"{info} {date} \n{parser.uah_send}"
@@ -91,3 +96,14 @@ def help():
         bot.send_message(message.chat.id, translation['uk']['help'], reply_markup=keyboard.link)
     else:
         bot.send_message(message.chat.id, translation["en"]["help"], reply_markup=keyboard.link)
+
+def github():
+    bot = main.bot
+    message = main.mes
+
+    keyboard.translate()
+
+    if main.user_language == 'uk':
+        bot.send_message(message.chat.id, translation['uk']['bot_info'], reply_markup=keyboard.github_link)
+    else:
+        bot.send_message(message.chat.id, translation['en']['bot_info'], reply_markup=keyboard.github_link)
