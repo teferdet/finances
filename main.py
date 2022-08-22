@@ -163,6 +163,15 @@ def convert(message):
             reboot = bot.send_message(message.chat.id, language.user_error, reply_markup=keyboard.number)
             bot.register_next_step_handler(reboot, convert)
 
+@bot.message_handler(func=lambda message: message.text == "Повернутися ⬅️"  or message.text ==  "Back ⬅️" or message.text == "Меню ⏭" or message.text == "Menu ⏭")
+def back(message):
+    global user_language, mes
+
+    mes = message
+    user_language = '{0.language_code}'.format(message.from_user)
+
+    language.back()
+
 @bot.message_handler(commands=['help'])
 def help(message):
     global user_language, mes

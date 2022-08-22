@@ -87,6 +87,16 @@ def converter():
     user_error = x['user_error']
     during = x['during']
 
+def back():
+    bot = main.bot
+    message = main.mes
+
+    keyboard.translate()
+    if main.user_language == "uk":
+        bot.send_message(message.chat.id, translation['uk']["exchange rate"]['menu'], reply_markup=keyboard.menu)
+    else:
+        bot.send_message(message.chat.id, translation['en']["exchange rate"]['menu'], reply_markup=keyboard.menu)
+
 def help():
     bot = main.bot
     message = main.mes
