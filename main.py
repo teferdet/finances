@@ -28,9 +28,9 @@ def start(message):
     if data is None:
         cursor.execute("""INSERT INTO user_data VALUES(?, ?, ?, ?, ?, ?)""", info)
         connect.commit()
-    else:
-        pass
-    
+
+    else: pass
+
     language.welcome()
 
 @bot.message_handler(func=lambda message: message.text == "📊 Курс валют" or message.text == "📊 Exchange rate")
@@ -55,8 +55,10 @@ def exchange_rate(message):
         bot.send_message(message.chat.id, language.menu, reply_markup=keyboard.menu)
     else:
         if message.text == "UAH" or message.text == "Гривня":
+            language.uah_course()
             reboot = bot.send_message(message.chat.id, language.uah)
         elif message.text == "Crypto" or message.text == "Криптовалюта":
+            language.crypto_course()
             reboot = bot.send_message(message.chat.id, language.crypto)
         else:
             reboot = bot.send_message(message.chat.id, language.user_error)
@@ -65,8 +67,6 @@ def exchange_rate(message):
 @bot.message_handler(func=lambda message: message.text == "💱 Конвертор" or message.text == "💱 Converter")
 def converter(message):
     global user_language
-    
-    user_language = '{0.language_code}'.format(message.from_user)
     
     language.converter()
     keyboard.translate()
@@ -82,13 +82,13 @@ def currency(message):
     
     user_message = message.text
     
-    parser.course()
     language.converter()
     keyboard.translate()
 
     if user_message == "Повернутися ⬅️" or user_message == "Back ⬅️" :
         next_handler = bot.send_message(message.chat.id, "Меню", reply_markup=keyboard.menu)
     else:
+        parser.uah_course()
         if user_message == 'USD/UAH':
             x = parser.usd_r
             y = parser.usd
@@ -150,7 +150,8 @@ def convert(message):
             reboot = bot.send_message(message.chat.id, language.user_error, reply_markup=keyboard.number)
             bot.register_next_step_handler(reboot, convert)
 
-@bot.message_handler(func=lambda message: message.text == "Повернутися ⬅️"  or message.text ==  "Back ⬅️" or message.text == "Меню ⏭" or message.text == "Menu ⏭")
+@bot.message_handler(func=lambda message: 
+message.text == "Повернутися ⬅️"  or message.text ==  "Back ⬅️" or message.text == "Меню ⏭" or message.text == "Menu ⏭")
 def back(message):
     global user_language, mes
 

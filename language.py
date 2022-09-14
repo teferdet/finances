@@ -45,7 +45,7 @@ def welcome():
         bot.send_message(message.chat.id, translation['en']['menu'], reply_markup=keyboard.menu)
 
 def exchange_rate():
-    global uah, crypto, choose, user_error, menu
+    global choose, user_error, server_error,menu, info, uah_course, crypto_course 
 
     date = time.strftime("%d/%m/%y")
 
@@ -60,17 +60,23 @@ def exchange_rate():
     user_error = x["user_error"]
     server_error = x["server_error"]
 
-    parser.course()
+    def uah_course():
+        global uah
+        parser.uah_course()
 
-    if parser.ubank.status_code == 200:
-        uah = f"{info} {date} \n{parser.uah_send}"
-    else:
-        uah = server_error
+        if parser.ubank.status_code == 200:
+            uah = f"{info} {date} \n{parser.uah_send}"
+        else:
+            uah = server_error
+
+    def crypto_course():     
+        global crypto
+        parser.crypto_course()
         
-    if parser.crypto_data.status_code == 200:
-        crypto = f"{info} {date} \n{parser.crypto_send}"
-    else:
-        crypto = server_error
+        if parser.crypto_data.status_code == 200:
+            crypto = f"{info} {date} \n{parser.crypto_send}"
+        else:
+            crypto = server_error
 
 def converter():
     global menu, choose, currency, server_error, user_error, during
