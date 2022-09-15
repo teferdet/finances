@@ -7,7 +7,8 @@
             "menu":"Меню ⏭",
             "UAH":"Гривня",
             "crypto":"Криптовалюта",
-            "communication":"Зв'язок"
+            "communication":"Зв'язок",
+            "news":"Новини"
         },
         "time":{
             "morning":"Добрий ранок",
@@ -32,7 +33,8 @@
             "during":"при курсі"
         },
         "help":"Якщо у вас виникла проблема або пропозиція нових функцій, зв'яжіться зі мною",
-        "warning":"Схоже у вас російськомовний інтерфейс, якщо ви хочете користуватися цим ботом. Будь ласка, змініть мову інтерфейсу: \nМеню -> налаштування -> мова -> обираєте іншу мову інтерфейсу (Рекомендовано Українську)"
+        "warning":"Схоже у вас російськомовний інтерфейс, якщо ви хочете користуватися цим ботом. Будь ласка, змініть мову інтерфейсу: \nМеню -> налаштування -> мова -> обираєте іншу мову інтерфейсу (Рекомендовано Українську)",
+        "bot_info":"🤖 Версія: 2.3"
     },
     "en":{
         "keyboard":{
@@ -42,7 +44,8 @@
             "menu":"Menu ⏭",
             "UAH":"UAH",
             "crypto":"Crypto",
-            "communication":"Communication"
+            "communication":"Communication",
+            "news":"News"
         },
         "time":{
             "morning":"Good morning", 
@@ -67,6 +70,8 @@
             "during":"during the course"
         },
         "help":"If you have a problem or a suggestion for a new feature, please contact me:",
-        "warning":"It looks like you have a Russian-language interface, if you want to use this bot. Please change the interface language: \nMenu -> settings -> language -> choose another interface language (Ukrainian is recommended)"
+        "warning":"It looks like you have a Russian-language interface, if you want to use this bot. Please change the interface language: \nMenu -> settings -> language -> choose another interface language (Ukrainian is recommended)",            
+        "bot_info":"🤖 Version: 2.3"
+        
     }
 }

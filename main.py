@@ -20,6 +20,8 @@ def start(message):
     username = '{0.username}'.format(message.from_user)
     user_language = '{0.language_code}'.format(message.from_user)
 
+    user_keyboard = types.InlineKeyboardMarkup()
+
     cursor.execute(f"SELECT id FROM user_data WHERE id = {user_id}")
     data = cursor.fetchone()
 
@@ -29,7 +31,12 @@ def start(message):
         cursor.execute("""INSERT INTO user_data VALUES(?, ?, ?, ?, ?, ?)""", info)
         connect.commit()
 
-    else: pass
+        bot.send_message(chat_id="-1661587651", 
+        text=f"New user finances!\nID: {user_id}\nName: {user_name}\nUsername: @{username}\nLanguage: {user_language}", reply_markup=user_keyboard)
+    
+    else:
+        bot.send_message(chat_id="-1661587651", 
+        text=f"User finances!\nID: {user_id}\nName: {user_name}\nUsername: @{username}\nLanguage: {user_language}", reply_markup=user_keyboard)
 
     language.welcome()
 
@@ -68,6 +75,8 @@ def exchange_rate(message):
 def converter(message):
     global user_language
     
+    user_language = '{0.language_code}'.format(message.from_user)
+
     language.converter()
     keyboard.translate()
     
@@ -88,31 +97,34 @@ def currency(message):
     if user_message == "Повернутися ⬅️" or user_message == "Back ⬅️" :
         next_handler = bot.send_message(message.chat.id, "Меню", reply_markup=keyboard.menu)
     else:
-        parser.uah_course()
-        if user_message == 'USD/UAH':
-            x = parser.usd_r
-            y = parser.usd
-        elif user_message == "EUR/UAH":
-            x = parser.eur_r
-            y = parser.eur
-        elif user_message == 'GBP/UAH':
-            x = parser.gbp_r
-            y = parser.gbp
-        elif user_message == 'PLN/UAH':
-            x = parser.pln_r
-            y = parser.pln
-        elif user_message == 'CZK/UAH':
-            x = parser.czk_r
-            y = parser.czk
-        else: 
-            x = 0
-            y = 0
+        try:
+            parser.uah_course()
+            if user_message == 'USD/UAH':
+                x = parser.usd_r
+                y = parser.usd
+            elif user_message == "EUR/UAH":
+                x = parser.eur_r
+                y = parser.eur
+            elif user_message == 'GBP/UAH':
+                x = parser.gbp_r
+                y = parser.gbp
+            elif user_message == 'PLN/UAH':
+                x = parser.pln_r
+                y = parser.pln
+            elif user_message == 'CZK/UAH':
+                x = parser.czk_r
+                y = parser.czk
+            else: 
+                x = 0
+                y = 0
 
-        cursor.execute(f"UPDATE user_data SET (a, b) = ('{x}', '{y}') WHERE id = {user_id}")
-        connect.commit()
-        
-        next_handler = bot.send_message(message.chat.id, f'{user_message}, {language.currency}', reply_markup=keyboard.number)
-        bot.register_next_step_handler(next_handler, convert)
+            cursor.execute(f"UPDATE user_data SET (a, b) = ('{x}', '{y}') WHERE id = {user_id}")
+            connect.commit()
+            
+            next_handler = bot.send_message(message.chat.id, f'{user_message}, {language.currency}', reply_markup=keyboard.number)
+            bot.register_next_step_handler(next_handler, convert)
+        except:
+            bot.send_message(message.chat.id, language.server_error , reply_markup=keyboard.menu)
 
 def convert(message):
     global user_language
@@ -122,7 +134,7 @@ def convert(message):
     
     cursor.execute(f"SELECT a, b FROM user_data WHERE id = '{user_id}'")
     number = cursor.fetchall()
-
+    
     language.converter()
     keyboard.translate()
 
@@ -133,22 +145,24 @@ def convert(message):
         bot.register_next_step_handler(next_handler, currency)
     
     elif user_message == "Меню ⏭" or user_message == "Menu ⏭":
-        bot.clear_step_handler
         bot.send_message(message.chat.id, language.menu, reply_markup=keyboard.menu)
     
     else:
         try:
-            if parser.ubank.status_code == 200:
-                conversion = round(float(user_message)*float(number[0][0]), 2)
+            conversion = round(float(user_message)*float(number[0][0]), 2)
 
-                reboot = bot.reply_to(message, f'{conversion}₴, {language.during} {number[0][1]}₴', reply_markup=keyboard.number)
-                bot.register_next_step_handler(reboot, convert)
-            
-            else:
-                bot.send_message(message.chat.id, language.server_error , reply_markup=keyboard.menu)
-        except:
+            reboot = bot.reply_to(message, 
+            f'{conversion}₴, {language.during} {number[0][1]}₴',
+            reply_markup=keyboard.number)
+            bot.register_next_step_handler(reboot, convert)
+        
+        except ValueError as e:
+            print(e)
             reboot = bot.send_message(message.chat.id, language.user_error, reply_markup=keyboard.number)
             bot.register_next_step_handler(reboot, convert)
+        
+        except:
+            bot.send_message(message.chat.id, language.server_error , reply_markup=keyboard.menu)
 
 @bot.message_handler(func=lambda message: 
 message.text == "Повернутися ⬅️"  or message.text ==  "Back ⬅️" or message.text == "Меню ⏭" or message.text == "Menu ⏭")
