@@ -30,13 +30,8 @@ def start(message):
     if data is None:
         cursor.execute("""INSERT INTO user_data VALUES(?, ?, ?, ?, ?, ?)""", info)
         connect.commit()
-
-        bot.send_message(chat_id="-1661587651", 
-        text=f"New user finances!\nID: {user_id}\nName: {user_name}\nUsername: @{username}\nLanguage: {user_language}", reply_markup=user_keyboard)
-    
     else:
-        bot.send_message(chat_id="-1661587651", 
-        text=f"User finances!\nID: {user_id}\nName: {user_name}\nUsername: @{username}\nLanguage: {user_language}", reply_markup=user_keyboard)
+        pass
 
     language.welcome()
 
