@@ -1,7 +1,16 @@
+# Token, API keys
 token = "</>" #telegram token
 api_crypto_key = "</>" #coinmarketcap
-nbu = "https://bank.gov.ua/NBUStatService/v1/statdirectory/exchange?json"
-crypto = 'https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest'
-github = '</>'
-telegram = "</>"
-news = '</>'
+
+# Url
+github =  '</>'
+telegram =  '</>'
+news =  '</>'
+
+# ID
+log_id =  '</>'
+ID =  '</>'
+
+# name
+version = "3.0"
+database = "UserInfo.db"

@@ -1,71 +1,216 @@
-import requests, json, config, time
+import config
+import requests 
+import json 
+import time
+from bs4 import BeautifulSoup as bs4
 
-def uah_course():
-    global usd_r, usd, eur_r, eur, gbp, gbp_r, pln, pln_r, czk, czk_r, jpy
-    global ubank, uah_send
+class Currency:
+    global name_list
 
-    ubank = requests.get(config.nbu)
+    name_list = {
+        "American Dollar":["🇺🇸", "USD", "$"],
+        "Euro":["🇪🇺", "EUR", "€"],
+        "British Pound":["🇬🇧", "GBP", "£"],
+        "Czech Koruna":["🇨🇿", "CZK", "Kč"],
+        "Japanese Yen":["🇯🇵", "JPY", "¥"],
+        "Polish Zloty":["🇵🇱", "PLN", "zł"],
+        "Swiss Franc":["🇨🇭", "CHF", "₣"],
+        "Chinese Yuan Renminbi":["🇨🇳", "CNY", "¥"],
+        "Ukraine Hryvnia":["🇺🇦", "UAH", "₴"]
+    }
 
-    if ubank.status_code == 200:
-        nbu_data = json.loads(ubank.text)
-        for coin in nbu_data:
-            if coin['cc'] == "USD":
-                usd_r = coin["rate"]
-                usd = round(coin["rate"], 2)
+    def __init__(self, currency, rate_index, currency_list):
+        global status_code
+        global url
+        global name
 
-            elif coin['cc'] == "EUR":
-                eur_r = coin["rate"]
-                eur = round(coin["rate"], 2)
-            
-            elif coin['cc'] == "GBP":
-                gbp_r = coin["rate"] 
-                gbp = round(coin["rate"], 2)
+        name = "fx-rate"
+        url = f'https://fx-rate.net/{currency}/'
         
-            elif coin['cc'] == "PLN":
-                pln_r = coin["rate"]
-                pln = round(coin["rate"], 2)
+        request = requests.get(url)
+        status_code = request.status_code
+        self.currency_list = currency_list
+        self.currency = currency
 
-            elif coin['cc'] == "CZK":
-                czl_r = coin["rate"]
-                czk = round(coin["rate"], 2)
+        if status_code == 200:
+            self.index = rate_index  
 
-            elif coin['cc'] == "JPY":
-                jpy = round(coin["rate"], 2)
+            self.request = request.text
+            self.parser_data(self.request)
+        
+        else:
+            pass
     
-        uah_send = f"🇺🇸 USD = {usd}₴\n🇪🇺 EUR = {eur}₴\n🇬🇧 GBP = {gbp}₴\n🇵🇱 PLN = {pln}₴\n🇨🇿 CZK = {czk}₴\n🇯🇵 JPY = {jpy}₴"
+    def parser_data(self, request):
+        global status 
+
+        try:
+            status = True
+            soup = bs4(self.request, "html.parser")
+            self.main = soup.find_all("tbody")[1]
+            self.symbol = soup.find( "div", class_ = "c_symbols").get_text(strip = True)
+
+            self.parser(self.index, self.main)
+
+        except Exception as error:
+            status = False
+
+    def parser(self, index, main):
+        global rate
+        
+        self.currency_name = []
+        self.rate = []
+
+        for info in self.main:
+            try:
+                name = info.find("td")
+
+                if name.get_text(strip = True) in self.currency_list:
+                    rate = info.find_all("a")[self.index].text
+                    
+                    self.currency_name.append(name.get_text(strip = True))
+                    self.rate.append(rate)
+
+            except AttributeError:
+                pass
+            
+            except Exception as e:
+                print(e)
+
+        self.printed( 
+            self.currency_name, self.rate, self.symbol,
+            self.index, self.currency
+        )
     
-    else: pass
-    
-def crypto_course():
-    global crypto_send, crypto_data
-    
-    headers = {'X-CMC_PRO_API_KEY' : config.api_crypto_key, 'Accepts': 'application/json'}
-    params = {'start':'1','limit':'25','convert':'USD'}
-    crypto_data = requests.get(config.crypto, params=params, headers=headers)
+    def printed(
+        self, currency_name, rate,
+        symbol, index, currency
+    ):
+        global send
+        send = []
 
-    if crypto_data.status_code == 200:
-        crypto_info = json.loads(crypto_data.text)
-        coin = crypto_info['data']
-
-        for x in coin:
-            if x['symbol'] == "BTC":
-                btc = round(x['quote']['USD']['price'], 4)
+        for name, rate in zip(self.currency_name, self.rate):
+            if self.index == 1:
+                symbol = self.symbol  
+                currency = f"{name_list[name][1]}/{self.currency}"
             
-            elif x['symbol'] == "ETH":
-                eth = round(x['quote']['USD']['price'], 4)
+            else:
+                symbol = name_list[name][2]
+                currency = f"{self.currency}/{name_list[name][1]}"
 
-            elif x['symbol'] == "BNB":
-                bnb = round(x['quote']['USD']['price'], 4)
-            
-            elif x['symbol'] == "SOL":
-                sol = round(x['quote']['USD']['price'], 4)
+            add = f"{name_list[name][0]} {currency.upper()} = {rate}{symbol}"
+            send.append(add)
 
-            elif x['symbol'] == "USDT":
-                usdt = round(x['quote']['USD']['price'], 4)
-            
-            elif x['symbol'] == "TRX":
-                trx = round(x['quote']['USD']['price'], 4)
-            
-        crypto_send = f"💵 BTC = {btc}$\n💵 ETH = {eth}$\n💵 BNB = {bnb}$\n💵 SOL = {sol}$\n💵 USDT = {usdt}$\n💵 TRX = {trx}$"
+        send = '\n'.join(map(str, send))
 
-    else: pass
+class Crypto:
+    global symbol    
+
+    symbol = {
+        "USD":"$", "EUR":"€",
+        "GBP":"£", "UAH":"₴"
+    }
+
+    def __init__(self, currency, crypto_list):
+        global status_code
+        global status
+        global name 
+        global url
+        
+        status = True
+        url = 'https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest'
+        name = "CoinMarketCap"
+
+        headers = {'X-CMC_PRO_API_KEY' : config.api_crypto_key, 'Accepts':'application/json'}
+        params = {'start':'1','limit':'100','convert': currency}
+        request = requests.get(url, params = params, headers = headers)
+
+        if request.status_code == 200: 
+            status_code = request.status_code
+            self.currency = currency
+            self.crypto_list = crypto_list
+            self.request = request.text
+            self.printed(self.request, self.currency, self.crypto_list)
+
+        else:
+            pass
+
+    def printed(self, request, currency, crypto_list):
+        global rate
+        global send
+
+        send = []
+        data = json.loads(request)['data']
+
+        for coin in data:
+            name = coin['symbol'] 
+            
+            if name in self.crypto_list:
+                rate = coin['quote'][self.currency]['price']
+                add = f"💵 {name}\{self.currency} = {round(rate, 4)}{symbol[self.currency]}"
+                
+                if add not in send:
+                    send.append(add)
+                    
+        send = '\n'.join(map(str, send))
+
+class Convert:
+    def __init__(self, a, b):
+        global status_code
+        global status
+        global url
+        global name
+
+        url = f"http://www.google.com/finance/quote/{a}-{b}" 
+        name = "Google finance"
+
+        finance = requests.get(url)
+        status_code = finance.status_code
+        status = False
+
+        if status_code == 200:
+            soup = bs4(finance.text, "html.parser")
+            self.main = soup.find("main")
+            
+            if self.main != None:
+                status = True
+                self.parser(self.main)
+
+    def parser(self, main):
+        global rate
+        
+        rate = float(
+            self.main.find("div", class_ = "YMlKec fxKbKc").text
+        )
+
+class Shares:
+    def __init__(self, shares_list):
+        global url
+        global status_code
+
+        url = 'https://www.google.com/finance/markets/most-active'
+        request = requests.get(url)
+        status_code = request.status_code
+
+        if status_code == 200:
+            soup = bs4(request.text, "html.parser")
+            self.main = soup.find_all("li")
+            self.printed(self.main, shares_list)
+
+        else:
+            print(status_code)
+
+    def printed(self, main, shares_list):
+        global send
+        send = []
+
+        for data in self.main:
+            teg = data.find("div", class_ = "COaKTb").text
+            rate = (data.find("div", class_ = "YMlKec").text).replace('$', '')
+            add_rate = (data.find("div", class_ = "BAftM").text).replace('$', '')        
+            
+            if teg in shares_list:
+                info = f"💸 {teg} | {rate}$ | {add_rate}$"
+                send.append(info)
+
+        send = '\n'.join(map(str, send))
