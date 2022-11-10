@@ -34,7 +34,7 @@ def welcome(message):
         reboot = bot.send_message(
             message.chat.id,
             "Your interface language is russian, please change it",
-            reply_markup = keyboard.link
+            reply_markup=keyboard.link
         )    
         bot.register_next_step_handler(reboot, main.start)
         
@@ -48,15 +48,15 @@ def welcome(message):
 
         if language == "uk":
             bot.send_message(message.chat.id, f"{uk['time'][times]} {name} 👋")
-            bot.send_message(message.chat.id, uk['menu'], reply_markup = keyboard.menu)
+            bot.send_message(message.chat.id, uk['menu'], reply_markup=keyboard.menu)
         
         elif language == "pl":
             bot.send_message(message.chat.id, f"{pl['time'][times]} {name} 👋")
-            bot.send_message(message.chat.id, pl['menu'], reply_markup = keyboard.menu)
+            bot.send_message(message.chat.id, pl['menu'], reply_markup=keyboard.menu)
 
         else:
             bot.send_message(message.chat.id, f"{en['time'][times]} {name} 👋")
-            bot.send_message(message.chat.id, en['menu'], reply_markup = keyboard.menu)
+            bot.send_message(message.chat.id, en['menu'], reply_markup=keyboard.menu)
 
 def translate(message, data):
     global language
@@ -85,7 +85,7 @@ def course(message):
     global technical_error
     global alternative
 
-    translate(message, data = 'exchange rate and shares')
+    translate(message, data='exchange rate and shares')
     
     menu = language["menu"]
     currency_choose = language["currency choose"]
@@ -107,7 +107,7 @@ def converter(message):
     global change
     global during
     
-    translate(message, data = 'converter')
+    translate(message, data='converter')
     
     menu = language['menu']
     choose = language['choose']
@@ -120,29 +120,29 @@ def converter(message):
     during = language['during']
 
 def back(message):
-    translate(message, data = 'back')
+    translate(message, data='back')
     keyboard.reply(message)
 
     bot.send_message(
         message.chat.id, language,
-        reply_markup = keyboard.menu
+        reply_markup=keyboard.menu
     )
 
 def info(message):
-    translate(message, data = 'bot info')
+    translate(message, data='bot info')
     keyboard.inline(message)
 
     bot.send_message(
         message.chat.id, 
         f"{language} {config.version}",
-        reply_markup = keyboard.info_link
+        reply_markup=keyboard.info_link
     )
 
 def help(message):
-    translate(message, data = "help")
+    translate(message, data="help")
     keyboard.inline(message)
 
     bot.send_message(
         message.chat.id, language,
-        reply_markup = keyboard.link
+        reply_markup=keyboard.link
     )

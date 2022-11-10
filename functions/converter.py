@@ -21,7 +21,7 @@ class Main:
         msg = bot.send_message(
             message.chat.id,
             language.choose,
-            reply_markup = keyboard.converter
+            reply_markup=keyboard.converter
         )
         bot.register_next_step_handler(msg, self.currency)
 
@@ -42,7 +42,7 @@ class Main:
             msg = bot.send_message(
                 message.chat.id,
                 language.menu,
-                reply_markup = keyboard.menu
+                reply_markup=keyboard.menu
             )
 
         else:
@@ -52,7 +52,7 @@ class Main:
             msg = bot.send_message(
                 message.chat.id,
                 language.to_choose, 
-                reply_markup = keyboard.to_converter
+                reply_markup=keyboard.to_converter
             )
 
             bot.register_next_step_handler(msg, self.to_currency)
@@ -64,22 +64,24 @@ class Main:
             msg = bot.send_message(
                 message.chat.id, 
                 language.to_choose,
-                reply_markup = keyboard.converter
+                reply_markup=keyboard.converter
             )
             bot.register_next_step_handler(msg, self.currency)
 
         elif message.text in ["Меню ⏭", "Menu ⏭"]:
             bot.send_message(
-                message.chat.id, language.menu, reply_markup = keyboard.menu
+                message.chat.id, 
+                language.menu, 
+                reply_markup=keyboard.menu
             )
 
         else:
             cursor.execute(f"UPDATE user_data SET to_currency = '{text}' WHERE id = {ID}")
             connect.commit()
             
-            self.test(message)
+            self.status(message)
     
-    def test(self, message):
+    def status(self, message):
         self.func(message)
 
         cursor.execute(f"SELECT currency, to_currency FROM user_data WHERE id = '{ID}'")
@@ -91,21 +93,17 @@ class Main:
             msg = bot.send_message(
                 message.chat.id,
                 language.currency, 
-                reply_markup = keyboard.number
+                reply_markup=keyboard.number
             )
             bot.register_next_step_handler(msg, self.convert)
 
         else: 
-            logs.server(
-                message, 
-                status_code = parser.status_code,
-                url = parser.url,
-                name = parser.name
-            )
+            self.log(message, status_code, url, name)
+            
             msg = bot.send_message(
                 message.chat.id, 
                 language.code_error, 
-                reply_markup = keyboard.converter
+                reply_markup=keyboard.converter
             )
             bot.register_next_step_handler(msg, self.currency)
 
@@ -119,15 +117,15 @@ class Main:
             msg = bot.send_message(
                 message.chat.id, 
                 language.to_choose, 
-                reply_markup = keyboard.to_converter
+                reply_markup=keyboard.to_converter
             )
-            main.bot.register_next_step_handler(msg, self.to_currency)
+            bot.register_next_step_handler(msg, self.to_currency)
         
         elif message.text in ["Меню ⏭", "Menu ⏭"]:
             bot.send_message(
                 message.chat.id, 
                 language.menu, 
-                reply_markup = keyboard.menu
+                reply_markup=keyboard.menu
             )
 
         elif message.text in ["🔁 Змінити", "🔁 Change"]:
@@ -139,16 +137,16 @@ class Main:
             msg = bot.send_message(
                 message.chat.id, 
                 f"{language.change} {currency[1]}/{currency[0]}", 
-                reply_markup = keyboard.number
+                reply_markup=keyboard.number
             )
-            main.bot.register_next_step_handler(msg, self.convert)
+            bot.register_next_step_handler(msg, self.convert)
 
         else:
             try:
                 parser.Convert(currency[0], currency[1])
 
                 keyboard.convert(
-                    message, finance = parser.url
+                    message, finance=parser.url
                 )
 
                 conversion = round(float(message.text)*parser.rate, 4)
@@ -157,24 +155,32 @@ class Main:
                 msg = bot.send_message(
                     message.chat.id,
                     conversion,
-                    reply_markup = keyboard.info_data
+                    reply_markup=keyboard.info_data
                 )
                 bot.register_next_step_handler(msg, self.convert)
 
-            except ValueError:
+            except ValueError as error:
+                print("161: ", error)
+
                 msg = bot.send_message(message.chat.id, language.user_error)
                 bot.register_next_step_handler(msg, self.convert)
         
             except Exception as error:
-                logs.server(
-                    message, 
-                    status_code = parser.status_code,
-                    url = parser.url,
-                    name = parser.name
-                )
+                print("167: ", error)
+                
+                self.log(message, status_code, url, name)
                 
                 bot.send_message(
                     message.chat.id, 
                     language.server_error, 
                     reply_markup = keyboard.menu
                 )
+
+    def log(self, message, status_code, url, name):
+        logs.server(
+                message, 
+                status_code=parser.status_code,
+                url=parser.url,
+                name=parser.name
+            )
+        

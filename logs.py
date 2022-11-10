@@ -40,37 +40,37 @@ def start_log(message):
     if username == None:
         markup.add(   
             types.InlineKeyboardButton(
-                text = name, 
-                url = f"web.telegram.org/#{ID}"
+                text=name, 
+                url=f"web.telegram.org/#{ID}"
             )
         )
 
     else:
         markup.add(   
-            types.InlineKeyboardButton(text = username, url = f"t.me/{username}")
+            types.InlineKeyboardButton(text=username, url=f"t.me/{username}")
         )
 
     bot.send_message(
-        chat_id = config.log_id,
-        text = f"#finances | #user\
-        \nDate&time: {date}\
-        \nID: `{ID}`\
-        \nName: {name}\
-        \nLanguage: {language.upper()}",
-        reply_markup = markup,
-        parse_mode = 'Markdown'
+        chat_id=config.log_id,
+        text=f"#finances | #user\
+            \nDate&time: {date}\
+            \nID: `{ID}`\
+            \nName: {name}\
+            \nLanguage: {language.upper()}",
+        reply_markup=markup,
+        parse_mode='Markdown'
     )
 
 def server(message, status_code, url, name):
     markup = types.InlineKeyboardMarkup()
-    markup.add( types.InlineKeyboardButton(text = "URL", url = url))
+    markup.add( types.InlineKeyboardButton(text="URL", url=url))
 
     bot.send_message(
-        chat_id = config.log_id, 
-        text = f"#finaces | #server\
+        chat_id=config.log_id, 
+        text=f"#finaces | #server\
             \nName: {name}\
             \nStatus code: {status_code}",
-        reply_markup = markup
+        reply_markup=markup
     )
 
 def add_in_database(message):
@@ -111,28 +111,30 @@ def send_database(message):
 
     if ID == config.ID:
         try:
-            with open(config.database, 'rb') as db:
-                bot.send_document(
-                    chat_id = config.log_id,
-                    document = db,
-                    caption = f"#finances | #database\
-                        \nDate&time: {date}"
-                )
-
-                bot.send_message(
-                    chat_id = ID, 
-                    text = "Database sent successfully!"
-                )
+            db = open(config.database, 'rb')
+            
+            bot.send_document(
+                chat_id=config.log_id,
+                document=db,
+                caption=f"#finances | #database\
+                    \nDate&time: {date}"
+            )
+            bot.send_message(
+                chat_id=ID, 
+                text="Database sent successfully!"
+            )
+            
+            db.close() 
 
         except:
             bot.send_message(
-                chat_id = config.ID, 
-                text = "Error send database"
+                chat_id=config.ID, 
+                text="Error send database"
             )
     else:
         bot.send_message(
-            chat_id = config.log_id,
-            text = f"#finances | #database\
+            chat_id=config.log_id,
+            text=f"#finances | #database\
                 \nDatabase request\
                 \nDate&time: {date}\
                 \nID: `{ID}`\

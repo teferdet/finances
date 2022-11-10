@@ -13,8 +13,9 @@ class Main:
         self.func(message)
 
         msg = bot.send_message(
-            message.chat.id, language.shares_choose, 
-            reply_markup = keyboard.keyboard_shares
+            message.chat.id,
+            language.shares_choose, 
+            reply_markup=keyboard.keyboard_shares
         )
         
         bot.register_next_step_handler(msg, self.shares)
@@ -30,33 +31,28 @@ class Main:
             bot.send_message(
                 message.chat.id,
                 language.menu,
-                reply_markup = keyboard.menu
+                reply_markup=keyboard.menu
             )
-            main.bot.clear_step_handler(message)
 
         elif message.text in ["🌐 IT"]:
             shares_list = [
-                "GOOGL", "META",
+                "GOOGL", "META", "AMZN",
                 "PAYPL", "MSFT",
-                "AMZN"
                 ]
-            self.test(message, shares_list)
+            self.status(message, shares_list)
 
-        elif message.text in ["🛠 Technologies","🛠 Технтології"]:
+        elif message.text in ["🛠 Technologies", "🛠 Технтології"]:
             shares_list = [
-                "TSLA", "NVDA",
+                "TSLA", "NVDA", "AMZN",
                 "AMD", "INTC",
-                "AMZN"
             ]
-            self.test(message, shares_list)
+            self.status(message, shares_list)
 
         else:
             msg = bot.send_message(message.chat.id, language.shares_user_error)
             bot.register_next_step_handler(msg, self.shares)
 
-    def test(self, message, shares_list):
-        global msg
-        
+    def status(self, message, shares_list):
         day = time.strftime("%d/%m/%y")
         parser.Shares(shares_list)                
 
@@ -66,47 +62,10 @@ class Main:
             f"{language.rate} {day}\n{parser.send}"
             )
 
+            html = open("index.html", 'rb')
+            bot.send_document(message.chat.id, document=html)
+            
         else:
             msg = bot.send_message(message.chat.id, server_error)
         
         bot.register_next_step_handler(msg, self.shares)
-"""
-def shares(message):
-    global server
-    
-    day = time.strftime("%d/%m/%y")
-    
-    language.course(message)
-    keyboard.translate(message)
-
-    if message.text == "Повернутися ⬅️" or message.text == "Back ⬅️":
-        bot.send_message(message.chat.id, language.menu, reply_markup=keyboard.menu)
-        main.bot.clear_step_handler(message)
-    
-    else:
-        try:
-            parser.rate_list()
-            url = "gf shares"
-            status_code = parser.status_code
-
-            if message.text == "🌐 IT":
-                send = parser.tey
-
-            elif message.text == "🛠 Technologies" or message.text == "🛠 Технтології":
-                send = parser.tex
-        
-            if status_code == 200:
-                reboot = bot.send_message(
-                    message.chat.id, 
-                    f"{language.course} {day}\n{send}"
-                )
-            
-            else:
-                logs.server(url)
-                reboot = bot.send_message(message.chat.id, server_error)
-
-        except:
-            reboot = bot.send_message(message.chat.id, language.user_error)
-        
-        bot.register_next_step_handler(reboot, shares)
-"""

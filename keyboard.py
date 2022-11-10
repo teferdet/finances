@@ -34,9 +34,9 @@ def reply(message):
 
     global menu
     menu = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    menu.row(   types.KeyboardButton(language['shares']))
+    #menu.row(   types.KeyboardButton(language['shares']))
     menu.row(   types.KeyboardButton(language["exchange rate"]))
-    menu.row(   types.KeyboardButton(language["converter"]))
+    #menu.row(   types.KeyboardButton(language["converter"]))
 
     global converter
     converter = types.ReplyKeyboardMarkup(resize_keyboard=True)
@@ -91,25 +91,21 @@ def inline(message):
 
     link = types.InlineKeyboardMarkup()
     link.row(   types.InlineKeyboardButton(
-                text = language["communication"], 
-                url = config.telegram
+                text=language["communication"], 
+                url=config.telegram
                 )
     )
 
     info_link = types.InlineKeyboardMarkup()
     info_link.row(  types.InlineKeyboardButton(
-                    text = 'ℹ️ GitHub', url = config.github),
-                    types.InlineKeyboardButton(
-                    text = language['news'], url = config.news
-                    )
-    )
+                    text='ℹ️ GitHub', url=config.github))
 
 def convert(message, finance):
     global info_data
     translate(message)
 
     info_data = types.InlineKeyboardMarkup()
-    info_data.add(  types.InlineKeyboardButton(text = language['more'], url = finance))
+    info_data.add(  types.InlineKeyboardButton(text=language['more'], url=finance))
 
 def alternative_currency_key(message, currency_name):
     global currency
@@ -118,20 +114,20 @@ def alternative_currency_key(message, currency_name):
 
     currency = types.InlineKeyboardMarkup()    
     if currency_name in ["c UAH", "c EUR", "c GBP", "crypto"]:
-        currency.add(   types.InlineKeyboardButton( text = "£", callback_data = 'c GBP'),
-                        types.InlineKeyboardButton( text = "€", callback_data = 'c EUR'),
-                        types.InlineKeyboardButton( text = "₴", callback_data = 'c UAH'))
+        currency.add(   types.InlineKeyboardButton(text="£", callback_data='c GBP'),
+                        types.InlineKeyboardButton(text="€", callback_data='c EUR'),
+                        types.InlineKeyboardButton(text="₴", callback_data='c UAH'))
 
     else:
         currency.add( types.InlineKeyboardButton( 
-            text = f"{currency_name.upper()}/{language['other']}",
-            callback_data = currency_name)
+            text=f"{currency_name.upper()}/{language['other']}",
+            callback_data=currency_name)
         )
 
-@bot.callback_query_handler(func = lambda call: True)
+@bot.callback_query_handler(func=lambda call: True)
 def key_handler(call):
     if call.data in ["c UAH", "c EUR", "c GBP"]:
-        exchange_rate.alternative_currency(call, currency_name = call.data)
+        exchange_rate.alternative_currency(call, currency_name=call.data)
     
     else:
-        exchange_rate.alternative_currency(call, currency_name = call.data)
+        exchange_rate.alternative_currency(call, currency_name=call.data)

@@ -48,7 +48,7 @@ class Currency:
             status = True
             soup = bs4(self.request, "html.parser")
             self.main = soup.find_all("tbody")[1]
-            self.symbol = soup.find( "div", class_ = "c_symbols").get_text(strip = True)
+            self.symbol = soup.find( "div", class_="c_symbols").get_text(strip=True)
 
             self.parser(self.index, self.main)
 
@@ -65,17 +65,17 @@ class Currency:
             try:
                 name = info.find("td")
 
-                if name.get_text(strip = True) in self.currency_list:
+                if name.get_text(strip=True) in self.currency_list:
                     rate = info.find_all("a")[self.index].text
                     
-                    self.currency_name.append(name.get_text(strip = True))
+                    self.currency_name.append(name.get_text(strip=True))
                     self.rate.append(rate)
 
             except AttributeError:
                 pass
             
-            except Exception as e:
-                print(e)
+            except Exception as error:
+                print("78:", error)
 
         self.printed( 
             self.currency_name, self.rate, self.symbol,
@@ -121,9 +121,16 @@ class Crypto:
         url = 'https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest'
         name = "CoinMarketCap"
 
-        headers = {'X-CMC_PRO_API_KEY' : config.api_crypto_key, 'Accepts':'application/json'}
-        params = {'start':'1','limit':'100','convert': currency}
-        request = requests.get(url, params = params, headers = headers)
+        headers = {
+            'X-CMC_PRO_API_KEY' : config.api_crypto_key,
+            'Accepts':'application/json'
+        }
+        params = {
+            'start':'1',
+            'limit':'100',
+            'convert': currency}
+
+        request = requests.get(url, params=params, headers=headers)
 
         if request.status_code == 200: 
             status_code = request.status_code
@@ -161,56 +168,58 @@ class Convert:
         global url
         global name
 
-        url = f"http://www.google.com/finance/quote/{a}-{b}" 
+        url = f"https://www.google.com/search?q={a}+in+{b}" 
         name = "Google finance"
 
-        finance = requests.get(url)
+        self.finance = requests.get(url)
         status_code = finance.status_code
         status = False
 
         if status_code == 200:
-            soup = bs4(finance.text, "html.parser")
-            self.main = soup.find("main")
-            
-            if self.main != None:
-                status = True
-                self.parser(self.main)
+            status = True
+            self.parser(self.finance)
 
     def parser(self, main):
         global rate
-        
+                
+        soup = bs4(finance.text, "html.parser")
         rate = float(
-            self.main.find("div", class_ = "YMlKec fxKbKc").text
+            soup.find("span", class_='DFlfde SwHCTb').text
         )
 
 class Shares:
     def __init__(self, shares_list):
         global url
         global status_code
-
-        url = 'https://www.google.com/finance/markets/most-active'
-        request = requests.get(url)
+           
+        url = 'https://www.google.com/finance'
+        name = "Google finance"
+        
+        session = requests.Session() 
+        request = session.get(url, headers=headers)
+        
         status_code = request.status_code
 
         if status_code == 200:
             soup = bs4(request.text, "html.parser")
             self.main = soup.find_all("li")
-            self.printed(self.main, shares_list)
+            self.printed(self.main, shares_list, request)
 
         else:
             print(status_code)
 
-    def printed(self, main, shares_list):
+    def printed(self, main, shares_list, request):
         global send
+        
         send = []
 
         for data in self.main:
-            teg = data.find("div", class_ = "COaKTb").text
-            rate = (data.find("div", class_ = "YMlKec").text).replace('$', '')
-            add_rate = (data.find("div", class_ = "BAftM").text).replace('$', '')        
+            teg = data.find("div", class_="COaKTb").text
+            rate = (data.find("div", class_="YMlKec").text).replace('$', '')
+            add_rate = (data.find("div", class_="BAftM").text).replace('$', '')        
             
             if teg in shares_list:
                 info = f"💸 {teg} | {rate}$ | {add_rate}$"
                 send.append(info)
-
+        
         send = '\n'.join(map(str, send))
