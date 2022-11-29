@@ -1,0 +1,30 @@
+{
+  "keyboard":{
+    "crypto":"💵 Kryptowaluta",
+    "communication":"🔗 Połączenie",
+    "news":"📰 Aktualności",
+    "other":"Inny"
+    },
+  "time":{
+    "morning":"Dzień dobry",
+    "day":"Dobry dzień",
+    "evening":"Dobry wieczór",
+    "night":"dobranocі"
+    },
+  "menu":"Wybierz żądaną walutę lub napisz ją samodzielnie, jeśli potrzebujesz przeliczenia, dodaj je po nazwie waluty:",
+  "exchange rate":{
+    "currency user error":">_< Niezrozumiałe polecenie! Wybierz walutę z kluczy lub wpisz ją poprawnie",
+    "server error":">_< Serwer chwilowo nie działa, spróbuj ponownie później",
+    "rate":"Ocena | "
+  },
+  "inline mode":{
+    "server error":">_< Serwer jest chwilowo nieczynny, proszę spróbować ponownie później.",
+    "choose":"Wpisz żądaną walutę:",
+    "user error":">_< Nieprawidłowo wpisana waluta lub kwota przeliczeniowa",
+    "warning":"Aby przeliczyć walutę, dodaj kwotę, która ma być przeliczona",
+    "warning info":"Aby dokonać konwersji w trybie inline, należy dodać kwotę konwersji. Na przykład: \"pln 11\", \"GBP 57\" itd...",
+    "choose error":"Waluta nie została zapisana, spróbuj ponownie"
+  },
+  "help":"Jeśli masz problem lub sugestię dotyczącą nowych funkcji, skontaktuj się ze mną",
+  "bot info":"🤖 Wersja:"
+}

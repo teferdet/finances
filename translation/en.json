@@ -1,0 +1,30 @@
+{
+  "keyboard":{
+    "crypto":"💵 Crypto",
+    "communication":"🔗 Communication",
+    "other":"Other",
+    "news":"📰 News"
+  },
+  "time":{
+    "morning":"Good morning",
+    "day":"Good day",
+    "evening":"Good evening",
+    "night":"Good night"
+  },
+  "menu":"Select the desired currency or write it yourself, if you need to convert, add it after the currency name:",
+  "exchange rate":{
+    "currency user error":">_< Unintelligible team! Select the currency from the keys, or write it correctly",
+    "server error":">_< The server is temporarily down, try again later",
+    "rate":"Course | "
+  },
+  "inline mode":{
+    "server error":">_< The server is temporarily down, try again later",
+    "choose":"Write the desired currency:",
+    "user error":">_< Incorrectly written currency or conversion amount ",
+    "warning":"To convert currency, add the amount to be converted",
+    "warning info":"To convert in inline mode you need to add the conversion amount. For example: \"uah 11\", \"GBP 57\" etc...",
+    "choose error":"Currency was not written, try again"
+  },
+  "help":"If you have a problem or a suggestion for a new feature, please contact me:",
+  "bot info":"🤖 Version:"
+}

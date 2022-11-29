@@ -10,134 +10,132 @@ bot = telebot.TeleBot(config.token)
 connect = sqlite3.connect(config.database, check_same_thread=False)
 cursor = connect.cursor()
 
-def start_log(message):
-    date = time.strftime("%d.%m.%Y | %H:%M:%S")
-    
-    ID = message.from_user.id
-    name = '{0.first_name} {0.last_name}'.format(message.from_user)
-    username = message.from_user.username
-    language = message.from_user.language_code
+class UserInfo:
+    def __init__(self, message):
+        self.ID = message.from_user.id
+        self.name = '{0.first_name} {0.last_name}'.format(message.from_user)
+        self.username = message.from_user.username
+        self.language = message.from_user.language_code
 
-    cursor.execute(f"SELECT id FROM user_data WHERE id = {ID}")
-    data = cursor.fetchone()
+        if self.name.split()[1] == "None":
+            self.name = message.from_user.first_name
 
-    if name.split()[1] == "None":
-        name = "{0.first_name}".format(message.from_user)   
-    else:
-        pass
-
-    info = [name, username, ID, language, 0, 0]
-
-    if data is None:
-        cursor.execute("""INSERT INTO user_data VALUES(?, ?, ?, ?, ?, ?)""", info)
-        connect.commit()
-    
-    else:
-        pass
-
-    markup = types.InlineKeyboardMarkup()
-
-    if username == None:
-        markup.add(   
-            types.InlineKeyboardButton(
-                text=name, 
-                url=f"web.telegram.org/#{ID}"
-            )
+        self.add(
+            self.ID, self.name,
+            self.username, self.language
         )
 
-    else:
-        markup.add(   
-            types.InlineKeyboardButton(text=username, url=f"t.me/{username}")
-        )
+    def add(self, ID, name, username, language):
+        cursor.execute(f"SELECT id FROM user_data WHERE id = {ID}")
+        data = cursor.fetchone()
 
-    bot.send_message(
-        chat_id=config.log_id,
-        text=f"#finances | #user\
-            \nDate&time: {date}\
-            \nID: `{ID}`\
-            \nName: {name}\
-            \nLanguage: {language.upper()}",
-        reply_markup=markup,
-        parse_mode='Markdown'
-    )
+        info = [name, username, ID, language, 0]
 
-def server(message, status_code, url, name):
-    markup = types.InlineKeyboardMarkup()
-    markup.add( types.InlineKeyboardButton(text="URL", url=url))
-
-    bot.send_message(
-        chat_id=config.log_id, 
-        text=f"#finaces | #server\
-            \nName: {name}\
-            \nStatus code: {status_code}",
-        reply_markup=markup
-    )
-
-def add_in_database(message):
-    ID = message.from_user.id
-
-    cursor.execute(f"SELECT id FROM user_data WHERE id = {ID}")
-    data = cursor.fetchone()
-
-    name = '{0.first_name} {0.last_name}'.format(message.from_user)
-    username = message.from_user.username
-    language = message.from_user.language_code
-
-    if name.split()[1] == "None":
-        name = "{0.first_name}".format(message.from_user)   
-    else:
-        pass
-
-    info = [name, username, ID, language, 0, 0]
-
-    if data is None:
-        cursor.execute("""INSERT INTO user_data VALUES(?, ?, ?, ?, ?, ?)""", info)
-        connect.commit()
-    
-    else:
-        pass
-
-def send_database(message):
-    date = time.strftime("%d.%m.%Y | %H:%M:%S")
-    
-    ID = message.from_user.id
-    name = '{0.first_name} {0.last_name}'.format(message.from_user)
-    username = message.from_user.username
-
-    if name.split()[1] == "None":
-        name = "{0.first_name}".format(message.from_user)   
-    else:
-        pass
-
-    if ID == config.ID:
-        try:
-            db = open(config.database, 'rb')
+        if data is None:
+            new = True
             
-            bot.send_document(
-                chat_id=config.log_id,
-                document=db,
-                caption=f"#finances | #database\
-                    \nDate&time: {date}"
+            cursor.execute("""INSERT INTO user_data VALUES(?, ?, ?, ?, ?)""", info)
+            connect.commit()
+            
+        else:
+            new = False
+        
+        self.about_user(ID, name, username, language, new)
+    
+    def about_user(self, ID, name, username, language, new):
+        date = time.strftime("%d.%m.%Y | %H:%M:%S")
+        
+        markup = types.InlineKeyboardMarkup()
+        if username != "None":
+            markup.add(   
+                types.InlineKeyboardButton(text=username, url=f"t.me/{username}")
             )
+        else:
+            markup = None
+
+        if new is True:
+            bot.send_message(
+                chat_id=config.log_id,
+                text=f"#finances | #user\
+                    \nDate&time: {date}\
+                    \nID: `{ID}`\
+                    \nName: {name}\
+                    \nLanguage: {language.upper()}",
+                reply_markup=markup,
+                parse_mode='Markdown'
+            )
+
+class SendDataBase:
+    def __init__(self, message):
+        ID = message.from_user.id
+        name = '{0.first_name} {0.last_name}'.format(message.from_user)
+        username = message.from_user.username
+
+        if name.split()[1] == "None":
+            name = message.from_user.first_name   
+        else:
+            pass
+        
+        self.who_request(ID, name, username)
+        
+    def who_request(self, ID, name, username):
+        date = time.strftime("%d.%m.%Y | %H:%M:%S")
+        
+        if ID == config.ID:
+            self.send_database(ID)
+            
+        else:
+            bot.send_message(
+                chat_id=config.log_id,
+                text=f"#finances | #database\
+                    \nDatabase request\
+                    \nDate&time: {date}\
+                    \nID: `{ID}`\
+                    \nName: {name}\
+                    \nUsername: {username}"
+            )
+
+    def send_database(self, ID):
+        date = time.strftime("%d.%m.%Y | %H:%M:%S")
+        
+        try:
+            with open(f"{config.database}", "rb") as db:
+                bot.send_document(
+                    chat_id=config.log_id,
+                    document=db,
+                    caption=f"#finances | #database\
+                    \nDate&time: {date}"
+                )
+            
             bot.send_message(
                 chat_id=ID, 
                 text="Database sent successfully!"
             )
             
-            db.close() 
-
-        except:
+        except Exception as error:
             bot.send_message(
-                chat_id=config.ID, 
-                text="Error send database"
+                chat_id=config.log_id, 
+                text=error
             )
-    else:
-        bot.send_message(
-            chat_id=config.log_id,
-            text=f"#finances | #database\
-                \nDatabase request\
-                \nDate&time: {date}\
-                \nID: `{ID}`\
-                \nName: {name}\
-                \nUsername: {username}"
-        )
+
+def server(status_code, url, name):
+    date = time.strftime("%d.%m.%Y | %H:%M:%S")
+    
+    markup = types.InlineKeyboardMarkup()
+    markup.add( types.InlineKeyboardButton(text=name, url=url))
+    
+    bot.send_message(
+        chat_id=config.log_id,
+        text=f"#Server | #Error\
+            \nDate&time: {date} \
+            \nName: {name}\
+            \nStatus code: `{status_code}`",
+        reply_markup=markup,
+        parse_mode='Markdown'
+    )
+        
+def work_status(status):
+    bot.send_message(
+        chat_id=config.log_id,
+        text=status
+    )
