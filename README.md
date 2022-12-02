@@ -14,9 +14,10 @@ To run the bot, you need to keep the necessary data in "config.py" and run it
 
 Config
 ```
-# Token, API key
+# Token, API key, database
 token = "Telegram bot token"
 api_crypto_key = "CoinMarketCap API kay"
+database = "MonngoDB link"
 
 # ID
 log_id = "<Telegram channel ID>"
