@@ -47,24 +47,21 @@ class InlineMode:
             self.message_data(inline_query)
     
     def message_data(self, inline_query):
-        if inline_query.query.split()[0].isalpha():
-            try:
-                currency_name = inline_query.query.split()[0]
-                number = inline_query.query.split()[1]
-    
-            except:
-                currency_name = inline_query.query.split()[0]
-                number = 1
+        if len(inline_query.query.split()) == 2:
+            query = inline_query.query.split()
+
+            if query[0].isalpha():
+                currency_name = query[0]
+                number = query[1]
+            
+            else:
+                currency_name = query[1]
+                number = query[0]
         
         else:
-            try:
-                currency_name = inline_query.query.split()[1]
-                number = inline_query.query.split()[0]
-
-            except:
-                currency_name = ''
-                number = 0
-        
+            currency_name = inline_query.query
+            number = 1
+                        
         if currency_name.upper() in config.block_currency_list: 
             self.block(inline_query)
         

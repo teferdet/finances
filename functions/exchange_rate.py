@@ -1,5 +1,5 @@
+import pymongo
 import random
-import sqlite3
 import time 
 import __main__
 import config
@@ -10,9 +10,6 @@ import logs
 
 main = __main__
 bot = main.bot
-
-connect = sqlite3.connect(config.database, check_same_thread=False)
-cursor = connect.cursor()
 
 currency_list = [
     'American Dollar', 'Euro', 'British Pound', 
@@ -25,6 +22,9 @@ crypto_list = [
     "BTC", 'ETH', "BNB", "SOL", 
     "USDT", "TRX", "TON", "LTC",
 ] 
+
+client = pymongo.MongoClient(config.database)
+db = client["finances"]["Users"]
 
 class ExchangeRate:
     def __init__(self, message):
@@ -43,50 +43,45 @@ class ExchangeRate:
                 
     def main(self, message):
         ID = message.from_user.id
-                
         language.course(message)
         
         if message.text in ['💵 Crypto', '💵 Криптовалюта']:
             self.crypto_status(message)
                 
         else:
-            if message.text.split()[0].isalpha():
-                try:
-                    currency_name = message.text.split()[0]
-                    number = message.text.split()[1]
-                    
-                except:
-                    currency_name = message.text
+            if len(message.text.split()) == 2:
+                text = message.text.split()
+                
+                if text[0].isalnum() is False:
+                    currency_name = text[1]
                     number = 1
-                
-            elif message.text.split()[1].isalpha():
-                currency_name = message.text.split()[1]
-                number = message.text.split()[0]
-                
-            else:       
-                currency_name = message.text.split()[1]
-                number = 1
-            
-            cursor.execute(f"UPDATE user_data SET convert = '{number}' WHERE id = {ID}")
-            connect.commit()
-            
+
+                elif text[0].isalpha():
+                    currency_name = text[0]
+                    number = text[1]
+
+                else:
+                    currency_name = text[1]
+                    number = text[0]
+
+            else:
+                currency_name = message.text
+                number = 1                
+
+            db.update_one({'_id':ID}, {'$set':{"Convert":number}})
             self.message_data(currency_name, number, message)
         
     def message_data(self, currency_name, number, message):
         code = 0 if currency_name.upper() in ['BTC', 'ETH'] else 1
-        ID = message.from_user.id
-        
-        cursor.execute(f"SELECT convert FROM user_data WHERE id = '{ID}'")
-        number = cursor.fetchall()[0][0]
         
         if currency_name.upper() in config.block_currency_list: 
             self.block(message, currency_name)            
         
         else:
             parser.Currency(currency_name, code, currency_list, number)
-            self.currency_status(message, currency_name.upper())
+            self.currency_status(message, currency_name.upper(), number)
 
-    def currency_status(self, message, currency_name):
+    def currency_status(self, message, currency_name, number):
         day = time.strftime("%d.%m.%y")
         
         keyboard.alternative_currency_key(message, currency_name)
@@ -140,9 +135,6 @@ class AlternativeCurrency:
         language.course(message=call)
         ID = call.from_user.id
 
-        cursor.execute(f"SELECT convert FROM user_data WHERE id = '{ID}'")
-        number = cursor.fetchall()[0][0]
-
         if currency_name in ["c UAH", "c EUR", "c GBP"]:
             parser.Crypto(currency_name.split()[1], crypto_list)
             keyboard.alternative_currency_key(
@@ -153,6 +145,10 @@ class AlternativeCurrency:
             markup = keyboard.currency
 
         else:
+            query = {'_id':ID}
+            for number in db.find(query, {'_id':0, 'Convert':1}):
+                number = number['Convert']
+                
             parser.Currency(currency_name, 0, currency_list, number)
             markup = None
 

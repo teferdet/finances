@@ -12,7 +12,7 @@ bot = main.bot
 
 def translate(message):
     global language
-
+    
     language = message.from_user.language_code    
     if language in ['uk', 'pl']:
         pass
@@ -47,7 +47,6 @@ def inline(message):
     global info_link
 
     translate(message)
-
     link = types.InlineKeyboardMarkup()
     link.row(   
         types.InlineKeyboardButton(
