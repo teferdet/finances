@@ -5,6 +5,7 @@
   + requests
   + pyTelegramBotAPI
   + bs4
+  + pymongo
 
 **finances** - Telegram bot for viewing and converting currencies.
 
