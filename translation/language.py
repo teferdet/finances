@@ -1,5 +1,6 @@
 import json
 import time
+import pymongo
 import __main__
 import config
 import keyboard
@@ -8,8 +9,12 @@ import logs
 main = __main__
 bot = main.bot
 
+client = pymongo.MongoClient(config.database)
+settings = client["finances"]["Settings"]
+
 class Welcome:
     def __init__(self, message):
+        self.message = message
         self.language = message.from_user.language_code
         
         keyboard.inline(message)
@@ -21,9 +26,9 @@ class Welcome:
             )    
 
         else:
-            self.data(message, self.language)
+            self.data()
     
-    def data(self, message, language):
+    def data(self):
         date = int(time.strftime("%H"))
         
         if (date >= 6) and (date <= 11): 
@@ -35,24 +40,32 @@ class Welcome:
         else:   
             times = "night"
         
-        name = "{0.first_name} {0.last_name}".format(message.from_user)
+        name = f"{self.message.from_user.first_name} {self.message.from_user.last_name}"
 
         if name.split()[1] == 'None':
-            name = message.from_user.first_name
+            name = self.message.from_user.first_name
+            
         else:
             pass
-            
-        self.send(message, self.language, times)
-    
-    def send(self, message, language, times):
-        keyboard.reply(message)
         
-        if language in ['uk', 'pl']:
+        if self.message.chat.type == "private":
+            keyboard.reply(self.message)
+            keypad = keyboard.currency_keyboard
+        
+        else:
+            keypad = None
+            
+        self.send(times, name, keypad)
+    
+    def send(self, times, name, keypad):
+        keyboard.reply(self.message)
+        
+        if self.language in ['uk', 'pl']:
             pass
         else:
             language = "en" 
         
-        file_name = f'translation/{language}.json'
+        file_name = f'translation/{self.language}.json'
         
         with open(file_name, "rb") as file:
             file = json.load(file)
@@ -60,15 +73,17 @@ class Welcome:
         hello = file['time'][times]
         menu = file['menu']
         
-        bot.send_message(message.chat.id, f"{hello} 👋")
-        bot.send_message(message.chat.id, menu, reply_markup=keyboard.currency_keyboard)
+        bot.send_message(self.message.chat.id, f"{hello} {name} 👋")
+        bot.send_message(self.message.chat.id, menu, reply_markup=keypad)
 
 def translate(code, data):
     global language
     
     language = code.from_user.language_code    
+    
     if language in ['uk', 'pl']:
         pass
+    
     else:
         language = "en"   
 
@@ -110,9 +125,13 @@ def info(message):
     translate(code=message, data='bot info')
     keyboard.inline(message)
 
+    query = {'_id':0}
+    for version in settings.find(query, {'_id':0, 'version':1}):
+        version = version['version']
+    
     bot.send_message(
         message.chat.id, 
-        f"{language} {config.version}",
+        f"{language} {version}",
         reply_markup=keyboard.info_link
     )
 

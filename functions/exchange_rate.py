@@ -1,3 +1,4 @@
+import re 
 import pymongo
 import random
 import time 
@@ -24,13 +25,15 @@ crypto_list = [
 ] 
 
 client = pymongo.MongoClient(config.database)
-db = client["finances"]["Users"]
+user_db = client["finances"]["Users"]
+settings = client["finances"]["Settings"]
 
 class ExchangeRate:
     def __init__(self, message):
+        self.message = message
         language = message.from_user.language_code
-        
         keyboard.inline(message)
+        
         if language in ['ru', 'be']:
             bot.send_message(
                 message.chat.id,
@@ -39,136 +42,146 @@ class ExchangeRate:
             )    
 
         else:
-            self.main(message)
+            self.main()
                 
-    def main(self, message):
-        ID = message.from_user.id
-        language.course(message)
+    def main(self):
+        ID = self.message.from_user.id
+        language.course(self.message)
         
-        if message.text in ['💵 Crypto', '💵 Криптовалюта']:
-            self.crypto_status(message)
+        if self.message.text in ['💵 Crypto', '💵 Криптовалюта']:
+            self.crypto_status()
                 
         else:
-            if len(message.text.split()) == 2:
-                text = message.text.split()
-                
-                if text[0].isalnum() is False:
-                    currency_name = text[1]
-                    number = 1
+            self.currency_name = re.findall(r"\b[a-zA-Z]{3}\b", self.message.text)
+            self.number = re.findall(r"[0-9]+", self.message.text)
 
-                elif text[0].isalpha():
-                    currency_name = text[0]
-                    number = text[1]
+            try: 
+                self.currency_name = self.currency_name[0]
+
+                if self.number != []:
+                    self.number = self.number[0]
 
                 else:
-                    currency_name = text[1]
-                    number = text[0]
+                    self.number = 1 
 
-            else:
-                currency_name = message.text
-                number = 1                
+                user_db.update_one({'_id':ID}, {'$set':{"Convert":self.number}})
+                self.message_data()
 
-            db.update_one({'_id':ID}, {'$set':{"Convert":number}})
-            self.message_data(currency_name, number, message)
+            except: 
+                bot.send_message(self.message.chat.id, language.currency_user_error)
+
+    def message_data(self):
+        code = 0 if self.currency_name.upper() in ['BTC', 'ETH'] else 1
         
-    def message_data(self, currency_name, number, message):
-        code = 0 if currency_name.upper() in ['BTC', 'ETH'] else 1
+        query = {'_id':0}
+        for block_currency_list in settings.find(query, {'_id':0, 'block currency list':1}):
+            block_currency_list = block_currency_list['block currency list']
         
-        if currency_name.upper() in config.block_currency_list: 
-            self.block(message, currency_name)            
-        
+        if self.currency_name.upper() in block_currency_list: 
+            self.block()            
+            
         else:
-            parser.Currency(currency_name, code, currency_list, number)
-            self.currency_status(message, currency_name.upper(), number)
-
-    def currency_status(self, message, currency_name, number):
+            parser.Currency(self.currency_name, code, currency_list, self.number)
+            self.currency_status(self.currency_name)
+        
+    def currency_status(self, currency):
         day = time.strftime("%d.%m.%y")
         
-        keyboard.alternative_currency_key(message, currency_name)
-        markup = None if currency_name in ['BTC', 'ETH'] else keyboard.currency
+        keyboard.alternative_currency_key(self.message, currency)
+        if currency in ['BTC', 'ETH']:
+            keypad = None 
+        
+        else:
+            keypad = keyboard.currency
         
         if parser.status_code == 200 and parser.status is True:
             bot.send_message(
-                message.chat.id, 
+                self.message.chat.id, 
                 f"{language.rate}{day}\n{parser.send}",
-                reply_markup=markup
+                reply_markup=keypad
             )
 
         elif parser.status is False:
-            bot.send_message(message.chat.id, language.currency_user_error)
+            bot.send_message(self.message.chat.id, language.currency_user_error)
 
         else:
             logs.server(parser.status_code, parser.url, parser.name)
-            bot.send_message(message.chat.id, language.server_error)
+            bot.send_message(self.message.chat.id, language.server_error)
 
-    def crypto_status(self, message):
+    def crypto_status(self):
         day = time.strftime("%d.%m.%y")
         parser.Crypto("USD", crypto_list)
         
-        keyboard.alternative_currency_key(message, "crypto")
+        keyboard.alternative_currency_key(self.message, "crypto")
         if parser.status is True: 
             bot.send_message(
-                message.chat.id, 
+                self.message.chat.id, 
                 f"{language.rate}{day}\n{parser.send}",
                 reply_markup=keyboard.currency
             )
         
         else:
             logs.server(parser.status_code, parser.url, parser.name)
-            bot.send_message(message.chat.id, language.server_error)
+            bot.send_message(self.message.chat.id, language.server_error)
         
-    def block(self, message, currency_name):
+    def block(self):
         block_message = random.randrange(1, 4)
-
+        query = {'_id':0}
+        
+        for file in settings.find(query, {'_id':0, 'file id':1}):
+            glory_to_Ukraine = file['file id']['glory to Ukraine']
+            anthem_of_Ukraine = file['file id']['anthem of Ukraine']
+    
         if block_message == 1:
-            bot.send_video(message.chat.id, config.glory_to_Ukraine) 
+            bot.send_video(self.message.chat.id, glory_to_Ukraine) 
 
         elif block_message == 2:
-            parser.Currency("UAH", 1, currency_list, 1)
-            self.currency_status(message, "UAH")
+            bot.send_audio(self.message.chat.id, anthem_of_Ukraine)
         
-        else:
-            bot.send_audio(message.chat.id, config.anthem_of_Ukraine) 
+        else: 
+            parser.Currency("UAH", 1, currency_list, 1)
+            self.currency_status("UAH")
                   
 class AlternativeCurrency:
     def __init__(self, call, currency_name):
         language.course(message=call)
         ID = call.from_user.id
-
+        self.call = call 
+        
         if currency_name in ["c UAH", "c EUR", "c GBP"]:
             parser.Crypto(currency_name.split()[1], crypto_list)
             keyboard.alternative_currency_key(
-                message=call, 
+                message=self.call, 
                 currency_name=currency_name
             )
 
-            markup = keyboard.currency
+            self.keypad = keyboard.currency
 
         else:
             query = {'_id':ID}
-            for number in db.find(query, {'_id':0, 'Convert':1}):
+            for number in user_db.find(query, {'_id':0, 'Convert':1}):
                 number = number['Convert']
                 
             parser.Currency(currency_name, 0, currency_list, number)
-            markup = None
+            self.keypad = None
 
-        self.status(call, markup)
+        self.status()
         
-    def status(self, call, markup):
+    def status(self):
         day = time.strftime("%d/%m/%y")
         
         if parser.status_code == 200 or parser.status is True:
             bot.edit_message_text(
-                chat_id=call.message.chat.id, 
-                message_id=call.message.id,
+                chat_id=self.call.message.chat.id, 
+                message_id=self.call.message.id,
                 text=f"{language.rate}{day}\n{parser.send}",
-                reply_markup=markup 
+                reply_markup=self.keypad
             ) 
 
         else:
             logs.server(parser.status_code, parser.url, parser.name)
             bot.edit_message_text(
-                chat_id=call.message.chat.id, 
-                message_id=call.message.id,
+                chat_id=self.call.message.chat.id, 
+                message_id=self.call.message.id,
                 text=language.server_error
             )

@@ -3,7 +3,8 @@
     "crypto":"💵 Crypto",
     "communication":"🔗 Communication",
     "other":"Other",
-    "news":"📰 News"
+    "news":"📰 News",
+    "delete":"❌ Delete"
   },
   "time":{
     "morning":"Good morning",

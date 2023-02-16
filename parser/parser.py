@@ -2,107 +2,91 @@ import config
 import requests 
 import json 
 import time
+import pymongo
 from bs4 import BeautifulSoup as bs4
 
-crypto_rate = {
-    "update date":"",
-    "USD":"",
-    "GBP":"",
-    "EUR":"",
-    "UAH":""
-}
+client = pymongo.MongoClient(config.database)
+database = client['finances']['Currency']
 
 class Currency:
     def __init__(self, currency, rate_index, currency_list, number):
-        global url
-        global name
+        self.currency = currency 
+        self.rate_index = rate_index
+        self.currency_list = currency_list
+        self.number = float(number) 
+
+        self.main() 
+    
+    def main(self):
+        global url 
+        global name 
 
         name = "fx-rate"
-        url = f'https://fx-rate.net/{currency}/'
-        
-        response = requests.get(url)
-        self.status(response, currency, rate_index, currency_list, number)
-        
-    def status(self, response, currency, rate_index, currency_list, number):
-        global status_code
-    
-        status_code = response.status_code
-        self.number = number
-        self.currency_list = currency_list
-        self.currency = currency
+        url = f'https://fx-rate.net/{self.currency}/'
 
+        self.response = requests.get(url)
+        self.status()
+    
+    def status(self):
+        global status_code
+        
+        status_code = self.response.status_code
+        
         if status_code == 200:
-            self.index = rate_index  
-            self.response = response.text
-            
-            self.parser_data(self.response)
+            self.parser()
         
         else:
             pass
-    
-    def parser_data(self, response):
-        global status 
 
+    def parser(self):
+        global status 
+        
         try:
             status = True
-            soup = bs4(self.response, "html.parser")
-            self.main = soup.find_all("tbody")[1]
+            soup = bs4(self.response.text, "html.parser")
+            self.site_data = soup.find_all("tbody")[1]
             self.symbol = soup.find("div", class_="c_symbols").get_text(strip=True)
 
-            self.parser(self.index, self.main, self.number)
+            self.currency_data()
 
         except Exception as error:
+            print(error)
             status = False
 
-    def parser(self, index, main, number):
-        self.rate = []
-        self.currency_name = []
-        number = float(self.number)
-        
-        for info in self.main:
-            try:
-                name = info.find("td")
+    def currency_data(self):
+        global send
 
-                if name.get_text(strip=True) in self.currency_list:
-                    add = float(info.find_all("a")[self.index].text)
-                    convert = round(add*number, 4)
+        send_list = []
+        self.currency_info(name='currency_info')
+
+        for data in self.site_data: 
+            try: 
+                table_data = data.find("td").get_text(strip=True)
+
+                if table_data in self.currency_list:
+                    rate = float(data.find_all("a")[self.rate_index].text)
+                    convert = round(rate*self.number, 4)
+                        
+                    if self.rate_index == 1:
+                        symbol = self.symbol
+                        currency = f"{info[table_data][1]}/{self.currency}"
+                        
+                    else:
+                        symbol = info[table_data][2]                
+                        currency = f"{self.currency}/{info[table_data][1]}"
                     
-                    self.rate.append(convert)
-                    self.currency_name.append(name.get_text(strip=True))
-
+                    add = f"{info[table_data][0]} {currency.upper()} | {convert}{symbol}"
+                    send_list.append(add)
+                
             except AttributeError:
                 pass
             
-            except Exception as error:
-                print(error)
-
-        self.printed( 
-            self.currency_name, self.rate, self.symbol,
-            self.index, self.currency, 
-        )
-    
-    def printed(self, currency_name, rate, symbol, index, currency):
-        global send_list
-        global send
-        
-        self.data(name='currency_info')
-        send_list = []
-        
-        for name, rate in zip(self.currency_name, self.rate):
-            if self.index == 1:
-                symbol = self.symbol
-                currency = f"{info[name][1]}/{self.currency}"
-                
-            else:
-                symbol = info[name][2]                
-                currency = f"{self.currency}/{info[name][1]}"
-
-            add = f"{info[name][0]} {currency.upper()} | {rate}{symbol}"
-            send_list.append(add)
+            except Exception:
+                pass
 
         send = '\n'.join(map(str, send_list))
 
-    def data(self, name):
+    def currency_info(self, name):
         global info
         
         file_name = "parser/currency_data.json"
@@ -110,89 +94,97 @@ class Currency:
             file = json.load(file)
             info = file[name]
 
-class Crypto:
+class Crypto: 
     def __init__(self, currency, crypto_list):
+        global status_code
         global status
         global send
-        
-        day = str(time.strftime("%d/%m/%y"))
+
+        self.currency = currency 
+        self.crypto_list = crypto_list 
+        self.query = {'_id':"Crypto"}
+        self.day = str(time.strftime("%d/%m/%y"))
+
         times = str(time.strftime("%H:%M"))
-        update_time = ["0:00", "6:00", "12:00", "18:00"]
+        update_time = ["00:00", "06:00", "12:00", "18:00"]
+
+        for info in database.find(self.query):
+            last_update = info[currency]['date'] 
+            rate = info[currency]['rate']
+
+        if times in update_time or last_update != self.day:
+            self.main()
         
-        if times in update_time or crypto_rate[currency] == "":
-            crypto_rate["update date"] = day
-            self.data(currency, crypto_list)
-
-        elif crypto_rate["update date"] != day:
-            crypto_rate["update date"] = day
-            self.data(currency, crypto_list)
-
         else:
+            status_code = True
             status = True
-            send = crypto_rate[currency]
+            send = rate 
 
-    def data(self, currency, crypto_list):
-        global name
-        global url
-        
-        crypto_rate[currency] = ""
+    def main(self):
+        global name 
+        global url        
+
         url = 'https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest'
         name = "CoinMarketCap"
         
         headers = {
-            'X-CMC_PRO_API_KEY' : config.api_crypto_key,
+            'X-CMC_PRO_API_KEY':config.api_crypto_key,
             'Accepts':'application/json'
         }
 
         params = {
             'start':'1',
             'limit':'100',
-            'convert': currency 
-        }
-        
-        response = requests.get(url, params=params, headers=headers)
-        self.status_code(response, currency, crypto_list)
-        
-    def status_code(self, response, currency, crypto_list):
+            'convert': self.currency 
+        }        
+
+        self.response = requests.get(url, params=params, headers=headers)
+        self.status_code()
+
+    def status_code(self):
         global status_code        
         global status
 
         status = True
-        status_code = response.status_code
+        status_code = self.response.status_code
 
-        if status_code == 200: 
-            self.currency = currency
-            self.crypto_list = crypto_list
-            self.response = response.text
+        if status_code == 200:             
+            self.data = json.loads(self.response.text)['data']
+            self.write()
 
-            self.printed(self.response, self.currency, self.crypto_list)
-        
         else:
             status = False 
-        
-    def printed(self, request, currency, crypto_list):
+
+    def write(self):
         global send
-        
+
+        times = str(time.strftime("%H:%M:%S"))
         send_list = []
-        data = json.loads(request)['data']
-        self.symbol(currency)
-        
-        for coin in data:
+        self.currency_info(currency=self.currency)
+
+        for coin in self.data:
             name = coin['symbol'] 
 
             if name in self.crypto_list:
-                rate = coin['quote'][self.currency]['price']
-                round_rate = round(rate, 4)
-                
-                add = f"💵 {name}\{self.currency} = {round_rate}{symbol}"
+                rate = round(
+                    coin['quote'][self.currency]['price'], 4
+                )
+                add = f"💵 {name}\{self.currency} | {rate}{symbol}"
 
                 if add not in send_list:
                     send_list.append(add)
 
         send = '\n'.join(map(str, send_list))
-        crypto_rate[currency] = send        
-    
-    def symbol(self, currency):
+
+        database.update_many(
+            self.query, {'$set':{
+                f"{self.currency}.date":self.day,
+                f"{self.currency}.time":times,
+                f"{self.currency}.rate":send
+            }}
+        )
+
+    def currency_info(self, currency):
         global symbol
         
         file_name = "parser/currency_data.json"
