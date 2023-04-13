@@ -50,7 +50,6 @@ class Currency:
             self.currency_data()
 
         except Exception as error:
-            print(error)
             status = False
 
     def currency_data(self):
@@ -102,19 +101,20 @@ class Crypto:
 
         self.currency = currency 
         self.crypto_list = crypto_list 
-        self.query = {'_id':"Crypto"}
         self.day = str(time.strftime("%d/%m/%y"))
+        self.time_now = int(time.strftime("%H"))
 
-        times = str(time.strftime("%H:%M"))
-        update_time = ["00:00", "06:00", "12:00", "18:00"]
 
-        for info in database.find(self.query):
-            last_update = info[currency]['date'] 
-            rate = info[currency]['rate']
+        for item in database.find({"_id":"Crypto"}):
+            last_update = int(item[self.currency]['time'])
+            date = item[self.currency]['date']
+            rate = item[self.currency]['rate']
 
-        if times in update_time or last_update != self.day:
+        next_update = last_update+2
+
+        if (next_update <= self.time_now) or (date != self.day):
             self.main()
-        
+
         else:
             status_code = True
             status = True
@@ -128,7 +128,7 @@ class Crypto:
         name = "CoinMarketCap"
         
         headers = {
-            'X-CMC_PRO_API_KEY':config.api_crypto_key,
+            'X-CMC_PRO_API_KEY':config.api_key,
             'Accepts':'application/json'
         }
 
@@ -177,9 +177,9 @@ class Crypto:
         send = '\n'.join(map(str, send_list))
 
         database.update_many(
-            self.query, {'$set':{
+            {"_id":"Crypto"}, {'$set':{
                 f"{self.currency}.date":self.day,
-                f"{self.currency}.time":times,
+                f"{self.currency}.time":self.time_now,
                 f"{self.currency}.rate":send
             }}
         )

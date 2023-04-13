@@ -80,18 +80,35 @@ class Groups:
         except:
             pass
 
-def server(status_code, url, name):
-    date = time.strftime("%d.%m.%Y | %H:%M:%S")
-    
-    keypad = types.InlineKeyboardMarkup()
-    keypad.add( types.InlineKeyboardButton(text=name, url=url))
-    
-    bot.send_message(
-        chat_id=config.log_id,
-        text=f"#Server | #Error\
-            \nDate&time: {date} \
-            \nName: {name}\
-            \nStatus code: `{status_code}`",
-        reply_markup=keypad,
-        parse_mode='Markdown'
-    )
+class Notification:
+    def work_status(self, status, error):
+        date = time.strftime("%d.%m.%Y | %H:%M:%S")
+
+        query = {'_id':0}
+        for item in settings.find(query, {'_id':0, 'logs':1}):
+            logs_id = item['logs']
+
+        if status is True: 
+            bot.send_message(
+                chat_id, 
+                f"Work status: #Start\nDate: {date}"
+            )
+
+        elif status is False: 
+            pass
+
+    def server(self, status_code, url, name):
+        date = time.strftime("%d.%m.%Y | %H:%M:%S")
+        
+        keypad = types.InlineKeyboardMarkup()
+        keypad.add( types.InlineKeyboardButton(text=name, url=url))
+        
+        bot.send_message(
+            chat_id=config.log_id,
+            text=f"#Server | #Error\
+                \nDate&time: {date} \
+                \nName: {name}\
+                \nStatus code: `{status_code}`",
+            reply_markup=keypad,
+            parse_mode='Markdown'
+        )

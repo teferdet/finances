@@ -41,5 +41,5 @@ def function(message):
         pass
 
 if __name__ == '__main__':
+    Notification = logs.Notification()
     bot.polling(none_stop=True)
- 

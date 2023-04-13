@@ -71,7 +71,7 @@ class ExchangeRate:
                 bot.send_message(self.message.chat.id, language.currency_user_error)
 
     def message_data(self):
-        code = 0 if self.currency_name.upper() in ['BTC', 'ETH'] else 1
+        index = 0 if self.currency_name.upper() in ['BTC', 'ETH'] else 1
         
         query = {'_id':0}
         for block_currency_list in settings.find(query, {'_id':0, 'block currency list':1}):
@@ -81,7 +81,7 @@ class ExchangeRate:
             self.block()            
             
         else:
-            parser.Currency(self.currency_name, code, currency_list, self.number)
+            parser.Currency(self.currency_name, index, currency_list, self.number)
             self.currency_status(self.currency_name)
         
     def currency_status(self, currency):
@@ -105,7 +105,8 @@ class ExchangeRate:
             bot.send_message(self.message.chat.id, language.currency_user_error)
 
         else:
-            logs.server(parser.status_code, parser.url, parser.name)
+            Notification = logs.Notification()
+            Notification.server(parser.status_code, parser.url, parser.name)
             bot.send_message(self.message.chat.id, language.server_error)
 
     def crypto_status(self):
@@ -121,7 +122,8 @@ class ExchangeRate:
             )
         
         else:
-            logs.server(parser.status_code, parser.url, parser.name)
+            Notification = logs.Notification()
+            Notification.server(parser.status_code, parser.url, parser.name)
             bot.send_message(self.message.chat.id, language.server_error)
         
     def block(self):

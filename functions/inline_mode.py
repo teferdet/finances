@@ -1,6 +1,8 @@
 import __main__
 import logs 
 import parser
+import pymongo
+import re 
 import time
 import config
 import keyboard
@@ -8,6 +10,9 @@ import language
 from telebot import types 
 
 bot = __main__.bot
+
+client = pymongo.MongoClient(config.database)
+settings = client["finances"]["Settings"]
 
 currency_list = [
     'American Dollar', 'Euro', 'British Pound', 
@@ -20,105 +25,114 @@ currency_list = [
 @bot.inline_handler(func=lambda query: True)
 class InlineMode:
     def __init__(self, inline_query):
-        language_code = inline_query.from_user.language_code
+        self.inline_query = inline_query
+        language_code = self.inline_query.from_user.language_code
+        
         wait = "¯\_(ツ)_/¯ I do not understand your language"
         
         if language_code in ["ru", "be"]:
-            markup = types.InlineQueryResultArticle(
-                "1", wait,
-                types.InputTextMessageContent(wait)
+            keypad = types.InlineQueryResultArticle(
+                "1", wait, types.InputTextMessageContent(wait)
             )
-            bot.answer_inline_query(inline_query.id, [markup])
+            bot.answer_inline_query(self.inline_query.id, [keypad])
             
         else:
-            self.main_menu(inline_query)
+            self.menu()
     
-    def main_menu(self, inline_query):
-        language.inline(inline_query)
+    def menu(self): 
+        language.inline(self.inline_query)
         
-        if inline_query.query == '': 
-            markup = types.InlineQueryResultArticle(
+        if self.inline_query.query == '': 
+            keypad = types.InlineQueryResultArticle(
                '1', language.choose,
                 types.InputTextMessageContent(language.choose_error)
             )
-            bot.answer_inline_query(inline_query.id, [markup])
+            bot.answer_inline_query(self.inline_query.id, [keypad])
 
         else:
-            self.message_data(inline_query)
+            self.message_data()
     
-    def message_data(self, inline_query):
-        if len(inline_query.query.split()) == 2:
-            query = inline_query.query.split()
+    def message_data(self):
+        self.currency_name = re.findall(r"\b[a-zA-Z]{3}\b", self.inline_query.query)
+        self.number = re.findall(r"[0-9]+", self.inline_query.query)
 
-            if query[0].isalpha():
-                currency_name = query[0]
-                number = query[1]
-            
+        try: 
+            self.currency_name = self.currency_name[0].upper()
+
+            if self.number != []:
+                self.number = self.number[0]
+        
             else:
-                currency_name = query[1]
-                number = query[0]
-        
-        else:
-            currency_name = inline_query.query
-            number = 1
-                        
-        if currency_name.upper() in config.block_currency_list: 
-            self.block(inline_query)
-        
-        elif currency_name.upper() in ['BTC', 'ETH']:
-            parser.Currency(currency_name, 0, currency_list, number)
-            self.server_status(inline_query)
-        
-        else:
-            parser.Currency(currency_name, 1, currency_list, number)
-            self.server_status(inline_query)
-        
-    def server_status(self, inline_query):
-        language.inline(inline_query)
-        
-        if parser.status_code == 200 and parser.status is True:
-            self.send_list = parser.send_list
-            self.send(inline_query, self.send_list)
-        
-        elif parser.status is False:
-            markup = types.InlineQueryResultArticle(
+                self.number = 1 
+
+            self.processing()
+
+        except: 
+            keypad = types.InlineQueryResultArticle(
                 '1', language.user_error,
                 types.InputTextMessageContent(language.user_error)
             )
-            bot.answer_inline_query(inline_query.id, [markup])
-            
-        else:
-            markup = types.InlineQueryResultArticle(
-                '1', language.server_error, 
-                types.InputTextMessageContent(language.server_error,)
-            )
-            logs.server(parser.status_code, parser.url, parser.name)
-            bot.answer_inline_query(inline_query.id, [markup])
+            bot.answer_inline_query(self.inline_query.id, [keypad])
     
-    def send(self, inline_query, send_list):
-        language.inline(inline_query)
+    def processing(self):
+        query = {'_id':0}, {'_id':0, 'block currency list':1}
+        for item in settings.find(query):
+            block_list = item['block currency list']
+        
+        if self.currency_name in block_list: 
+            self.block()
+        
+        else:
+            index = 0 if self.currency_name.upper() in ['BTC', 'ETH'] else 1
+
+            parser.Currency(self.currency_name, index, currency_list, self.number)
+            self.server_status()
+        
+    def server_status(self):
+        language.inline(self.inline_query)
+
+        if parser.status_code == 200 and parser.status is True:
+            self.send_list = parser.send_list
+            self.publishing()
+        
+        else:
+            if parser.status is False:
+                text = language.user_error
+                
+            else:
+                text = language.server_error
+
+            keypad = types.InlineQueryResultArticle(
+                '1', text, 
+                types.InputTextMessageContent(text)
+            )
+
+            bot.answer_inline_query(self.inline_query.id, [keypad])
+    
+    def publishing(self):
+        language.inline(self.inline_query)
         
         number = 1
-        markup = [
+        keypad = [
             types.InlineQueryResultArticle(
                 number, language.warning,
                 types.InputTextMessageContent(language.warning_info)
             )
         ]
         
-        for inline in self.send_list:
+        for item in self.send_list:
             number += 1
             add = types.InlineQueryResultArticle(
-                number, inline,
-                types.InputTextMessageContent(inline)
+                number, item,
+                types.InputTextMessageContent(item)
             )
-            markup.append(add)
-            
-        bot.answer_inline_query(inline_query.id, markup)
-        
+            keypad.append(add)
+
+        bot.answer_inline_query(self.inline_query.id, keypad)
+
     def block(self, inline_query):
-        markup = types.InlineQueryResultArticle(
+        keypad = types.InlineQueryResultArticle(
            '1', "Слава Україні",
             types.InputTextMessageContent("Слава Україні\nГероям Слава")
         )
-        bot.answer_inline_query(inline_query.id, [markup])
+        bot.answer_inline_query(self.inline_query.id, [keypad])
