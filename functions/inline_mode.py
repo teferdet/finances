@@ -56,39 +56,32 @@ class InlineMode:
         self.currency_name = re.findall(r"\b[a-zA-Z]{3}\b", self.inline_query.query)
         self.number = re.findall(r"[0-9]+", self.inline_query.query)
 
-        try: 
+        if self.currency_name != []:
             self.currency_name = self.currency_name[0].upper()
-
-            if self.number != []:
-                self.number = self.number[0]
-        
-            else:
-                self.number = 1 
+            self.number = self.number[0] if self.number != [] else 1
 
             self.processing()
 
-        except: 
+        else:
             keypad = types.InlineQueryResultArticle(
                 '1', language.user_error,
                 types.InputTextMessageContent(language.user_error)
             )
             bot.answer_inline_query(self.inline_query.id, [keypad])
-    
+
     def processing(self):
-        query = {'_id':0}, {'_id':0, 'block currency list':1}
-        for item in settings.find(query):
+        for item in settings.find({'_id':0}):
             block_list = item['block currency list']
         
         if self.currency_name in block_list: 
             self.block()
         
         else:
-            index = 0 if self.currency_name.upper() in ['BTC', 'ETH'] else 1
-
-            parser.Currency(self.currency_name, index, currency_list, self.number)
+            self.index = 0 if self.currency_name.upper() in ['BTC', 'ETH'] else 1
             self.server_status()
         
     def server_status(self):
+        parser.Currency(self.currency_name, self.index, currency_list, self.number)
         language.inline(self.inline_query)
 
         if parser.status_code == 200 and parser.status is True:

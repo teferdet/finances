@@ -53,6 +53,7 @@ class Currency:
             status = False
 
     def currency_data(self):
+        global send_list 
         global send
 
         send_list = []
@@ -110,7 +111,7 @@ class Crypto:
             date = item[self.currency]['date']
             rate = item[self.currency]['rate']
 
-        next_update = last_update+2
+        next_update = last_update+1
 
         if (next_update <= self.time_now) or (date != self.day):
             self.main()

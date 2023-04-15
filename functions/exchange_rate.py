@@ -150,7 +150,7 @@ class AlternativeCurrency:
         ID = call.from_user.id
         self.call = call 
         
-        if currency_name in ["c UAH", "c EUR", "c GBP"]:
+        if currency_name.split()[0] in ["c"]:
             parser.Crypto(currency_name.split()[1], crypto_list)
             keyboard.alternative_currency_key(
                 message=self.call, 
