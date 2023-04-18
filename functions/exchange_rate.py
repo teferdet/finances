@@ -53,21 +53,16 @@ class ExchangeRate:
                 
         else:
             self.currency_name = re.findall(r"\b[a-zA-Z]{3}\b", self.message.text)
-            self.number = re.findall(r"[0-9]+", self.message.text)
+            self.number = re.findall(r"\d+\.*\d*", self.message.text)
 
-            try: 
-                self.currency_name = self.currency_name[0]
-
-                if self.number != []:
-                    self.number = self.number[0]
-
-                else:
-                    self.number = 1 
+            if self.currency_name != []:
+                self.currency_name = self.currency_name[0].upper()
+                self.number = self.number[0] if self.number != [] else 1
 
                 user_db.update_one({'_id':ID}, {'$set':{"Convert":self.number}})
                 self.message_data()
 
-            except: 
+            else: 
                 bot.send_message(self.message.chat.id, language.currency_user_error)
 
     def message_data(self):

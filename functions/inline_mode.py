@@ -54,7 +54,7 @@ class InlineMode:
     
     def message_data(self):
         self.currency_name = re.findall(r"\b[a-zA-Z]{3}\b", self.inline_query.query)
-        self.number = re.findall(r"[0-9]+", self.inline_query.query)
+        self.number = re.findall(r"\d+\.*\d*", self.inline_query.query)
 
         if self.currency_name != []:
             self.currency_name = self.currency_name[0].upper()
@@ -123,7 +123,7 @@ class InlineMode:
 
         bot.answer_inline_query(self.inline_query.id, keypad)
 
-    def block(self, inline_query):
+    def block(self):
         keypad = types.InlineQueryResultArticle(
            '1', "Слава Україні",
             types.InputTextMessageContent("Слава Україні\nГероям Слава")

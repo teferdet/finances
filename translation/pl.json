@@ -3,7 +3,8 @@
     "crypto":"💵 Kryptowaluta",
     "communication":"🔗 Połączenie",
     "news":"📰 Aktualności",
-    "other":"Inny"
+    "other":"Inny",
+    "delte":"❌ Usuwanie"
     },
   "time":{
     "morning":"Dzień dobry",
@@ -25,6 +26,7 @@
     "warning info":"Aby dokonać konwersji w trybie inline, należy dodać kwotę konwersji. Na przykład: \"pln 11\", \"GBP 57\" itd...",
     "choose error":"Waluta nie została zapisana, spróbuj ponownie"
   },
+  "donate":"🙏 Przyczynić się do rozwoju bota i wesprzeć autora pieniędzmi: ",
   "help":"Jeśli masz problem lub sugestię dotyczącą nowych funkcji, skontaktuj się ze mną",
   "bot info":"🤖 Wersja:"
 }

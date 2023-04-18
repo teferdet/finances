@@ -125,14 +125,22 @@ def info(message):
     translate(code=message, data='bot info')
     keyboard.inline(message)
 
-    query = {'_id':0}
-    for version in settings.find(query, {'_id':0, 'version':1}):
+    for version in settings.find({'_id':0}):
         version = version['version']
     
     bot.send_message(
         message.chat.id, 
         f"{language} {version}",
         reply_markup=keyboard.info_link
+    )
+
+def donate(message):
+    translate(code=message, data='donate')
+    keyboard.inline(message)
+    
+    bot.send_message(
+        message.chat.id, language,
+        reply_markup=keyboard.donate_link
     )
 
 def help(message):

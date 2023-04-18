@@ -15,11 +15,11 @@ settings = client["finances"]["Settings"]
 class Info:
     def __init__(self, message):
         chat_type = message.chat.type
-        
+
         if chat_type == "private":
             Users(message)
         
-        elif chat_type == "group":
+        elif chat_type in ["group", "supergroup"]:
             Groups(message)
         
         else:
@@ -62,13 +62,17 @@ class Groups:
             "_id":self.ID,
             "Name":self.title,
             "Username":self.message.chat.username,
-            "Currency list":[
+            "Currency output list":[
                 'American Dollar', 'Euro', 'British Pound', 
                 'Czech Koruna','Japanese Yen', 'Polish Zloty',
                 'Swiss Franc', 'Chinese Yuan Renminbi',
                 'Ukraine Hryvnia'
             ],
-            "Find currency":{}
+            "Currency input list":[
+                'USD', 'EUR', "GBP", "CZK",
+                "PLN", "CHF", "CNY", "UAH",
+                "BTC", "ETH"
+            ]
         }
         
         self.add()
@@ -80,35 +84,18 @@ class Groups:
         except:
             pass
 
-class Notification:
-    def work_status(self, status, error):
-        date = time.strftime("%d.%m.%Y | %H:%M:%S")
-
-        query = {'_id':0}
-        for item in settings.find(query, {'_id':0, 'logs':1}):
-            logs_id = item['logs']
-
-        if status is True: 
-            bot.send_message(
-                chat_id, 
-                f"Work status: #Start\nDate: {date}"
-            )
-
-        elif status is False: 
-            pass
-
-    def server(self, status_code, url, name):
-        date = time.strftime("%d.%m.%Y | %H:%M:%S")
-        
-        keypad = types.InlineKeyboardMarkup()
-        keypad.add( types.InlineKeyboardButton(text=name, url=url))
-        
-        bot.send_message(
-            chat_id=config.log_id,
-            text=f"#Server | #Error\
-                \nDate&time: {date} \
-                \nName: {name}\
-                \nStatus code: `{status_code}`",
-            reply_markup=keypad,
-            parse_mode='Markdown'
-        )
+def server(status_code, url, name):
+    date = time.strftime("%d.%m.%Y | %H:%M:%S")
+    
+    keypad = types.InlineKeyboardMarkup()
+    keypad.add( types.InlineKeyboardButton(text=name, url=url))
+    
+    bot.send_message(
+        chat_id=config.log_id,
+        text=f"#Server | #Error\
+            \nDate&time: {date} \
+            \nName: {name}\
+            \nStatus code: `{status_code}`",
+        reply_markup=keypad,
+        parse_mode='Markdown'
+    )

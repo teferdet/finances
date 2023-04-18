@@ -25,6 +25,10 @@ def start(message):
 def info(message):
     language.info(message)
 
+@bot.message_handler(commands=["donate"])
+def donate(message):
+    language.donate(message)
+
 @bot.message_handler(commands=["help"])
 def help(message):
     language.help(message)
@@ -34,12 +38,11 @@ def function(message):
     if message.chat.type == 'private':
         exchange_rate.ExchangeRate(message)
         
-    elif message.chat.type == "group":
+    elif message.chat.type in ["group", "supergroup"]:
         group_handler.GroupHandler(message)
     
     else:
         pass
 
 if __name__ == '__main__':
-    Notification = logs.Notification()
-    bot.polling(none_stop=True)
+    bot.infinity_polling(timeout=10, long_polling_timeout=5)

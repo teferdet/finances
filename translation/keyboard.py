@@ -3,6 +3,7 @@ import json
 import config
 import language
 import exchange_rate
+import group_handler
 import __main__
 import parser
 import logs
@@ -18,12 +19,15 @@ def database():
     global github
     global call
     global news    
+    global buymeacoffee
+    global thanks
     
-    query = {'_id':0}
-    for links in settings.find(query, {'_id':0, 'links':1}):
+    for links in settings.find({'_id':0}):
         github = links['links'][0]
         call = links['links'][1]
         news = links['links'][2]
+        buymeacoffee = links['links'][3]
+        thanks = links['links'][4]
 
 def translate(message):
     global language
@@ -60,6 +64,7 @@ def reply(message):
 def inline(message):
     global link
     global info_link
+    global donate_link
 
     database()
     translate(message)
@@ -78,25 +83,47 @@ def inline(message):
         types.InlineKeyboardButton(text='ℹ️ GitHub', url=github)            
     )
 
-def group_handler(message):
-    global keypad_delete 
-    
+    donate_link = types.InlineKeyboardMarkup()
+    donate_link.row(
+        types.InlineKeyboardButton(text="☕️ Buy me a coffee", url=buymeacoffee),
+        types.InlineKeyboardButton(text='❤️ Дяка', url=thanks)            
+    )
+
+def group_keypad_handler(message, currency_name):
+    global delete
+    global delete_and_rate
+
     translate(message)
-    keypad_delete = types.InlineKeyboardMarkup()
-    
-    info_link.row(
-        types.InlineKeyboardButton(text=language["delete"], callback_data='delete'),         
+
+    delete_and_rate =types.InlineKeyboardMarkup()
+    delete_and_rate.row( 
+        types.InlineKeyboardButton( 
+            text=f"{currency_name.upper()}/{language['other']}",
+            callback_data=currency_name
+        )
+    )
+    delete_and_rate.row(
+        types.InlineKeyboardButton(text=language['delete'], callback_data='delete')
+    )
+
+    delete = types.InlineKeyboardMarkup()
+    delete.add(
+        types.InlineKeyboardButton(text=language['delete'], callback_data='delete')
     )
 
 def alternative_currency_key(message, currency_name):
     global currency
 
     currency = types.InlineKeyboardMarkup()    
-    if currency_name in ["c UAH", "c EUR", "c GBP", "crypto"]:
-        currency.add(   
+    if currency_name.split()[0] in ["c"] or currency_name == "crypto":
+        currency.row(   
             types.InlineKeyboardButton(text="£", callback_data='c GBP'),
             types.InlineKeyboardButton(text="€", callback_data='c EUR'),
             types.InlineKeyboardButton(text="₴", callback_data='c UAH')
+        )
+        currency.row(   
+            types.InlineKeyboardButton(text="zł‎", callback_data='c PLN'),
+            types.InlineKeyboardButton(text="Kč", callback_data='c CZK'),
         )
 
     else:
@@ -109,9 +136,12 @@ def alternative_currency_key(message, currency_name):
         )
 
 @bot.callback_query_handler(func=lambda call: True)
-def key_handler(call):
+def call_handler(call):
+    data = call.message.json['chat']
+
     if call.data == "delete":
-        pass
+        bot.delete_message(data['id'], call.message.message_id)
     
     else:
-        exchange_rate.AlternativeCurrency(call, currency_name=call.data)
+        handler = group_handler if data['type'] in ["group", "supergroup"] else exchange_rate
+        handler.AlternativeCurrency(call, currency_name=call.data)

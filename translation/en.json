@@ -26,6 +26,7 @@
     "warning info":"To convert in inline mode you need to add the conversion amount. For example: \"uah 11\", \"GBP 57\" etc...",
     "choose error":"Currency was not written, try again"
   },
+  "donate":"🙏 Contribute to the development of the bot and support the author with money: ",
   "help":"If you have a problem or a suggestion for a new feature, please contact me:",
   "bot info":"🤖 Version:"
 }
