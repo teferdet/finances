@@ -13,10 +13,10 @@ main = __main__
 bot = main.bot
 
 currency_list = [
-    'American Dollar', 'Euro', 'British Pound', 
-    'Czech Koruna','Japanese Yen', 'Polish Zloty',
-    'Swiss Franc', 'Chinese Yuan Renminbi',
-    'Ukraine Hryvnia'
+    'British Pound','Bulgarian Lev', 'Chinese Yuan Renminbi',
+    'Czech Koruna','Euro', 'Indian Rupee', 'American Dollar'
+    'Israeli New Shekel', 'Japanese Yen', 'Polish Zloty',
+    'Swiss Franc', 'Turkish Lira', 'Ukraine Hryvnia'
 ]
 
 crypto_list = [
@@ -100,8 +100,6 @@ class ExchangeRate:
             bot.send_message(self.message.chat.id, language.currency_user_error)
 
         else:
-            Notification = logs.Notification()
-            Notification.server(parser.status_code, parser.url, parser.name)
             bot.send_message(self.message.chat.id, language.server_error)
 
     def crypto_status(self):
@@ -117,8 +115,6 @@ class ExchangeRate:
             )
         
         else:
-            Notification = logs.Notification()
-            Notification.server(parser.status_code, parser.url, parser.name)
             bot.send_message(self.message.chat.id, language.server_error)
         
     def block(self):
@@ -165,7 +161,7 @@ class AlternativeCurrency:
         self.status()
         
     def status(self):
-        day = time.strftime("%d/%m/%y")
+        day = time.strftime("%d.%m.%y")
         
         if parser.status_code == 200 or parser.status is True:
             bot.edit_message_text(

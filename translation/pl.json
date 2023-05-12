@@ -4,7 +4,11 @@
     "communication":"🔗 Połączenie",
     "news":"📰 Aktualności",
     "other":"Inny",
-    "delte":"❌ Usuwanie"
+    "delte":"❌ Usuwanie",
+    "cancel":"❌ Anuluj",
+    "input":"📥 Wpisz",
+    "output":"📤 Wypłać   ",
+    "groups":"👥 Tworzenie grup"
     },
   "time":{
     "morning":"Dzień dobry",
@@ -12,8 +16,10 @@
     "evening":"Dobry wieczór",
     "night":"dobranocі"
     },
-  "menu":"Wybierz żądaną walutę lub napisz ją samodzielnie, jeśli potrzebujesz przeliczenia, dodaj je po nazwie waluty:",
-  "exchange rate":{
+    "menu":{
+      "in bot":"Wybierz żądaną walutę lub napisz ją samodzielnie, jeśli potrzebujesz przeliczenia, dodaj je po nazwie waluty:",
+      "in group":"Pomogę Ci wyświetlić kurs wymiany walut na czacie. Proszę podać nazwę waluty (kod alfabetyczny) i w razie potrzeby dodać kwotę przeliczenia.nOstrzeżenie, administrator grupy zarządza listą dostępnych walut, które mogę zaakceptować!"
+    },  "exchange rate":{
     "currency user error":">_< Niezrozumiałe polecenie! Wybierz walutę z kluczy lub wpisz ją poprawnie",
     "server error":">_< Serwer chwilowo nie działa, spróbuj ponownie później",
     "rate":"Ocena | "
@@ -25,6 +31,19 @@
     "warning":"Aby przeliczyć walutę, dodaj kwotę, która ma być przeliczona",
     "warning info":"Aby dokonać konwersji w trybie inline, należy dodać kwotę konwersji. Na przykład: \"pln 11\", \"GBP 57\" itd...",
     "choose error":"Waluta nie została zapisana, spróbuj ponownie"
+  },
+  "settings":{
+    "menu":"⚙️ Ustawienia \nWybierz funkcję, której chcesz użyć:",
+    "choose group":"Wybierz grupę, którą chcesz skonfigurować:", 
+    "write input":"✍️ Napisz nową listę walut, które bot będzie przetwarzał na czacie (Tylko kod alfabetyczny. Na przykład: Ils, USD, inne...):", 
+    "write output":"✍️ Napisz nową listę walut, które chcesz zobaczyć (tylko kod alfabetyczny. Na przykład: Ils, USD, inne...):",
+    "warning":"Ostrzeżenie!!! Niestety, bot nie obsługuje wypłaty wszystkich walut świata, a jedynie listę sugerowanych walut. Możesz wybrać tylko waluty wymienione poniżej:\n",
+    "success":"🎉 Ustawienia zostały pomyślnie zaktualizowane",
+    "exit":"Opuszczono menu ustawień, zmiany zostały anulowane ",
+    "group item":"Wybierz, co chcesz zmienić w grupie:",
+    "item error":"Ta waluta nie jest obsługiwana",
+    "settings locate error":"Ustawienia można zmieniać tylko w czacie bota",
+    "error group list":"😢 Nie masz jeszcze żadnych grup do założenia"
   },
   "donate":"🙏 Przyczynić się do rozwoju bota i wesprzeć autora pieniędzmi: ",
   "help":"Jeśli masz problem lub sugestię dotyczącą nowych funkcji, skontaktuj się ze mną",

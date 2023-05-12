@@ -16,13 +16,13 @@ group = client['finances']['Groups']
 settings = client["finances"]["Settings"]
 
 class GroupHandler:
-    def __init__(self, message):
-        logs.Info(message)        
-
+    def __init__(self, message): 
         self.message = message
         self.ID = message.from_user.id
         self.chat = message.chat.id
         language = message.from_user.language_code
+        
+        logs.Info(message)
 
         if language not in ['ru', 'be']:
             logs.Users(self.message)

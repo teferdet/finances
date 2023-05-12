@@ -8,12 +8,14 @@ sys.path.append('translation')
 sys.path.append('functions')
 sys.path.append('parser')
 
-import language
 import inline_mode
 import exchange_rate
 import group_handler
 
 import keyboard
+import language
+
+import settings
 import logs
 
 @bot.message_handler(commands=["start"])
@@ -28,6 +30,10 @@ def info(message):
 @bot.message_handler(commands=["donate"])
 def donate(message):
     language.donate(message)
+
+@bot.message_handler(commands=['settings'])
+def setting(message):
+    settings.Publishing(message)
 
 @bot.message_handler(commands=["help"])
 def help(message):
@@ -45,4 +51,4 @@ def function(message):
         pass
 
 if __name__ == '__main__':
-    bot.infinity_polling(timeout=10, long_polling_timeout=5)
+    bot.infinity_polling()

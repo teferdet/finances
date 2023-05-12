@@ -28,11 +28,17 @@ class Info:
 class Users:
     def __init__(self, message):
         self.message = message
-        self.ID = message.from_user.id
-        self.name = '{0.first_name} {0.last_name}'.format(message.from_user)
+        self.ID = message.chat.id
+        users = [item['_id'] for item in users_db.find()]
+
+        if self.ID not in users:
+            self.data_collection()
+    
+    def data_collection(self):
+        self.name = '{0.first_name} {0.last_name}'.format(self.message.from_user)
 
         if self.name.split()[1] == "None":
-            self.name = message.from_user.first_name
+            self.name = self.message.from_user.first_name
             
         self.data = {
             '_id':self.ID,
@@ -40,24 +46,46 @@ class Users:
             'Username':self.message.from_user.username,
             'Language code':self.message.from_user.language_code,
             'Premium':self.message.from_user.is_premium,
-            'Convert':0
+            'Convert':0,
+            'Admin groups':{},
+            'Inline currency list':[
+                'American Dollar', 'Euro', 'British Pound', 
+                'Czech Koruna','Japanese Yen', 'Polish Zloty',
+                'Swiss Franc', 'Chinese Yuan Renminbi',
+                'Ukraine Hryvnia', 'Bulgarian Lev', 'Israeli New Shekel',
+                'Swedish Krona','Norwegian Krone'
+            ],
+            'Personal currency list':[
+                'American Dollar', 'Euro', 'British Pound', 
+                'Czech Koruna','Japanese Yen', 'Polish Zloty',
+                'Swiss Franc', 'Chinese Yuan Renminbi',
+                'Ukraine Hryvnia'
+            ],
+            'Crypto list':[
+                "BTC", 'ETH', "BNB", "SOL", 
+                "USDT", "TRX", "TON", "LTC",
+            ]
         }
 
-        self.add()
-        
-    def add(self):
-        try:
-            users_db.insert_one(self.data)
-
-        except:
-            pass
+        users_db.insert_one(self.data)
 
 class Groups:
     def __init__(self, message):
         self.message = message
         self.ID = message.chat.id
-        self.title = message.chat.title
-        
+        groups = [item['_id'] for item in groups_db.find()]
+
+        if self.ID not in groups:
+            self.data_collection()
+
+    def data_collection(self):
+        self.title = self.message.chat.title
+        self.admins = []
+
+        for item in bot.get_chat_administrators(self.message.chat.id):
+            if item.user.is_bot is False:
+                self.admins.append(item.user.id)
+
         self.data = {
             "_id":self.ID,
             "Name":self.title,
@@ -74,28 +102,14 @@ class Groups:
                 "BTC", "ETH"
             ]
         }
-        
-        self.add()
     
-    def add(self):
-        try:
-            groups_db.insert_one(self.data)
+        self.share_access()
 
-        except:
-            pass
+    def share_access(self):
+        groups_db.insert_one(self.data)
 
-def server(status_code, url, name):
-    date = time.strftime("%d.%m.%Y | %H:%M:%S")
-    
-    keypad = types.InlineKeyboardMarkup()
-    keypad.add( types.InlineKeyboardButton(text=name, url=url))
-    
-    bot.send_message(
-        chat_id=config.log_id,
-        text=f"#Server | #Error\
-            \nDate&time: {date} \
-            \nName: {name}\
-            \nStatus code: `{status_code}`",
-        reply_markup=keypad,
-        parse_mode='Markdown'
-    )
+        for ID in self.admins:
+            users_db.update_one(
+                {'_id':ID}, 
+                {'$set':{f"Admin groups.{self.title}":self.ID}}
+            )

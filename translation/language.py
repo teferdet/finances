@@ -32,60 +32,59 @@ class Welcome:
         date = int(time.strftime("%H"))
         
         if (date >= 6) and (date <= 11): 
-            times = 'morning'
+            self.times = 'morning'
         elif (date >= 12) and (date <= 18):
-            times = "day"
+            self.times = "day"
         elif (date >= 19) and (date <= 21): 
-            times = "evening"
+            self.times = "evening"
         else:   
-            times = "night"
+            self.times = "night"
         
-        name = f"{self.message.from_user.first_name} {self.message.from_user.last_name}"
+        self.name = f"{self.message.from_user.first_name} {self.message.from_user.last_name}"
 
-        if name.split()[1] == 'None':
-            name = self.message.from_user.first_name
+        if self.name.split()[1] == 'None':
+            self.name = self.message.from_user.first_name
             
         else:
             pass
         
         if self.message.chat.type == "private":
             keyboard.reply(self.message)
-            keypad = keyboard.currency_keyboard
+            self.keypad = keyboard.currency_keyboard
+            self.index = "in bot"
         
         else:
-            keypad = None
+            self.keypad = None
+            self.index = "in group"
             
-        self.send(times, name, keypad)
+        self.publishing()
     
-    def send(self, times, name, keypad):
+    def publishing(self):
         keyboard.reply(self.message)
         
         if self.language in ['uk', 'pl']:
             pass
         else:
-            language = "en" 
+            self.language = "en" 
         
         file_name = f'translation/{self.language}.json'
         
         with open(file_name, "rb") as file:
             file = json.load(file)
             
-        hello = file['time'][times]
-        menu = file['menu']
-        
-        bot.send_message(self.message.chat.id, f"{hello} {name} 👋")
-        bot.send_message(self.message.chat.id, menu, reply_markup=keypad)
+        hello = file['time'][self.times]
+        menu = file['menu'][self.index]
+    
+        bot.send_message(self.message.chat.id, f"{hello} {self.name} 👋") 
+        bot.send_message(self.message.chat.id, menu, reply_markup=self.keypad)
 
 def translate(code, data):
     global language
     
     language = code.from_user.language_code    
     
-    if language in ['uk', 'pl']:
-        pass
-    
-    else:
-        language = "en"   
+    if language not in ['uk', 'pl']:
+        language = 'en'
 
     file_name = f'translation/{language}.json'
         
@@ -133,6 +132,33 @@ def info(message):
         f"{language} {version}",
         reply_markup=keyboard.info_link
     )
+
+def settings_data(message):
+    global settings_menu 
+    global choose_group 
+    global write_input 
+    global write_output
+    global warning
+    global success 
+    global exit
+    global item_error
+    global settings_locate_error
+    global group_item 
+    global error_group_list
+    
+    translate(code=message, data='settings')
+
+    settings_menu = language['menu']
+    choose_group = language['choose group']
+    write_input = language['write input']
+    write_output = language['write output']
+    group_item = language['group item']
+    warning = language['warning']
+    success = language['success']
+    exit = language['exit']
+    item_error = language['item error']
+    settings_local_error = ['settings local error']
+    error_group_list = language['error group list']
 
 def donate(message):
     translate(code=message, data='donate')

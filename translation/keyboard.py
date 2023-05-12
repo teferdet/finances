@@ -5,6 +5,7 @@ import language
 import exchange_rate
 import group_handler
 import __main__
+import settings
 import parser
 import logs
 from telebot import types
@@ -13,7 +14,7 @@ main = __main__
 bot = main.bot
 
 client = pymongo.MongoClient(config.database)
-settings = client["finances"]["Settings"]
+settings_db = client["finances"]["Settings"]
 
 def database():
     global github
@@ -22,21 +23,19 @@ def database():
     global buymeacoffee
     global thanks
     
-    for links in settings.find({'_id':0}):
+    for links in settings_db.find({'_id':0}):
         github = links['links'][0]
         call = links['links'][1]
         news = links['links'][2]
         buymeacoffee = links['links'][3]
         thanks = links['links'][4]
 
-def translate(message):
+def translate(data):
     global language
     
-    language = message.from_user.language_code    
-    if language in ['uk', 'pl']:
-        pass
-    else:
-        language = "en"   
+    language = data.from_user.language_code    
+    if language not in ['uk', 'pl']:
+        language = 'en'
 
     file_name = f'translation/{language}.json'
     
@@ -61,6 +60,10 @@ def reply(message):
         types.KeyboardButton("🇨🇿 CZK")
     )
 
+    global cancel
+    cancel = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    cancel.add(types.KeyboardButton(language['cancel']))
+
 def inline(message):
     global link
     global info_link
@@ -84,10 +87,42 @@ def inline(message):
     )
 
     donate_link = types.InlineKeyboardMarkup()
-    donate_link.row(
-        types.InlineKeyboardButton(text="☕️ Buy me a coffee", url=buymeacoffee),
-        types.InlineKeyboardButton(text='❤️ Дяка', url=thanks)            
-    )
+    donate_link.row(types.InlineKeyboardButton(text="☕️ Buy me a coffee", url=buymeacoffee))
+    donate_link.row(types.InlineKeyboardButton(text='❤️ Дяка', url=thanks))
+
+def setting_keyboard(message):
+    global settings_menu 
+
+    translate(message)
+    settings_menu = types.InlineKeyboardMarkup()
+    settings_menu.row(types.InlineKeyboardButton(text=language['groups'], callback_data='s group '))
+
+def group_settings(call, ID):
+    translate(call)
+    group_settings = types.InlineKeyboardMarkup()
+    group_settings.row(
+        types.InlineKeyboardButton(
+            text=language['input'], callback_data=f's group input list {ID}'
+        ))
+    group_settings.row(
+        types.InlineKeyboardButton(
+            text=language['output'], callback_data=f's group output list {ID}'
+        ))
+
+    return group_settings
+
+def groups_keypad(admin_access):
+    keypad = []
+
+    groups_keypad = types.InlineKeyboardMarkup()
+    for name, ID  in admin_access[0].items():
+        item =  groups_keypad.row(
+            types.InlineKeyboardButton(
+                text=name, callback_data=f's group {ID}'
+        ))
+        keypad.append(item)
+
+    return groups_keypad
 
 def group_keypad_handler(message, currency_name):
     global delete
@@ -140,8 +175,15 @@ def call_handler(call):
     data = call.message.json['chat']
 
     if call.data == "delete":
-        bot.delete_message(data['id'], call.message.message_id)
-    
+        try:
+            bot.delete_message(data['id'], call.message.message_id)
+        
+        except:
+            bot.answer_callback_query(call.id, ">_< Error", show_alert=False)
+
+    elif call.data.split()[0] in ['s']:
+        settings.Settings(call)
+
     else:
         handler = group_handler if data['type'] in ["group", "supergroup"] else exchange_rate
         handler.AlternativeCurrency(call, currency_name=call.data)

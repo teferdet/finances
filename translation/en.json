@@ -4,16 +4,23 @@
     "communication":"🔗 Communication",
     "other":"Other",
     "news":"📰 News",
-    "delete":"❌ Delete"
+    "delete":"❌ Delete",
+    "cancel":"❌ Cancel",
+    "input":"📥 Input",
+    "output":"📤 Output",
+    "groups":"👥 Groups settings"
   },
   "time":{
     "morning":"Good morning",
-    "day":"Good day",
+    "day":"Good afternoon",
     "evening":"Good evening",
     "night":"Good night"
   },
-  "menu":"Select the desired currency or write it yourself, if you need to convert, add it after the currency name:",
-  "exchange rate":{
+  "menu":{
+    "in bot":"Select the desired currency or write it yourself, if you need to convert, add it after the currency name:",
+    "in group":"I will help you view the exchange rate in the chat. Please enter the name of the currency (alphabetical code) and add the conversion amount if necessary.\nAttention, the group administrator manages the list of available currencies that I can accept!"
+  },
+    "exchange rate":{
     "currency user error":">_< Unintelligible team! Select the currency from the keys, or write it correctly",
     "server error":">_< The server is temporarily down, try again later",
     "rate":"Course | "
@@ -25,6 +32,19 @@
     "warning":"To convert currency, add the amount to be converted",
     "warning info":"To convert in inline mode you need to add the conversion amount. For example: \"uah 11\", \"GBP 57\" etc...",
     "choose error":"Currency was not written, try again"
+  },
+  "settings":{
+    "menu":"⚙️ Settings \nSelect the function you want to use: ",
+    "choose group":"Select the group you want to configure:", 
+    "write input":"✍️ Write a new list of currencies that the bot will process in the chat (Only alphabetic code. For example: Ils, USD, other...):", 
+    "write output":"✍️ Write a new list of currencies you want to see(Only alphabetic code. For example: Ils, USD, other...):",
+    "group item":"Select what you want to change in the group:",
+    "warning":"Warning! Unfortunately, the bot does not support the withdrawal of all world currencies, but only a list of suggested currencies. You can choose only the currencies listed below:\n",
+    "success":"🎉 Settings have been successfully updated ",
+    "exit":"You have exited the settings menu, changes have been cancelled ",
+    "item error":"This currency is not supported ",
+    "settings locate error":"You can change settings only in the bot's chat",
+    "error group list":"😢 You don't have any groups to set up yet"
   },
   "donate":"🙏 Contribute to the development of the bot and support the author with money: ",
   "help":"If you have a problem or a suggestion for a new feature, please contact me:",

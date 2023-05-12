@@ -89,8 +89,8 @@ class Currency:
     def currency_info(self, name):
         global info
         
-        file_name = "parser/currency_data.json"
-        with open(file_name, "rb") as file:                
+        path = "parser/currency_data.json"
+        with open(path, "rb") as file:                
             file = json.load(file)
             info = file[name]
 

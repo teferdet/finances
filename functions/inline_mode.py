@@ -15,11 +15,14 @@ client = pymongo.MongoClient(config.database)
 settings = client["finances"]["Settings"]
 
 currency_list = [
-    'American Dollar', 'Euro', 'British Pound', 
-    'Czech Koruna','Japanese Yen', 'Polish Zloty',
-    'Swiss Franc', 'Chinese Yuan Renminbi',
-    'Ukraine Hryvnia', 'Bulgarian Lev', 'Israeli New Shekel',
-    'Swedish Krona','Norwegian Krone'
+    'Argentine Peso', 'Australian Dollar', 'British Pound',
+    'Bulgarian Lev', 'Canadian Dollar', 'Chinese Yuan Renminbi',
+    'Czech Koruna', 'Danish Krone', 'Egyptian Pound',
+    'Euro', 'Iceland Krona', 'Indian Rupee',
+    'Israeli New Shekel', 'Japanese Yen', 'Korean Won',
+    'Norwegian Krone', 'Polish Zloty', 'Romanian Leu',
+    'Singapore Dollar', 'Swedish Krona', 'Swiss Franc',
+    'Turkish Lira', 'Ukraine Hryvnia', 'American Dollar'
 ]
 
 @bot.inline_handler(func=lambda query: True)
