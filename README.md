@@ -7,12 +7,12 @@
   + bs4
   + pymongo
 
-**finances** — Telegram bot for viewing and converting fiat and cryptocurrencies, with the ability to view the share price  .
+## finances — Telegram bot for viewing and converting fiat and cryptocurrencies, with the ability to view the share price  .
 
-**Bot run**
+## Bot run
 To run the bot, you need to enter the necessary data into the config.py file:
 
-*Config*
+### Config
 ```
 # Token, API keys, database
 token = "<Your Telegram API token>"
@@ -22,12 +22,12 @@ database = "<MongoDB url>"
 ```
 >You can change other information: list of blocked currencies, version, database name, Telegram file id in database 
 
-*Database* 
+### Database 
 ```
 python database.py
 ```
 
-*Bot run*
+### Bot run
 ```
 pip install -r requirements.txt
 ```
