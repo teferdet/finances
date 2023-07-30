@@ -1,38 +1,42 @@
 # finances
 
 **Libraries and python version**
-  + Python - 3.11
+  + Python — 3.11
   + requests
   + pyTelegramBotAPI
   + bs4
   + pymongo
 
-**finances** - Telegram bot for viewing and converting currencies.
+**finances** — Telegram bot for viewing and converting fiat and cryptocurrencies, with the ability to view the share price  .
 
 **Bot run**
-To run the bot, you need to keep the necessary data in "config.py" and run it
+To run the bot, you need to enter the necessary data into the config.py file:
 
-Config
+*Config*
 ```
-# Token, API key, database
-token = "Telegram bot token"
-api_crypto_key = "CoinMarketCap API kay"
-database = "MonngoDB link"
+# Token, API keys, database
+token = "<Your Telegram API token>"
+crypto_api_key = "<Your CoinMarketCap API key>"
+share_api_kay = '<Your Financial Modeling Prep API kay>'
+database = "<MongoDB url>"
+```
+>You can change other information: list of blocked currencies, version, database name, Telegram file id in database 
 
-# ID
-log_id = "<Telegram channel ID>"
-ID = "<Your Telegram ID>"
+*Database* 
 ```
-You can change other information: list of blocked currencies, version, database name, Telegram file id
+python database.py
+```
 
-Bot run
-```
-python main.py
-```
-If you need to download the libraries above:
+*Bot run*
 ```
 pip install -r requirements.txt
 ```
+>If you need to download the libraries above
+
+```
+python main.py
+```
+>Run bot
 
 **Characteristics of the bot**
 | Function | Support |
@@ -47,3 +51,5 @@ pip install -r requirements.txt
 For currencies - [fx-rate.net](https://fx-rate.net)
 
 For crypto currencies - [CoinMarketCap](https://coinmarketcap.com/)
+
+For share - [Financial Modeling Prep](https://site.financialmodelingprep.com/)
