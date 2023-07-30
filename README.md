@@ -1,5 +1,7 @@
 # finances
 
+**finances — Telegram bot for viewing and converting fiat and cryptocurrencies, with the ability to view the share price**
+
 **Libraries and python version**
   + Python — 3.11
   + requests
@@ -7,7 +9,6 @@
   + bs4
   + pymongo
 
-## finances — Telegram bot for viewing and converting fiat and cryptocurrencies, with the ability to view the share price  .
 
 ## Bot run
 To run the bot, you need to enter the necessary data into the config.py file:
@@ -38,7 +39,7 @@ python main.py
 ```
 >Run bot
 
-**Characteristics of the bot**
+## Characteristics of the bot
 | Function | Support |
 | ------------- | ------------- |
 | Language  | English, Ukrainian and Polish |
@@ -46,7 +47,7 @@ python main.py
 | Cryptocurrency | BTC, ETH, USDT, LTC, TRX, SOL, TON |
 | Chat function | Inline mode |
 
-**Sources of information** 
+## Sources of information
 
 For currencies - [fx-rate.net](https://fx-rate.net)
 
