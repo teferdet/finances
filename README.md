@@ -24,6 +24,7 @@ database = "<MongoDB url>"
 >You can change other information: list of blocked currencies, version, database name, Telegram file id in database 
 
 ### Database 
+To create a database, run this file. It will automatically do all the work for you
 ```
 python database.py
 ```
@@ -45,7 +46,7 @@ python main.py
 | Language  | English, Ukrainian and Polish |
 | Currencies | All currencies of the world (conversion to 9-13) |
 | Cryptocurrency | BTC, ETH, USDT, LTC, TRX, SOL, TON |
-| Chat function | Inline mode |
+| Chat function | Inline mode and groups |
 
 ## Sources of information
 
