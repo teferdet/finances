@@ -64,7 +64,12 @@ class Users:
             'Crypto list':[
                 "BTC", 'ETH', "BNB", "SOL", 
                 "USDT", "TRX", "TON", "LTC",
-            ]
+            ],
+            'Share list':[
+                'APPL', 'META', 'AMZN', 'ADBE',
+                'PYPL', 'GOOGL', 'INTC', 'AMD',
+                'NFLX', 'MSFT'
+            ] 
         }
 
         users_db.insert_one(self.data)

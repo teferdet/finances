@@ -129,7 +129,7 @@ class Crypto:
         name = "CoinMarketCap"
         
         headers = {
-            'X-CMC_PRO_API_KEY':config.api_key,
+            'X-CMC_PRO_API_KEY':config.crypto_api_key,
             'Accepts':'application/json'
         }
 
@@ -192,3 +192,47 @@ class Crypto:
         with open(file_name, "rb") as file:                
             file = json.load(file)
             symbol = file["symbol"][currency]
+
+class Share:
+    def __init__(self, company):
+        self.day = str(time.strftime("%d.%m.%y"))
+        self.time_now = int(time.strftime("%H"))
+        self.company = company
+
+        for item in database.find({"_id":"Shares"}):
+            last_update = int(item['time'])
+            date = item['date']
+            self.send = item['data']
+
+        next_update = last_update+1
+
+        if (next_update <= self.time_now) or (date != self.day):
+            self.get_data()
+    
+    def get_data(self):
+        company = ','.join(self.company)
+        url = f"https://financialmodelingprep.com/api/v3/quote/{company}?apikey={config.share_api_kay}"
+        self.response = requests.get(url)
+
+        if self.response.status_code == 200:             
+            self.data = json.loads(self.response.text)
+            self.write()
+
+        else:
+            self.send = False 
+
+    def write(self):
+        rate = []
+        
+        for info in self.data:
+            text = f"💵 {info['symbol']} | {info['name']} = {info['price']}$"
+            rate.append(text)
+
+        self.send = "\n".join(rate)
+        database.update_many(
+            {"_id":"Shares"}, {'$set':{
+                "date":self.day,
+                "time":self.time_now,
+                "data":self.send
+            }}
+        )

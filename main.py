@@ -11,6 +11,7 @@ sys.path.append('parser')
 import inline_mode
 import exchange_rate
 import group_handler
+import share_handler
 
 import keyboard
 import language
@@ -30,6 +31,10 @@ def info(message):
 @bot.message_handler(commands=["donate"])
 def donate(message):
     language.donate(message)
+
+@bot.message_handler(commands=['share'])
+def share(message):
+    share_handler.ShareHandler(message)
 
 @bot.message_handler(commands=['settings'])
 def setting(message):

@@ -2,14 +2,13 @@ import re
 import pymongo
 import random
 import time 
-import __main__
+import __main__ as main
 import config
 import parser
 import language
 import keyboard
 import logs
 
-main = __main__
 bot = main.bot
 
 currency_list = [
