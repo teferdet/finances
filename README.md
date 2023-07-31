@@ -49,6 +49,6 @@ python main.py
 | Chat function | Inline mode and groups |
 
 ## Sources of information
-  + For currencies - [fx-rate.net](https://fx-rate.net)
-  + For crypto currencies - [CoinMarketCap](https://coinmarketcap.com/)
-  + For share - [Financial Modeling Prep](https://site.financialmodelingprep.com/)
+  + Currencies - [fx-rate.net](https://fx-rate.net)
+  + Crypto currencies - [CoinMarketCap](https://coinmarketcap.com/)
+  + Share - [Financial Modeling Prep](https://site.financialmodelingprep.com/)
