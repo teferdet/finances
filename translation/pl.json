@@ -17,7 +17,7 @@
     "night":"dobranocі"
     },
     "menu":{
-      "in bot":"Wybierz żądaną walutę lub napisz ją samodzielnie, jeśli potrzebujesz przeliczenia, dodaj je po nazwie waluty:",
+      "in bot":"Aby uzyskać kurs waluty fiducjarnej, wybierz go z menu lub wpisz własny.  Jeśli chcesz przeliczyć walutę, dodaj kwotę konwersji do nazwy.n💵 Uzyskaj kurs kryptowaluty - /crypto \n📑 Uzyskaj kurs akcji - /share \nInne niezbędne polecenia w menu",
       "in group":"Pomogę Ci wyświetlić kurs wymiany walut na czacie. Proszę podać nazwę waluty (kod alfabetyczny) i w razie potrzeby dodać kwotę przeliczenia.nOstrzeżenie, administrator grupy zarządza listą dostępnych walut, które mogę zaakceptować!"
     },  "exchange rate":{
     "currency user error":">_< Niezrozumiałe polecenie! Wybierz walutę z kluczy lub wpisz ją poprawnie",

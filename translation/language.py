@@ -1,12 +1,11 @@
 import json
 import time
 import pymongo
-import __main__
+import __main__ as main
 import config
 import keyboard
 import logs
 
-main = __main__
 bot = main.bot
 
 client = pymongo.MongoClient(config.database)
@@ -21,8 +20,9 @@ class Welcome:
         if self.language in ['ru', 'be']:
             bot.send_message(
                 message.chat.id,
-                "¯\_(ツ)_/¯ I do not understand your language",
-                reply_markup=keyboard.link
+                "[¯\_(ツ)_/¯ I do not understand your language](http://surl.li/dhmwi)",
+                reply_markup=keyboard.link,
+                parse_mode='MarkdownV2'
             )    
 
         else:

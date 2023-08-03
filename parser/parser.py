@@ -6,7 +6,7 @@ import pymongo
 from bs4 import BeautifulSoup as bs4
 
 client = pymongo.MongoClient(config.database)
-database = client['finances']['Currency']
+database = client["finances"]["Currency"]
 
 class Currency:
     def __init__(self, currency, rate_index, currency_list, number):
@@ -22,7 +22,7 @@ class Currency:
         global name 
 
         name = "fx-rate"
-        url = f'https://fx-rate.net/{self.currency}/'
+        url = f"https://fx-rate.net/{self.currency}/"
 
         self.response = requests.get(url)
         self.status()
@@ -57,7 +57,7 @@ class Currency:
         global send
 
         send_list = []
-        self.currency_info(name='currency_info')
+        self.currency_info(name="currency_info")
 
         for data in self.site_data: 
             try: 
@@ -84,7 +84,7 @@ class Currency:
             except Exception:
                 pass
 
-        send = '\n'.join(map(str, send_list))
+        send = "\n".join(map(str, send_list))
 
     def currency_info(self, name):
         global info
@@ -95,144 +95,94 @@ class Currency:
             info = file[name]
 
 class Crypto: 
-    def __init__(self, currency, crypto_list):
-        global status_code
-        global status
-        global send
-
-        self.currency = currency 
-        self.crypto_list = crypto_list 
-        self.day = str(time.strftime("%d/%m/%y"))
-        self.time_now = int(time.strftime("%H"))
-
-
-        for item in database.find({"_id":"Crypto"}):
-            last_update = int(item[self.currency]['time'])
-            date = item[self.currency]['date']
-            rate = item[self.currency]['rate']
-
-        next_update = last_update+1
-
-        if (next_update <= self.time_now) or (date != self.day):
-            self.main()
-
-        else:
-            status_code = True
-            status = True
-            send = rate 
-
-    def main(self):
-        global name 
-        global url        
-
-        url = 'https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest'
-        name = "CoinMarketCap"
-        
+    def __init__(self):
+        url = "https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest"
         headers = {
-            'X-CMC_PRO_API_KEY':config.crypto_api_key,
-            'Accepts':'application/json'
+            "X-CMC_PRO_API_KEY":config.crypto_api_key,
+            "Accepts":"application/json"
         }
+        currencies = [
+            "USD", "GBP", "EUR",
+            "UAH", "PLN", "CZK"
+        ]
 
-        params = {
-            'start':'1',
-            'limit':'100',
-            'convert': self.currency 
-        }        
+        for self.currency in currencies:
+            params = {
+                "start":"1",
+                "limit":"100",
+                "convert":self.currency 
+            }        
 
-        self.response = requests.get(url, params=params, headers=headers)
-        self.status_code()
+            self.response = requests.get(url, params=params, headers=headers)
+            self.status_code()
 
     def status_code(self):
-        global status_code        
-        global status
-
-        status = True
-        status_code = self.response.status_code
-
-        if status_code == 200:             
-            self.data = json.loads(self.response.text)['data']
+        if self.response.status_code == 200:             
+            self.data = json.loads(self.response.text)["data"]
             self.write()
-
-        else:
-            status = False 
-
+    
     def write(self):
-        global send
-
-        times = str(time.strftime("%H:%M:%S"))
-        send_list = []
-        self.currency_info(currency=self.currency)
-
+        data_object = {}
+        symbol = self.symbol()
+    
         for coin in self.data:
-            name = coin['symbol'] 
+            name = coin["symbol"] 
+            price = round(coin["quote"][self.currency]["price"], 4)
+            add = {name:[name, price, symbol]}
+            data_object.update(add)
 
-            if name in self.crypto_list:
-                rate = round(
-                    coin['quote'][self.currency]['price'], 4
-                )
-                add = f"💵 {name}\{self.currency} | {rate}{symbol}"
-
-                if add not in send_list:
-                    send_list.append(add)
-
-        send = '\n'.join(map(str, send_list))
-
-        database.update_many(
-            {"_id":"Crypto"}, {'$set':{
-                f"{self.currency}.date":self.day,
-                f"{self.currency}.time":self.time_now,
-                f"{self.currency}.rate":send
-            }}
+        database.update_one(
+            {"_id":"Crypto"}, 
+            {"$set":{self.currency:data_object}},
+            upsert=True
         )
 
-    def currency_info(self, currency):
-        global symbol
-        
-        file_name = "parser/currency_data.json"
-        with open(file_name, "rb") as file:                
+    def symbol(self):
+        path = "parser/currency_data.json"
+        with open(path, "rb") as file:                
             file = json.load(file)
-            symbol = file["symbol"][currency]
+            symbol = file["symbol"][self.currency]
+
+        return symbol
 
 class Share:
-    def __init__(self, company):
-        self.day = str(time.strftime("%d.%m.%y"))
-        self.time_now = int(time.strftime("%H"))
-        self.company = company
-
-        for item in database.find({"_id":"Shares"}):
-            last_update = int(item['time'])
-            date = item['date']
-            self.send = item['data']
-
-        next_update = last_update+1
-
-        if (next_update <= self.time_now) or (date != self.day):
-            self.get_data()
-    
-    def get_data(self):
-        company = ','.join(self.company)
-        url = f"https://financialmodelingprep.com/api/v3/quote/{company}?apikey={config.share_api_kay}"
+    def __init__(self):
+        url = f"https://financialmodelingprep.com/api/v3/stock/list?apikey={config.share_api_kay}"
         self.response = requests.get(url)
 
         if self.response.status_code == 200:             
             self.data = json.loads(self.response.text)
             self.write()
 
-        else:
-            self.send = False 
-
     def write(self):
-        rate = []
-        
-        for info in self.data:
-            text = f"💵 {info['symbol']} | {info['name']} = {info['price']}$"
-            rate.append(text)
+        data_object = {}
+        share_list = self.share_list()
 
-        self.send = "\n".join(rate)
-        database.update_many(
-            {"_id":"Shares"}, {'$set':{
-                "date":self.day,
-                "time":self.time_now,
-                "data":self.send
-            }}
+        for info in self.data:
+            symbol = info["symbol"]
+            name = info["name"]
+            price = info["price"]
+            
+            if symbol in share_list:
+                add = {symbol:[symbol, name, price]}
+                data_object.update(add)
+
+        database.update_one(
+            {"_id":"Shares"}, 
+            {"$set":data_object},
+            upsert=True
         )
+    
+    def share_list(self):
+        path = "parser/currency_data.json"
+        with open(path, "rb") as file:                
+            file = json.load(file)
+            share_list = file["symbols company"]
+
+        return share_list
+
+def main():
+    while True:
+        Share()
+        Crypto()
+        time.sleep(1800)

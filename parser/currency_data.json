@@ -32,5 +32,22 @@
         "UAH":"₴",
         "PLN":"zł‎",
         "CZK":"Kč"
-    }
+    },
+    "symbols company":[
+        "AAPL", "MSFT", "2222.SR", "GOOG",
+        "AMZN", "NVDA", "TSLA", "META", "BRK-B", 
+        "TSM", "V", "UNH", "MC.PA", "JPM", "JNJ", 
+        "TCEHY", "XOM", "LLY", "WMT", "AVGO", "MA", 
+        "PG", "NVO", "HD", "BA", "ADBE", "PYPL",
+        "NESN.SW", "ORCL", "CVX", "ASML", "MRK", "KO", 
+        "ABBV", "PEP", "BABA", "BAC", "OR.PA", "ADBE", "ROG.SW", 
+        "COST", "IHC.AE", "RMS.PA", "TM", "AZN", "NVS", "CRM", "CSCO", 
+        "1398.HK", "MCD", "TMO", "RELIANCE.NS", "SHEL", "ACN", "PFE", 
+        "NFLX", "ABT", "LIN", "AMD", "CMCSA", "DHR", 
+        "HDB", "SAP", "NKE", "WFC", "HSBC", 
+        "TMUS", "DIS", "TXN", "UPS", "CDI.PA", "PRX.AS", "BHP", 
+        "TCS.NS", "PM", "MS", "INTC", "CAT", "QCOM", "TTE", "NEE",  
+        "INTU", "COP", "UNP", "VZ", "LOW", "RY", "UL", 
+        "SNY", "IBM", "SIE.DE", "BMY", "HON"
+    ]
 }

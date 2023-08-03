@@ -1,5 +1,6 @@
 import config
 import telebot
+import threading
 import sys
 
 bot = telebot.TeleBot(config.token)
@@ -8,52 +9,10 @@ sys.path.append('translation')
 sys.path.append('functions')
 sys.path.append('parser')
 
+import parser
+import message_handler
 import inline_mode
-import exchange_rate
-import group_handler
-import share_handler
-
-import keyboard
-import language
-
-import settings
-import logs
-
-@bot.message_handler(commands=["start"])
-def start(message):
-    language.Welcome(message)
-    logs.Info(message)
-
-@bot.message_handler(commands=["info"])
-def info(message):
-    language.info(message)
-
-@bot.message_handler(commands=["donate"])
-def donate(message):
-    language.donate(message)
-
-@bot.message_handler(commands=['share'])
-def share(message):
-    share_handler.ShareHandler(message)
-
-@bot.message_handler(commands=['settings'])
-def setting(message):
-    settings.Publishing(message)
-
-@bot.message_handler(commands=["help"])
-def help(message):
-    language.help(message)
-
-@bot.message_handler(func=lambda message: True)
-def function(message):
-    if message.chat.type == 'private':
-        exchange_rate.ExchangeRate(message)
-        
-    elif message.chat.type in ["group", "supergroup"]:
-        group_handler.GroupHandler(message)
-    
-    else:
-        pass
 
 if __name__ == '__main__':
-    bot.infinity_polling()
+    threading.Thread(target=bot.infinity_polling).start()
+    threading.Thread(target=parser.main).start()

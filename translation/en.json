@@ -17,7 +17,7 @@
     "night":"Good night"
   },
   "menu":{
-    "in bot":"Select the desired currency or write it yourself, if you need to convert, add it after the currency name:",
+    "in bot":"📊 To get the fiat currency rate, select it from the menu or write your own.  If you need to convert a currency, add the conversion amount to the name.n💵 Get the cryptocurrency rate - /crypto \n📑 Get the share rate - /share \nOther necessary commands in the menu",
     "in group":"I will help you view the exchange rate in the chat. Please enter the name of the currency (alphabetical code) and add the conversion amount if necessary.\nAttention, the group administrator manages the list of available currencies that I can accept!"
   },
     "exchange rate":{

@@ -4,13 +4,13 @@ import config
 import language
 import exchange_rate
 import group_handler
-import __main__
+import __main__ as main
 import settings
+import crypto_handler
 import parser
 import logs
 from telebot import types
 
-main = __main__
 bot = main.bot
 
 client = pymongo.MongoClient(config.database)
@@ -48,7 +48,6 @@ def reply(message):
 
     global currency_keyboard
     currency_keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    currency_keyboard.row(  types.KeyboardButton(language['crypto']))
     currency_keyboard.row(  
         types.KeyboardButton("🇺🇦 UAH"), 
         types.KeyboardButton("🇺🇸 USD"),
@@ -183,6 +182,9 @@ def call_handler(call):
 
     elif call.data.split()[0] in ['s']:
         settings.Settings(call)
+    
+    elif call.data.split()[0] in ['c']:
+        crypto_handler.AlternativeCrypto(call, currency=call.data)
 
     else:
         handler = group_handler if data['type'] in ["group", "supergroup"] else exchange_rate

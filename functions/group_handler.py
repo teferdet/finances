@@ -120,7 +120,6 @@ class AlternativeCurrency:
             ) 
 
         else:
-            logs.server(parser.status_code, parser.url, parser.name)
             bot.edit_message_text(
                 chat_id=self.call.message.chat.id, 
                 message_id=self.call.message.id,
