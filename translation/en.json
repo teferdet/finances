@@ -1,52 +1,52 @@
 {
   "keyboard":{
-    "crypto":"💵 Crypto",
+    "crypto":"💵 Cryptocurrency",
     "communication":"🔗 Communication",
-    "other":"Other",
     "news":"📰 News",
-    "delete":"❌ Delete",
+    "other": "Other",
+    "delete":"🗑 Delete",
     "cancel":"❌ Cancel",
-    "input":"📥 Input",
-    "output":"📤 Output",
-    "groups":"👥 Groups settings"
+    "input":"📥 Change receiving data",
+    "output":"📤 Change output data",
+    "groups":"👥 Group settings"
   },
   "time":{
-    "morning":"Good morning",
-    "day":"Good afternoon",
-    "evening":"Good evening",
-    "night":"Good night"
+    "morning": "Good morning",
+    "day": "Good afternoon",
+    "evening": "Good evening",
+    "night": "Good night"
   },
   "menu":{
-    "in bot":"📊 To get the fiat currency rate, select it from the menu or write your own.  If you need to convert a currency, add the conversion amount to the name.n💵 Get the cryptocurrency rate - /crypto \n📑 Get the share rate - /share \nOther necessary commands in the menu",
-    "in group":"I will help you view the exchange rate in the chat. Please enter the name of the currency (alphabetical code) and add the conversion amount if necessary.\nAttention, the group administrator manages the list of available currencies that I can accept!"
+    "in bot":"📊 To find out the exchange rate of fiat currencies, select it from the menu or write your own.  If you need to convert a currency, add the conversion amount to the name.n💵 Get the cryptocurrency rate - /crypto \n📑 Get the share rate - /share \nOther necessary commands in the menu.",
+    "in group":"I will help you view the exchange rate in the chat. Please enter the name of the currency (literal code) and add the conversion amount if necessary.\nWarning, the group administrator manages the list of available currencies that I can accept!"
   },
-    "exchange rate":{
-    "currency user error":">_< Unintelligible team! Select the currency from the keys, or write it correctly",
-    "server error":">_< The server is temporarily down, try again later",
-    "rate":"Course | "
+  "exchange rate":{
+    "currency user error":"😖 Unclear command! Select the currency from the keys or write it correctly.",
+    "server error":"😖 The server is temporarily down, please try again later",
+    "rate": "Rate | "
   },
   "inline mode":{
-    "server error":">_< The server is temporarily down, try again later",
-    "choose":"Write the desired currency:",
-    "user error":">_< Incorrectly written currency or conversion amount ",
-    "warning":"To convert currency, add the amount to be converted",
-    "warning info":"To convert in inline mode you need to add the conversion amount. For example: \"uah 11\", \"GBP 57\" etc...",
-    "choose error":"Currency was not written, try again"
+    "server error":"😖 The server is temporarily down, please try again later",
+    "choose": "Write the desired currency:",
+    "user error":"😖 Currency or conversion amount is incorrect.",
+    "warning":"☝️ To convert currency, add the amount to be converted.",
+    "warning info":"☝️ To convert in inline mode, you need to add the conversion amount. For example: \"UAH 11\", \"gpb 57\", etc...",
+    "choose error":"🔁 The currency was not written, try again"
   },
   "settings":{
-    "menu":"⚙️ Settings \nSelect the function you want to use: ",
-    "choose group":"Select the group you want to configure:", 
-    "write input":"✍️ Write a new list of currencies that the bot will process in the chat (Only alphabetic code. For example: Ils, USD, other...):", 
-    "write output":"✍️ Write a new list of currencies you want to see(Only alphabetic code. For example: Ils, USD, other...):",
-    "group item":"Select what you want to change in the group:",
-    "warning":"Warning! Unfortunately, the bot does not support the withdrawal of all world currencies, but only a list of suggested currencies. You can choose only the currencies listed below:\n",
-    "success":"🎉 Settings have been successfully updated ",
-    "exit":"You have exited the settings menu, changes have been cancelled ",
-    "item error":"This currency is not supported ",
-    "settings locate error":"You can change settings only in the bot's chat",
-    "error group list":"😢 You don't have any groups to set up yet"
+    "menu":"⚙️ Settings \nSelect the function you need:",
+    "choose group": "Select the group you want to edit:", 
+    "write input":"✍️ Write a list of currencies that the bot should process (Alphabetic code only. For example: Ils, USD...):", 
+    "write output":"✍️ Write the currencies that the bot should display(Alphabetic code only. For example: Ils, USD...):",
+    "warning": "Attention! Unfortunately, the bot does not support the output of all world currencies, but only a list of suggested currencies. You can choose only those currencies that are listed below:\n",
+    "success":"🎉 Changes have been successfully applied",
+    "exit": "Changes were not applied",
+    "item error":"😖 This currency is not supported",
+    "group item": "Select what you want to change in the group:",
+    "settings locate error": "Settings are only available in the bot's private messages",
+    "group list error":"😢 Unfortunately you don't have any groups to edit yet"
   },
-  "donate":"🙏 Contribute to the development of the bot and support the author with money: ",
-  "help":"If you have a problem or a suggestion for a new feature, please contact me:",
+  "donate":"🙏 Contribute to the development of the bot, support the development with money: ",
+  "help": "If you have a problem or a suggestion for new features, please contact me.",
   "bot info":"🤖 Version:"
 }

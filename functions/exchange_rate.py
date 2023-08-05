@@ -14,10 +14,10 @@ user_db = client["finances"]["Users"]
 settings = client["finances"]["Settings"]
 
 currency_list = [
-    'British Pound','Bulgarian Lev', 'Chinese Yuan Renminbi',
-    'Czech Koruna','Euro', 'Indian Rupee', 'American Dollar'
+    'American Dollar', 'British Pound','Bulgarian Lev',
+    'Chinese Yuan Renminbi', 'Czech Koruna', 'Euro', 'Indian Rupee', 
     'Israeli New Shekel', 'Japanese Yen', 'Polish Zloty',
-    'Swiss Franc', 'Turkish Lira', 'Ukraine Hryvnia'
+    'Swiss Franc', 'Turkish Lira', 'Ukraine Hryvnia'    
 ]
 
 class ExchangeRate:

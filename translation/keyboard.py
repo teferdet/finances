@@ -58,6 +58,11 @@ def reply(message):
         types.KeyboardButton("🇵🇱 PLN"), 
         types.KeyboardButton("🇨🇿 CZK")
     )
+    currency_keyboard.row(  
+        types.KeyboardButton("🇨🇭 CHF"),
+        types.KeyboardButton("🇧🇬 BGN"), 
+        types.KeyboardButton("🇯🇵 JPY")
+    )
 
     global cancel
     cancel = types.ReplyKeyboardMarkup(resize_keyboard=True)
