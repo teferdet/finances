@@ -14,6 +14,7 @@ client = pymongo.MongoClient(config.database)
 user = client["finances"]["Users"]
 group = client['finances']['Groups']
 settings = client["finances"]["Settings"]
+data = 'exchange rate'
 
 class GroupHandler:
     def __init__(self, message): 
@@ -74,26 +75,28 @@ class GroupHandler:
 
     def server_status(self):
         day = time.strftime("%d.%m.%y")
+        keypad = None
 
         parser.Currency(self.currency_name, self.index, self.output, self.number)
-        language.course(self.message)
 
         if parser.status_code == 200 and parser.status is True:
-                bot.send_message(
-                self.message.chat.id, 
-                f"{language.rate}{day}\n{parser.send}",
-                reply_markup=self.keypad 
-            )
+            rate = language.translate(self.message, data, 'rate') 
+            text = f"{rate}{day}\n{parser.send}",
+            keypad = self.keypad
 
         elif parser.status is False:
-            bot.send_message(self.message.chat.id, language.currency_user_error)
+            text = language.translate(self.message, data, "currency user error")
 
         else:
-            bot.send_message(self.message.chat.id, language.server_error)
+            text = language.translate(self.message, data, "server error")
+        
+        bot.send_message(
+            self.message.chat.id, 
+            text, reply_markup=self.keypad
+        )
 
 class AlternativeCurrency:
     def __init__(self, call, currency_name):
-        language.course(message=call)
         keyboard.group_keypad_handler(call, currency_name)
 
         ID = call.from_user.id
@@ -111,17 +114,15 @@ class AlternativeCurrency:
     def status(self):
         day = time.strftime("%d/%m/%y")
         
-        if parser.status_code:
-            bot.edit_message_text(
-                chat_id=self.call.message.chat.id, 
-                message_id=self.call.message.id,
-                text=f"{language.rate}{day}\n{parser.send}",
-                reply_markup=self.keypad
-            ) 
+        if parser.status_code == 200 or parser.status is True:
+            rate = language.translate(self.call, data, 'rate') 
+            text = f"{rate}{day}\n{parser.send}"
 
         else:
-            bot.edit_message_text(
-                chat_id=self.call.message.chat.id, 
-                message_id=self.call.message.id,
-                text=language.server_error
-            )
+            text = language.translate(self.call, data, "server error")
+
+        bot.edit_message_text(
+            chat_id=self.call.message.chat.id, 
+            message_id=self.call.message.id,
+            text=text, reply_markup=keyboard.delete
+        )

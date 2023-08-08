@@ -1,20 +1,33 @@
 import pymongo
 import json
 import config
-import language
 import exchange_rate
 import group_handler
 import __main__ as main
 import settings
 import crypto_handler
-import parser
-import logs
 from telebot import types
 
 bot = main.bot
-
 client = pymongo.MongoClient(config.database)
 settings_db = client["finances"]["Settings"]
+
+currency_keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
+currency_keyboard.row(  
+    types.KeyboardButton("🇺🇦 UAH"), 
+    types.KeyboardButton("🇺🇸 USD"),
+    types.KeyboardButton("🇬🇧 GBP")
+) 
+currency_keyboard.row(  
+    types.KeyboardButton("🇪🇺 EUR"),
+    types.KeyboardButton("🇵🇱 PLN"), 
+    types.KeyboardButton("🇨🇿 CZK")
+)
+currency_keyboard.row(  
+    types.KeyboardButton("🇨🇭 CHF"),
+    types.KeyboardButton("🇧🇬 BGN"), 
+    types.KeyboardButton("🇯🇵 JPY")
+)
 
 def database():
     global github
@@ -30,43 +43,24 @@ def database():
         buymeacoffee = links['links'][3]
         thanks = links['links'][4]
 
-def translate(data):
-    global language
+def translate(code):
+    language = code.from_user.language_code    
     
-    language = data.from_user.language_code    
     if language not in ['uk', 'pl']:
         language = 'en'
 
-    file_name = f'translation/{language}.json'
-    
-    with open(file_name, "rb") as file:
+    path = f'translation/{language}.json'
+    with open(path, "rb") as file:
         file = json.load(file)
-        language = file["keyboard"]
+        translate = file["keyboard"]
+    
+    return translate
 
-def reply(message):
-    translate(message)
-
-    global currency_keyboard
-    currency_keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    currency_keyboard.row(  
-        types.KeyboardButton("🇺🇦 UAH"), 
-        types.KeyboardButton("🇺🇸 USD"),
-        types.KeyboardButton("🇬🇧 GBP")
-    ) 
-    currency_keyboard.row(  
-        types.KeyboardButton("🇪🇺 EUR"),
-        types.KeyboardButton("🇵🇱 PLN"), 
-        types.KeyboardButton("🇨🇿 CZK")
-    )
-    currency_keyboard.row(  
-        types.KeyboardButton("🇨🇭 CHF"),
-        types.KeyboardButton("🇧🇬 BGN"), 
-        types.KeyboardButton("🇯🇵 JPY")
-    )
-
-    global cancel
+def cancel(call):
     cancel = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    cancel.add(types.KeyboardButton(language['cancel']))
+    cancel.add(types.KeyboardButton(translate(call)['cancel']))
+
+    return cancel
 
 def inline(message):
     global link
@@ -74,19 +68,18 @@ def inline(message):
     global donate_link
 
     database()
-    translate(message)
     
     link = types.InlineKeyboardMarkup()
     link.row(   
         types.InlineKeyboardButton(
-            text=language["communication"],
+            text=translate(message)["communication"],
             url=call
         )
     )
 
     info_link = types.InlineKeyboardMarkup()
     info_link.row(
-        types.InlineKeyboardButton(text=language["news"], url=news),
+        types.InlineKeyboardButton(text=translate(message)["news"], url=news),
         types.InlineKeyboardButton(text='ℹ️ GitHub', url=github)            
     )
 
@@ -95,36 +88,31 @@ def inline(message):
     donate_link.row(types.InlineKeyboardButton(text='❤️ Дяка', url=thanks))
 
 def setting_keyboard(message):
-    global settings_menu 
-
-    translate(message)
     settings_menu = types.InlineKeyboardMarkup()
-    settings_menu.row(types.InlineKeyboardButton(text=language['groups'], callback_data='s group '))
+    settings_menu.row(types.InlineKeyboardButton(text=translate(message)['groups'], callback_data='s group '))
+
+    return settings_menu
 
 def group_settings(call, ID):
-    translate(call)
     group_settings = types.InlineKeyboardMarkup()
     group_settings.row(
         types.InlineKeyboardButton(
-            text=language['input'], callback_data=f's group input list {ID}'
+            text=translate(call)['input'], callback_data=f's group input list {ID}'
         ))
     group_settings.row(
         types.InlineKeyboardButton(
-            text=language['output'], callback_data=f's group output list {ID}'
+            text=translate(call)['output'], callback_data=f's group output list {ID}'
         ))
 
     return group_settings
 
 def groups_keypad(admin_access):
-    keypad = []
-
     groups_keypad = types.InlineKeyboardMarkup()
     for name, ID  in admin_access[0].items():
-        item =  groups_keypad.row(
+        groups_keypad.row(
             types.InlineKeyboardButton(
                 text=name, callback_data=f's group {ID}'
         ))
-        keypad.append(item)
 
     return groups_keypad
 
@@ -132,28 +120,25 @@ def group_keypad_handler(message, currency_name):
     global delete
     global delete_and_rate
 
-    translate(message)
-
     delete_and_rate =types.InlineKeyboardMarkup()
     delete_and_rate.row( 
         types.InlineKeyboardButton( 
-            text=f"{currency_name.upper()}/{language['other']}",
+            text=f"{currency_name.upper()}/{translate(message)['other']}",
             callback_data=currency_name
         )
     )
     delete_and_rate.row(
-        types.InlineKeyboardButton(text=language['delete'], callback_data='delete')
+        types.InlineKeyboardButton(text=translate(message)['delete'], callback_data='delete')
     )
 
     delete = types.InlineKeyboardMarkup()
     delete.add(
-        types.InlineKeyboardButton(text=language['delete'], callback_data='delete')
+        types.InlineKeyboardButton(text=translate(message)['delete'], callback_data='delete')
     )
 
-def alternative_currency_key(message, currency_name):
-    global currency
-
+def alternative_currency_keyboard(message, currency_name):
     currency = types.InlineKeyboardMarkup()    
+    
     if currency_name.split()[0] in ["c"] or currency_name == "crypto":
         currency.row(   
             types.InlineKeyboardButton(text="£", callback_data='c GBP'),
@@ -166,13 +151,14 @@ def alternative_currency_key(message, currency_name):
         )
 
     else:
-        translate(message)
         currency.add( 
             types.InlineKeyboardButton( 
-                text=f"{currency_name.upper()}/{language['other']}",
+                text=f"{currency_name.upper()}/{translate(message)['other']}",
                 callback_data=currency_name
             )
         )
+
+    return currency
 
 @bot.callback_query_handler(func=lambda call: True)
 def call_handler(call):

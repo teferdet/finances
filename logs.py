@@ -21,9 +21,6 @@ class Info:
         
         elif chat_type in ["group", "supergroup"]:
             Groups(message)
-        
-        else:
-            pass
 
 class Users:
     def __init__(self, message):

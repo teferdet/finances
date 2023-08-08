@@ -24,6 +24,7 @@ currency_list = [
     'Singapore Dollar', 'Swedish Krona', 'Swiss Franc',
     'Turkish Lira', 'Ukraine Hryvnia', 'American Dollar'
 ]
+data = 'inline mode'
 
 @bot.inline_handler(func=lambda query: True)
 class InlineMode:
@@ -43,12 +44,13 @@ class InlineMode:
             self.menu()
     
     def menu(self): 
-        language.inline(self.inline_query)
-        
         if self.inline_query.query == '': 
+            choose = language.translate(self.inline_query, data, "choose")
+            choose_error = language.translate(self.inline_query, data, 'choose error') 
+            
             keypad = types.InlineQueryResultArticle(
-               '1', language.choose,
-                types.InputTextMessageContent(language.choose_error)
+               '1', choose,
+                types.InputTextMessageContent(choose_error)
             )
             bot.answer_inline_query(self.inline_query.id, [keypad])
 
@@ -66,9 +68,11 @@ class InlineMode:
             self.processing()
 
         else:
+            user_error = language.translate(self.inline_query, data, "user error")
+
             keypad = types.InlineQueryResultArticle(
-                '1', language.user_error,
-                types.InputTextMessageContent(language.user_error)
+                '1', user_error,
+                types.InputTextMessageContent(user_error)
             )
             bot.answer_inline_query(self.inline_query.id, [keypad])
 
@@ -85,7 +89,6 @@ class InlineMode:
         
     def server_status(self):
         parser.Currency(self.currency_name, self.index, currency_list, self.number)
-        language.inline(self.inline_query)
 
         if parser.status_code == 200 and parser.status is True:
             self.send_list = parser.send_list
@@ -93,10 +96,11 @@ class InlineMode:
         
         else:
             if parser.status is False:
-                text = language.user_error
+                text = language.translate(self.inline_query, data, "user error")
                 
             else:
-                text = language.server_error
+                text = language.translate(self.inline_query, data, 'server error'
+                )
 
             keypad = types.InlineQueryResultArticle(
                 '1', text, 
@@ -106,13 +110,14 @@ class InlineMode:
             bot.answer_inline_query(self.inline_query.id, [keypad])
     
     def publishing(self):
-        language.inline(self.inline_query)
-        
+        warning = language.translate(self.inline_query, data, 'warning')
+        warning_info = language.translate(self.inline_query, data, 'warning info')
+
         number = 1
         keypad = [
             types.InlineQueryResultArticle(
-                number, language.warning,
-                types.InputTextMessageContent(language.warning_info)
+                number, warning,
+                types.InputTextMessageContent(warning_info)
             )
         ]
         

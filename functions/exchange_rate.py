@@ -19,6 +19,7 @@ currency_list = [
     'Israeli New Shekel', 'Japanese Yen', 'Polish Zloty',
     'Swiss Franc', 'Turkish Lira', 'Ukraine Hryvnia'    
 ]
+data = 'exchange rate'
 
 class ExchangeRate:
     def __init__(self, message):
@@ -39,7 +40,6 @@ class ExchangeRate:
     
     def message_handler(self):
         ID = self.message.from_user.id
-        language.course(self.message)
 
         self.currency_name = re.findall(r"\b[a-zA-Z]{3}\b", self.message.text)
         self.number = re.findall(r"\d+\.*\d*", self.message.text)
@@ -54,11 +54,12 @@ class ExchangeRate:
             )
             self.request()
 
-        else: 
-            bot.send_message(self.message.chat.id, language.currency_user_error)
+        else:
+            text = language.translate(self.message, data, "currency user error")
+            bot.send_message(self.message.chat.id, text)
     
     def request(self):
-        keyboard.alternative_currency_key(self.message, self.currency_name)
+        self.keypad = keyboard.alternative_currency_keyboard(self.message, self.currency_name)
 
         if self.currency_name in ['BTC', 'ETH']:
             index = 0
@@ -66,7 +67,6 @@ class ExchangeRate:
         
         else:
             currency = self.currency_name
-            self.keypad = keyboard.currency
             index = 1
 
         query = {'_id':0}
@@ -85,23 +85,26 @@ class ExchangeRate:
 
     def publishing(self):
         day = time.strftime("%d.%m.%y")
-        
+        keypad = None
+
         if parser.status_code == 200 and parser.status is True:
-            bot.send_message(
-                self.message.chat.id, 
-                f"{language.rate}{day}\n{parser.send}",
-                reply_markup=self.keypad
-            )
+            rate = language.translate(self.message, data, 'rate') 
+            text = f"{rate}{day}\n{parser.send}",
+            keypad = self.keypad
 
         elif parser.status is False:
-            bot.send_message(self.message.chat.id, language.currency_user_error)
+            text = language.translate(self.message, data, "currency user error")
 
         else:
-            bot.send_message(self.message.chat.id, language.server_error)
+            text = language.translate(self.message, data, "server error")
+        
+        bot.send_message(
+            self.message.chat.id, 
+            text, reply_markup=self.keypad
+        )
 
 class AlternativeCurrency:
     def __init__(self, call, currency_name):
-        language.course(message=call)
         ID = call.from_user.id
         self.call = call 
         
@@ -110,24 +113,20 @@ class AlternativeCurrency:
             number = number['Convert']
             
         parser.Currency(currency_name, 0, currency_list, number)
-        self.keypad = None
-
         self.publishing()
         
     def publishing(self):
         day = time.strftime("%d.%m.%y")
         
         if parser.status_code == 200 or parser.status is True:
-            bot.edit_message_text(
-                chat_id=self.call.message.chat.id, 
-                message_id=self.call.message.id,
-                text=f"{language.rate}{day}\n{parser.send}",
-                reply_markup=self.keypad
-            ) 
+            rate = language.translate(self.call, data, 'rate') 
+            text = f"{rate}{day}\n{parser.send}"
 
         else:
-            bot.edit_message_text(
-                chat_id=self.call.message.chat.id, 
-                message_id=self.call.message.id,
-                text=language.server_error
-            )
+            text = language.translate(self.call, data, "server error")
+
+        bot.edit_message_text(
+            chat_id=self.call.message.chat.id, 
+            message_id=self.call.message.id,
+            text=text
+        )

@@ -1,6 +1,7 @@
 import __main__ as main
 import config
 import pymongo
+import re
 import keyboard
 import language  
 import time
@@ -13,6 +14,7 @@ company = [
     'PYPL', 'GOOGL', 'INTC', 'AMD',
     'NFLX', 'MSFT', 'ORCL', 'NVDA'
 ] 
+data = 'exchange rate'
 
 class ShareHandler:
     def __init__(self, message):
@@ -29,18 +31,27 @@ class ShareHandler:
             )    
 
         else:
-            self.request()
+            self.massage_handler()
+    
+    def massage_handler(self):
+        ID = self.message.from_user.id
+
+        self.number = re.findall(r"\d+\.*\d*", self.message.text)
+        self.number = float(self.number[0]) if self.number != [] else 1
+
+        self.request()
     
     def request(self):
         self.send = []
 
         query = {"_id":"Shares"}
         data = [info for info in finance.find(query)]
-            
+
         for key in data[0]:   
             if key in company:    
                 name = data[0][key][1]
-                price = data[0][key][2]
+                price = float(data[0][key][2])
+                price = round(price*self.number, 4)
                 symbol = data[0][key][0]
 
                 add = f"💵 {symbol} | {price}$"
@@ -51,9 +62,9 @@ class ShareHandler:
 
     def publishing(self):
         day = time.strftime("%d.%m.%y")
-        language.course(self.message)
+        rate = language.translate(self.message, data, 'rate') 
 
         bot.send_message(
             self.message.chat.id, 
-            f"{language.rate}{day}\n{self.send}"
+            f"{rate}{day}\n{self.send}"
         )

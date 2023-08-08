@@ -1,11 +1,11 @@
-import __main__ 
+import __main__ as main
 import keyboard 
 import language 
 import re
 import pymongo 
 import config 
 
-bot = __main__.bot 
+bot = main.bot 
 
 client = pymongo.MongoClient(config.database)
 group = client['finances']['Groups']
@@ -33,6 +33,8 @@ currency_code = [
     'JPY', 'NOK', 'RON', 'SEK', 'TRY', 'USD'
 ]
 
+data = "settings"
+
 class Settings:
     def __init__(self, call):
         data = call.data.split()[1::]
@@ -46,8 +48,6 @@ class GroupSettingsHandler:
         self.data = data
         self.ID = self.call.from_user.id  
     
-        language.settings_data(call)
-
         if self.data[0] == 'group' and len(self.data) == 1:
             self.get_admins_data() 
         
@@ -62,39 +62,36 @@ class GroupSettingsHandler:
             item['Admin groups'] 
             for item in users.find({'_id':self.ID})
         ]
-        
+
         if admin_access != [{}]:
-            bot.edit_message_text(
-                chat_id=self.call.message.chat.id, 
-                message_id=self.call.message.id,
-                text=language.choose_group,
-                reply_markup=keyboard.groups_keypad(admin_access)
-            )
+            text = language.translate(self.call, data, 'choose group')
+            keypad = keyboard.groups_keypad(admin_access)
 
         else:
-            bot.edit_message_text(
-                chat_id=self.call.message.chat.id, 
-                message_id=self.call.message.id,
-                text=language.error_group_list,
-                reply_markup=None
-            )           
-
-    def group_setup(self):
-        group_ID = self.call.data.split()[2]
+            text = language.translate(self.call, data, 'error group list')
+            keypad = None
 
         bot.edit_message_text(
             chat_id=self.call.message.chat.id, 
             message_id=self.call.message.id,
-            text=language.group_item,
+            text=text, reply_markup=keypad
+        )           
+
+    def group_setup(self):
+        group_ID = self.call.data.split()[2]
+        text = language.translate(self.call, data, 'group item')
+
+        bot.edit_message_text(
+            chat_id=self.call.message.chat.id, 
+            message_id=self.call.message.id, text=text,
             reply_markup=keyboard.group_settings(self.call, group_ID)
         ) 
 
     def edit_group_settings(self):
-        keyboard.reply(self.call)
         self.ID = int(self.call.data.split()[4])
 
         if self.data[1] == 'input':
-            text = language.write_input
+            text = language.translate(self.call, data, 'write input')
             function = self.input_currency_input
     
             bot.delete_message(
@@ -103,29 +100,29 @@ class GroupSettingsHandler:
             )
 
         else:
+            warning = language.translate(self.call, data, 'warning')
+
             bot.edit_message_text(
                 chat_id=self.call.message.chat.id, 
                 message_id=self.call.message.id,
-                text=f"{language.warning} {' '.join(map(str, currency_code))}",
+                text=f"{warning} {', '.join(map(str, currency_code))}",
                 reply_markup=None
             ) 
             
-            text = language.write_output
+            text = language.translate(self.call, data, 'write output')
             function = self.input_currency_output
 
         msg = bot.send_message(
             chat_id=self.call.message.chat.id, 
             text=text,
-            reply_markup=keyboard.cancel 
+            reply_markup=keyboard.cancel(self.call)
         ) 
 
         bot.register_next_step_handler(msg, function)
 
     def input_currency_input(self, msg):
-        keyboard.reply(self.call)
-    
         if msg.text.split()[0] == '❌':
-            text = language.exit
+            text = language.translate(self.call, data, 'exit')
         
         else:  
             text = re.findall(r"\b[a-zA-Z]{3}\b", msg.text)
@@ -134,7 +131,7 @@ class GroupSettingsHandler:
                 {'$set':{"Currency input list":text}}
             )
 
-            text = language.success
+            text = language.translate(self.call, data, 'success')
 
         bot.send_message(
             chat_id=self.call.message.chat.id, 
@@ -143,17 +140,17 @@ class GroupSettingsHandler:
         )
     
     def input_currency_output(self, msg):
-        keyboard.reply(self.call)
         export = []
 
         if msg.text.split()[0] == '❌':
-            text = language.exit
+            text = language.translate(self.call, data, 'exit')
         
         else:  
             text = re.findall(r"\b[a-zA-Z]{3}\b", msg.text)
             
             for item in text:
                 item = item.upper()
+                error = language.translate(self.call, data, 'item error')
 
                 if item in currency_code:
                     export.append(output_currency[item])
@@ -161,7 +158,7 @@ class GroupSettingsHandler:
                 else: 
                     bot.answer_callback_query(
                         self.call.id, 
-                        f"{item} {language.item_error}",
+                        f"{item} {error}",
                         show_alert=False
                     )                
             
@@ -170,7 +167,7 @@ class GroupSettingsHandler:
                     {'_id':self.ID},
                     {'$set':{"Currency output list":export}}
                 )
-                text = language.success
+                text = language.translate(self.call, data, 'success')
 
             else:
                 text = "Error"
@@ -185,22 +182,22 @@ class Publishing:
     def __init__(self, message):
         self.message = message 
         types = self.message.chat.type
-        language.settings_data(message)
 
         if types == 'private':
             self.publishing()
         
         else:
+            error = language.translate(self.message, data, 'settings local error')
             bot.send_message(
                 self.message.chat.id,
-                language.settings_local_error
+                error
             )
 
     def publishing(self):
-        keyboard.setting_keyboard(self.message)
+        text = language.translate(self.message, data, "menu")
 
         bot.send_message(
-            self.message.chat.id, language.settings_menu,
-            reply_markup=keyboard.settings_menu
+            self.message.chat.id, text,
+            reply_markup=keyboard.setting_keyboard(self.message)
         )
 

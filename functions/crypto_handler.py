@@ -11,11 +11,13 @@ import keyboard
 bot = main.bot
 client = pymongo.MongoClient(config.database)
 finance = client["finances"]["Currency"]
+user_db = client["finances"]["Users"]
 
 crypto_currency = [
     "BTC", 'ETH', "BNB", "SOL", 
     "USDT", "TRX", "TON", "LTC"
 ]
+data = 'exchange rate'
 
 class Crypto:
     def __init__(self, message):
@@ -32,22 +34,34 @@ class Crypto:
             )    
 
         else:
-            self.request()
+            self.massage_handler()
     
+    def massage_handler(self):
+        ID = self.message.from_user.id
+
+        self.number = re.findall(r"\d+\.*\d*", self.message.text)
+        self.number = float(self.number[0]) if self.number != [] else 1
+
+        user_db.update_one(
+            {'_id':ID}, 
+            {'$set':{"Convert":self.number}}
+        )
+        self.request()
+
     def request(self):
         self.send = []
 
         query = {"_id":"Crypto"}
-        data = {"_id":0, "USD":1}
+        info =  {"_id":0, "USD":1}
 
-        for info in finance.find(query, data):
-            data = info['USD']
-        
-        for key in data:   
+        data = [info for info in finance.find(query, info)]
+
+        for key in data[0]['USD']:   
             if key in crypto_currency:
-                name = data[key][0]
-                price = data[key][1]
-                symbol = data[key][2]
+                name = data[0]['USD'][key][0]
+                price = float(data[0]['USD'][key][1])
+                price = round(price*self.number, 4)
+                symbol = data[0]['USD'][key][2]
 
                 add = f"💵 {name}/USD | {price}{symbol}"
                 self.send.append(add)
@@ -57,13 +71,13 @@ class Crypto:
 
     def publishing(self):
         day = time.strftime("%d.%m.%y")
-        language.course(self.message)
-        keyboard.alternative_currency_key(self.message, "crypto")
+        rate = language.translate(self.message, data, 'rate') 
+        keypad = keyboard.alternative_currency_keyboard(self.message, "crypto")
 
         bot.send_message(
             self.message.chat.id, 
-            f"{language.rate}{day}\n{self.send}",
-            reply_markup=keyboard.currency
+            f"{rate}{day}\n{self.send}",
+            reply_markup=keypad
         )
 
 class AlternativeCrypto:
@@ -71,18 +85,22 @@ class AlternativeCrypto:
         self.call = call
         self.currency = currency.split()[1]
         self.send = []
+        ID = call.from_user.id
+        
+        for number in user_db.find({'_id':ID}):
+            number = float(number['Convert'])
 
         query = {"_id":"Crypto"}
-        data = {"_id":0, self.currency:1}
+        info =  {"_id":0, self.currency:1}
 
-        for info in finance.find(query, data):
-            data = info[self.currency]
-        
-        for key in data:   
+        data = [info for info in finance.find(query, info)]
+
+        for key in data[0][self.currency]:   
             if key in crypto_currency:
-                name = data[key][0]
-                price = data[key][1]
-                symbol = data[key][2]
+                name = data[0][self.currency][key][0]
+                price = float(data[0][self.currency][key][1])
+                price = round(price*number, 4)
+                symbol = data[0][self.currency][key][2]
 
                 add = f"💵 {name}/{self.currency} | {price}{symbol}"
                 self.send.append(add)
@@ -92,12 +110,12 @@ class AlternativeCrypto:
 
     def publishing(self):
         day = time.strftime("%d.%m.%y")
-        language.course(self.call)
-        keyboard.alternative_currency_key(self.call, "crypto")
+        rate = language.translate(self.call, data, 'rate') 
+        keypad = keyboard.alternative_currency_keyboard(self.call, "crypto")
 
         bot.edit_message_text(
             chat_id=self.call.message.chat.id, 
             message_id=self.call.message.id,
-            text=f"{language.rate}{day}\n{self.send}",
-            reply_markup=keyboard.currency
+            text=f"{rate}{day}\n{self.send}",
+            reply_markup=keypad
         ) 

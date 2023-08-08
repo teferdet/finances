@@ -17,8 +17,8 @@
     "night":"dobranocі"
     },
     "menu":{
-      "in bot":"📊 Aby sprawdzić kurs wymiany walut fiducjarnych, wybierz go z menu lub wpisz własny.  Jeśli chcesz przeliczyć walutę, dodaj kwotę konwersji do nazwy.n💵 Uzyskaj kurs kryptowaluty - /crypto \n📑 Uzyskaj kurs akcji - /share \nInne niezbędne polecenia w menu",
-      "in group":"Pomogę ci wyświetlić kurs wymiany na czacie. Wprowadź nazwę waluty (dosłowny kod) i dodaj kwotę konwersji, jeśli to konieczne.\nOstrzeżenie, administrator grupy zarządza listą dostępnych walut, które mogę zaakceptować!"
+      "in bot":"Funkcje i sposób pracy z nimi\n\n📊 Aby sprawdzić kurs wymiany walut fiducjarnych, wybierz go z menu lub wpisz własny.  Jeśli chcesz przeliczyć walutę, dodaj kwotę przeliczenia do nazwy: 45 UAH lub 5 USD\n💵 Aby uzyskać kurs kryptowaluty - /crypto\n📑 Aby uzyskać kurs akcji - /share\n\n👆Jeśli potrzebujesz przekonwertować kryptowalutę lub akcje, dodaj kwotę konwersji do ich polecenia: /crypto 4\nInne polecenia znajdują się w menu\n\nBot obsługuje również tryb inline i działa z czatami",
+      "in group":"Funkcje i sposób pracy z nimi\n\n📊 Aby sprawdzić kurs wymiany walut fiducjarnych, wybierz go z menu lub wpisz własny.  Jeśli chcesz przeliczyć walutę, dodaj kwotę przeliczenia do nazwy: 45 UAH lub 5 USD\n💵 Aby uzyskać kurs kryptowaluty - /crypto\n📑 Aby uzyskać kurs akcji - /share\n👆Jeśli potrzebujesz przekonwertować kryptowalutę lub akcje, dodaj kwotę konwersji do ich polecenia: /crypto 4\nInne polecenia znajdują się w menu \n\n⚙️ Ustawienia bota można zmienić w wiadomościach osobistych. "
     },  
     "exchange rate":{
     "currency user error":"😖 Niezrozumiałe polecenie! Wybierz walutę z kluczy lub wpisz ją poprawnie",
