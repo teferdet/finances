@@ -45,14 +45,13 @@ class ShareHandler:
         self.send = []
 
         query = {"_id":"Shares"}
-        data = [info for info in finance.find(query)]
+        data = [info for info in finance.find(query)][0]
 
-        for key in data[0]:   
+        for key in data:   
             if key in company:    
-                name = data[0][key][1]
-                price = float(data[0][key][2])
+                price = float(data[key][2])
                 price = round(price*self.number, 4)
-                symbol = data[0][key][0]
+                symbol = data[key][0]
 
                 add = f"💵 {symbol} | {price}$"
                 self.send.append(add)

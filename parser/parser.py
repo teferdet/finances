@@ -122,6 +122,7 @@ class Crypto:
             self.write()
     
     def write(self):
+        update = time.strftime("%d.%m.%y | %H:%M")
         data_object = {}
         symbol = self.symbol()
     
@@ -133,7 +134,10 @@ class Crypto:
 
         database.update_one(
             {"_id":"Crypto"}, 
-            {"$set":{self.currency:data_object}},
+            {"$set":{
+                "update time":update,
+                self.currency:data_object
+            }},
             upsert=True
         )
 
@@ -155,16 +159,24 @@ class Share:
             self.write()
 
     def write(self):
+        update = time.strftime("%d.%m.%y | %H:%M")
         data_object = {}
         share_list = self.share_list()
+
+        database.update_one(
+            {"_id":"Shares"}, 
+            {"$set":{"update time":update}},
+            upsert=True
+        )
 
         for info in self.data:
             symbol = info["symbol"]
             name = info["name"]
             price = info["price"]
-            
+            currency = '$'
+
             if symbol in share_list:
-                add = {symbol:[symbol, name, price]}
+                add = {symbol:[symbol, name, price, currency]}
                 data_object.update(add)
 
         database.update_one(
@@ -185,4 +197,6 @@ def main():
     while True:
         Share()
         Crypto()
+  
+        print("Update data")
         time.sleep(1800)

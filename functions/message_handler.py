@@ -22,9 +22,7 @@ commands = ['share', 'settings', "crypto"]
 
 @bot.message_handler(commands=['start'])
 class Start:
-    def __init__(self, message):
-        logs.Info(message)
-        
+    def __init__(self, message):        
         self.message = message
         self.language = message.from_user.language_code
 
@@ -73,6 +71,8 @@ class Start:
     
         bot.send_message(self.message.chat.id, f"{hello} {self.name} 👋") 
         bot.send_message(self.message.chat.id, menu, reply_markup=self.keypad)
+        
+        logs.Info(self.message)
 
 @bot.message_handler(commands=['info'])
 def info(message):

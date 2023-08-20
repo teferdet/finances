@@ -10,7 +10,7 @@ import keyboard
 
 bot = main.bot
 client = pymongo.MongoClient(config.database)
-finance = client["finances"]["Currency"]
+finances = client["finances"]["Currency"]
 user_db = client["finances"]["Users"]
 
 crypto_currency = [
@@ -54,14 +54,15 @@ class Crypto:
         query = {"_id":"Crypto"}
         info =  {"_id":0, "USD":1}
 
-        data = [info for info in finance.find(query, info)]
+        for info in finances.find(query, info):
+            data = info['USD']
 
-        for key in data[0]['USD']:   
+        for key in data:   
             if key in crypto_currency:
-                name = data[0]['USD'][key][0]
-                price = float(data[0]['USD'][key][1])
+                name = data[key][0]
+                price = float(data[key][1])
                 price = round(price*self.number, 4)
-                symbol = data[0]['USD'][key][2]
+                symbol = data[key][2]
 
                 add = f"💵 {name}/USD | {price}{symbol}"
                 self.send.append(add)
@@ -93,14 +94,15 @@ class AlternativeCrypto:
         query = {"_id":"Crypto"}
         info =  {"_id":0, self.currency:1}
 
-        data = [info for info in finance.find(query, info)]
+        for info in finances.find(query, info):
+            data = info[self.currency]
 
-        for key in data[0][self.currency]:   
+        for key in data:   
             if key in crypto_currency:
-                name = data[0][self.currency][key][0]
-                price = float(data[0][self.currency][key][1])
+                name = data[key][0]
+                price = float(data[key][1])
                 price = round(price*number, 4)
-                symbol = data[0][self.currency][key][2]
+                symbol = data[key][2]
 
                 add = f"💵 {name}/{self.currency} | {price}{symbol}"
                 self.send.append(add)

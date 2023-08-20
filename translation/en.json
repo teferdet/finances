@@ -27,7 +27,9 @@
   },
   "inline mode":{
     "server error":"😖 The server is temporarily down, please try again later",
-    "choose": "Write the desired currency:",
+    "choose":"Write the currency and conversion amount (if necessary):",
+    "choose warning":"'!' for cryptocurrencies and 'share' for shares",
+    "warning crypto":"Add the currency and amount (if necessary):",
     "user error":"😖 Currency or conversion amount is incorrect.",
     "warning":"☝️ To convert currency, add the amount to be converted.",
     "warning info":"☝️ To convert in inline mode, you need to add the conversion amount. For example: \"UAH 11\", \"gpb 57\", etc...",

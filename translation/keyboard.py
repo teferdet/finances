@@ -89,7 +89,7 @@ def inline(message):
 
 def setting_keyboard(message):
     settings_menu = types.InlineKeyboardMarkup()
-    settings_menu.row(types.InlineKeyboardButton(text=translate(message)['groups'], callback_data='s group '))
+    settings_menu.row(types.InlineKeyboardButton(text=translate(message)['groups'], callback_data='settings group '))
 
     return settings_menu
 
@@ -97,11 +97,11 @@ def group_settings(call, ID):
     group_settings = types.InlineKeyboardMarkup()
     group_settings.row(
         types.InlineKeyboardButton(
-            text=translate(call)['input'], callback_data=f's group input list {ID}'
+            text=translate(call)['input'], callback_data=f'settings group input list {ID}'
         ))
     group_settings.row(
         types.InlineKeyboardButton(
-            text=translate(call)['output'], callback_data=f's group output list {ID}'
+            text=translate(call)['output'], callback_data=f'settings group output list {ID}'
         ))
 
     return group_settings
@@ -111,7 +111,7 @@ def groups_keypad(admin_access):
     for name, ID  in admin_access[0].items():
         groups_keypad.row(
             types.InlineKeyboardButton(
-                text=name, callback_data=f's group {ID}'
+                text=name, callback_data=f'settings group {ID}'
         ))
 
     return groups_keypad
@@ -139,15 +139,15 @@ def group_keypad_handler(message, currency_name):
 def alternative_currency_keyboard(message, currency_name):
     currency = types.InlineKeyboardMarkup()    
     
-    if currency_name.split()[0] in ["c"] or currency_name == "crypto":
+    if currency_name.split()[0] in ["crypto"] or currency_name == "crypto":
         currency.row(   
-            types.InlineKeyboardButton(text="£", callback_data='c GBP'),
-            types.InlineKeyboardButton(text="€", callback_data='c EUR'),
-            types.InlineKeyboardButton(text="₴", callback_data='c UAH')
+            types.InlineKeyboardButton(text="£", callback_data='crypto GBP'),
+            types.InlineKeyboardButton(text="€", callback_data='crypto EUR'),
+            types.InlineKeyboardButton(text="₴", callback_data='crypto UAH')
         )
         currency.row(   
-            types.InlineKeyboardButton(text="zł‎", callback_data='c PLN'),
-            types.InlineKeyboardButton(text="Kč", callback_data='c CZK'),
+            types.InlineKeyboardButton(text="zł‎", callback_data='crypto PLN'),
+            types.InlineKeyboardButton(text="Kč", callback_data='crypto CZK'),
         )
 
     else:
@@ -171,10 +171,10 @@ def call_handler(call):
         except:
             bot.answer_callback_query(call.id, ">_< Error", show_alert=False)
 
-    elif call.data.split()[0] in ['s']:
+    elif call.data.split()[0] in ['settings']:
         settings.Settings(call)
     
-    elif call.data.split()[0] in ['c']:
+    elif call.data.split()[0] in ['crypto']:
         crypto_handler.AlternativeCrypto(call, currency=call.data)
 
     else:

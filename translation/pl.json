@@ -27,7 +27,9 @@
   },
   "inline mode":{
     "server error":"😖 Serwer jest chwilowo nieczynny, proszę spróbować ponownie później.",
-    "choose":"Wpisz żądaną walutę:",
+    "choose":"Wpisz walutę i kwotę konwersji (jeśli to konieczne).:",
+    "choose warning":"! - dla kryptowalut i share dla akcji",
+    "warning crypto":"Dodaj walutę i kwotę (jeśli to konieczne):",
     "user error":"😖 Nieprawidłowo wpisana waluta lub kwota przeliczeniowa",
     "warning":"☝️ Aby przeliczyć walutę, dodaj kwotę, która ma być przeliczona",
     "warning info":"☝️ Aby dokonać konwersji w trybie inline, należy dodać kwotę konwersji. Na przykład: \"pln 11\", \"GBP 57\" itd...",
