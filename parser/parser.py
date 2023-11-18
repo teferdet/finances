@@ -7,92 +7,86 @@ from bs4 import BeautifulSoup as bs4
 
 client = pymongo.MongoClient(config.database)
 database = client["finances"]["Currency"]
+cash = {"currency": {}}
+
+currencies = [
+    "USD", "EUR", "GBP",
+    "PLN", "CZK", "UAH",
+    "CHF", "BGN", "JPY"
+]
+
+convert_currency = [
+    'Argentine Peso', 'Australian Dollar', 'British Pound',
+    'Bulgarian Lev', 'Canadian Dollar', 'Chinese Yuan Renminbi',
+    'Czech Koruna', 'Danish Krone', 'Egyptian Pound',
+    'Euro', 'Iceland Krona', 'Indian Rupee',
+    'Israeli New Shekel', 'Japanese Yen', 'Korean Won',
+    'Norwegian Krone', 'Polish Zloty', 'Romanian Leu',
+    'Singapore Dollar', 'Swedish Krona', 'Swiss Franc',
+    'Turkish Lira', 'Ukraine Hryvnia', 'American Dollar'
+]
 
 class Currency:
-    def __init__(self, currency, rate_index, currency_list, number):
-        self.currency = currency 
-        self.rate_index = rate_index
-        self.currency_list = currency_list
-        self.number = float(number) 
+    def __init__(self, currency: list, convert_currency: list):
+        self.convert_currency = convert_currency
+        update = int(time.strftime("%H"))
 
-        self.main() 
-    
-    def main(self):
-        global url 
-        global name 
+        for self.item in currency:
+            cash["currency"][self.item] = {}
+            self.cash = cash["currency"][self.item]
+            self.cash['time'] = update
 
-        name = "fx-rate"
-        url = f"https://fx-rate.net/{self.currency}/"
+            url = f"https://fx-rate.net/{self.item}/"
+            self.response = requests.get(url, timeout=5)
 
-        self.response = requests.get(url)
-        self.status()
-    
-    def status(self):
-        global status_code
-        
-        status_code = self.response.status_code
-        
-        if status_code == 200:
-            self.parser()
-        
-        else:
-            pass
+            status_code = self.response.status_code
+            self.cash['status'] = status_code
 
-    def parser(self):
-        global status 
-        
+            if status_code == 200:
+                self.data_retrieval()
+
+            else:
+                self.cash['status'] = "server error"
+                print(f"Parser error. Status code: {status_code}")
+                break
+
+    def data_retrieval(self):
         try:
-            status = True
             soup = bs4(self.response.text, "html.parser")
             self.site_data = soup.find_all("tbody")[1]
             self.symbol = soup.find("div", class_="c_symbols").get_text(strip=True)
+            self.data_processin()
 
-            self.currency_data()
+        except IndexError as error:
+            self.cash['status'] = "bad request"
+            print(f"Parser: Currency. Error. Data retrieval: {error}")
 
-        except Exception as error:
-            status = False
+    def data_processin(self):
+        cash["currency"][self.item]['symbol'] = self.symbol
 
-    def currency_data(self):
-        global send_list 
-        global send
+        for data in self.site_data:
+            info = self.info("currency_info")
+            try:
+                name = data.find("td").get_text(strip=True)
+                if name in self.convert_currency:
+                    self.cash[name] = [
+                        float(data.find_all("a")[0].text),
+                        float(data.find_all("a")[1].text),
+                        info[name][0], info[name][1], info[name][2]
+                    ] 
 
-        send_list = []
-        self.currency_info(name="currency_info")
-
-        for data in self.site_data: 
-            try: 
-                table_data = data.find("td").get_text(strip=True)
-
-                if table_data in self.currency_list:
-                    rate = float(data.find_all("a")[self.rate_index].text)
-                    convert = round(rate*self.number, 4)
-                        
-                    if self.rate_index == 1:
-                        symbol = self.symbol
-                        currency = f"{info[table_data][1]}/{self.currency}"
-                        
-                    else:
-                        symbol = info[table_data][2]                
-                        currency = f"{self.currency}/{info[table_data][1]}"
-                    
-                    add = f"{info[table_data][0]} {currency.upper()} | {convert}{symbol}"
-                    send_list.append(add)
-                
             except AttributeError:
                 pass
-            
-            except Exception:
-                pass
-
-        send = "\n".join(map(str, send_list))
-
-    def currency_info(self, name):
-        global info
         
+        print("Parser: Currency. Successful upgrade")
+
+    def info(self, name):
         path = "parser/currency_data.json"
-        with open(path, "rb") as file:                
+        with open(path, "rb") as file:
             file = json.load(file)
             info = file[name]
+
+        return info
 
 class Crypto: 
     def __init__(self):
@@ -193,10 +187,62 @@ class Share:
 
         return share_list
 
+class CurrencyHandler:
+    def __init__(self, currency: str, amount: float,
+                 convert_currency: list, index: int):
+        self.currency = currency
+        self.amount = amount
+        self.index = index
+        self.convert_currency = convert_currency
+
+        data = list(cash['currency'])
+        time_now = int(time.strftime("%H"))
+
+        if self.currency not in data:
+            Currency([self.currency], self.convert_currency)
+        
+        else:
+            update = int(cash['currency'][self.currency]['time']) + 2
+
+            if update <= time_now:
+                Currency([self.currency], self.convert_currency)
+        
+        self.cash = cash['currency'][self.currency]
+        
+        if self.cash['status'] == 200:
+            self.__str__()
+
+        else:
+            return self.cash['status']
+
+    def __str__(self):
+        message = []
+
+        for item in self.convert_currency:
+            if item in list(self.cash):
+                info = self.cash[item]
+
+                if self.index == 0:
+                    convert = round(info[1]*self.amount, 2)
+                    symbol = self.cash['symbol']                
+                    currency = f"{info[3]}/{self.currency}"
+
+                else:
+                    convert = round(info[0]*self.amount, 2)
+                    symbol = info[4]                
+                    currency = f"{self.currency}/{info[3]}"
+
+                data =  f"{info[2]} {currency.upper()} | {convert}{symbol}"
+                message.append(data)
+        
+        self.cash['inline'] = message 
+        return "\n".join(map(str, message))
+
 def main():
     while True:
+        Currency(currencies, convert_currency)
         Share()
         Crypto()
   
         print("Update data")
-        time.sleep(1800)
+        time.sleep(7200)

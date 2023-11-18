@@ -9,11 +9,12 @@ import exchange_rate
 import group_handler
 import share_handler
 import crypto_handler
+import control_panel
 
 import keyboard
 import language
 
-import settings
+import settings 
 import logs
 
 client = pymongo.MongoClient(config.database)
@@ -27,11 +28,10 @@ class Start:
         self.language = message.from_user.language_code
 
         if self.language in ['ru', 'be']:
-            keyboard.inline(message)
             bot.send_message(
                 message.chat.id,
                 "[¯\_(ツ)_/¯ I do not understand your language](http://surl.li/dhmwi)",
-                reply_markup=keyboard.link,
+                reply_markup=keyboard.communication_link(message),
                 parse_mode='MarkdownV2'
             )    
 
@@ -72,38 +72,36 @@ class Start:
         bot.send_message(self.message.chat.id, f"{hello} {self.name} 👋") 
         bot.send_message(self.message.chat.id, menu, reply_markup=self.keypad)
         
-        logs.Info(self.message)
+        if self.message.chat.type != "private":
+            logs.Users(self.message)
 
 @bot.message_handler(commands=['info'])
 def info(message):
-    keyboard.inline(message)
     text = language.translate(message, "bot info", None)
     version = [data for data in settings_db.find({'_id':0})][0]['version']
 
     bot.send_message(
         message.chat.id, 
         f"{text} {version}",
-        reply_markup=keyboard.info_link
+        reply_markup=keyboard.info_link(message)
     )
 
 @bot.message_handler(commands=['donate'])
 def donate(message):
-    keyboard.inline(message)
     text = language.translate(message, 'donate', None)
     
     bot.send_message(
         message.chat.id, text,
-        reply_markup=keyboard.donate_link
+        reply_markup=keyboard.donate_link(message)
     )
 
 @bot.message_handler(commands=['help'])
 def help(message):
-    keyboard.inline(message)
     text = language.translate(message, 'help', None)
     
     bot.send_message(
         message.chat.id, text,
-        reply_markup=keyboard.link
+        reply_markup=keyboard.communication_link(message)
     )
 
 @bot.message_handler(commands)
@@ -121,6 +119,9 @@ def commands(message):
 
     elif text == "crypto":
         crypto_handler.Crypto(message)
+    
+    elif text == "channels":
+        control_panel.Publisihbg(message)
 
 @bot.message_handler(func=lambda message: True)
 def function(message):

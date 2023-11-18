@@ -116,19 +116,22 @@ class CurrencyHandler:
             self.request()
     
     def request(self):
-        parser.Currency(self.currency_name, self.index, currency_list, self.number)
-    
-        if parser.status_code == 200 and parser.status is True:
-            self.send_list = parser.send_list
+        answer = parser.CurrencyHandler(
+            self.currency_name, self.number,
+            currency_list, self.index
+        )
+
+        if answer != "server error" and answer != "bad request":
+            self.send_list = parser.cash['currency'][self.currency_name]['inline']
             self.publishing()
-        
+
         else:
-            if parser.status is False:
-                text = language.translate(self.inline_query, data, "user error")
-                
-            else:
+            if answer == "server error":
                 text = language.translate(self.inline_query, data, 'server error')
 
+            elif answer == "bad request":
+                text = language.translate(self.inline_query, data, "user error")
+    
             keypad = types.InlineQueryResultArticle(
                 '1', text, 
                 types.InputTextMessageContent(text)

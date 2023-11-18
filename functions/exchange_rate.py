@@ -27,11 +27,10 @@ class ExchangeRate:
         language = message.from_user.language_code
         
         if language in ['ru', 'be']:
-            keyboard.inline(message)
             bot.send_message(
                 message.chat.id,
                 "[¯\_(ツ)_/¯ I do not understand your language](http://surl.li/dhmwi)",
-                reply_markup=keyboard.link,
+                reply_markup=keyboard.communication_link(message),
                 parse_mode='MarkdownV2'
             )    
 
@@ -77,26 +76,23 @@ class ExchangeRate:
             bot.send_message(self.message.chat.id, "❌")           
             
         else:
-            parser.Currency(
-                self.currency_name, index, 
-                currency_list, self.number
-            )
+            self.parser = parser.CurrencyHandler(self.currency_name, self.number, currency_list, index)
             self.publishing()
 
     def publishing(self):
         day = time.strftime("%d.%m.%y")
         keypad = None
 
-        if parser.status_code == 200 and parser.status is True:
-            rate = language.translate(self.message, data, 'rate') 
-            text = f"{rate}{day}\n{parser.send}",
-            keypad = self.keypad
+        if self.parser == "server error":
+            text = language.translate(self.message, data, "server error")
 
-        elif parser.status is False:
+        elif self.parser == "bad request":
             text = language.translate(self.message, data, "currency user error")
 
         else:
-            text = language.translate(self.message, data, "server error")
+            rate = language.translate(self.message, data, 'rate') 
+            text = f"{rate}{day}\n{self.parser}",
+            keypad = self.keypad
         
         bot.send_message(
             self.message.chat.id, 
@@ -112,18 +108,18 @@ class AlternativeCurrency:
         for number in user_db.find(query, {'_id':0, 'Convert':1}):
             number = number['Convert']
             
-        parser.Currency(currency_name, 0, currency_list, number)
+        self.parser = parser.CurrencyHandler(currency_name, number, currency_list, 0)
         self.publishing()
         
     def publishing(self):
         day = time.strftime("%d.%m.%y")
         
-        if parser.status_code == 200 or parser.status is True:
-            rate = language.translate(self.call, data, 'rate') 
-            text = f"{rate}{day}\n{parser.send}"
+        if self.parser == "server error":
+            text = language.translate(self.call, data, "server error")
 
         else:
-            text = language.translate(self.call, data, "server error")
+            rate = language.translate(self.call, data, 'rate') 
+            text = f"{rate}{day}\n{self.parser}"
 
         bot.edit_message_text(
             chat_id=self.call.message.chat.id, 

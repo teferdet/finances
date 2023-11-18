@@ -22,8 +22,6 @@ class GroupHandler:
         self.ID = message.from_user.id
         self.chat = message.chat.id
         language = message.from_user.language_code
-        
-        logs.Info(message)
 
         if language not in ['ru', 'be']:
             logs.Users(self.message)
@@ -77,18 +75,18 @@ class GroupHandler:
         day = time.strftime("%d.%m.%y")
         keypad = None
 
-        parser.Currency(self.currency_name, self.index, self.output, self.number)
+        parser = parser.CurrencyHandler(self.currency_name, self.number, self.output, self.index)
 
-        if parser.status_code == 200 and parser.status is True:
-            rate = language.translate(self.message, data, 'rate') 
-            text = f"{rate}{day}\n{parser.send}",
-            keypad = self.keypad
+        if parser == "server error":
+            text = language.translate(self.message, data, "server error")
 
-        elif parser.status is False:
+        elif parser == "bad request":
             text = language.translate(self.message, data, "currency user error")
 
         else:
-            text = language.translate(self.message, data, "server error")
+            rate = language.translate(self.message, data, 'rate') 
+            text = f"{rate}{day}\n{parser}",
+            keypad = self.keypad
         
         bot.send_message(
             self.message.chat.id, 
@@ -108,7 +106,7 @@ class AlternativeCurrency:
             number = x['Convert']
             output = y['Currency output list']
 
-        parser.Currency(currency_name, 0, output, number)
+        parser.CurrencyHandler(currency_name, number, output, 0)
         self.status()
         
     def status(self):

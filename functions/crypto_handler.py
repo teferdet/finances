@@ -25,11 +25,10 @@ class Crypto:
         language = message.from_user.language_code
         
         if language in ['ru', 'be']:
-            keyboard.inline(message)
             bot.send_message(
                 message.chat.id,
                 "[¯\_(ツ)_/¯ I do not understand your language](http://surl.li/dhmwi)",
-                reply_markup=keyboard.link,
+                reply_markup=keyboard.communication_link(message),
                 parse_mode='MarkdownV2'
             )    
 
