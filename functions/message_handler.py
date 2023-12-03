@@ -9,7 +9,6 @@ import exchange_rate
 import group_handler
 import share_handler
 import crypto_handler
-import control_panel
 
 import keyboard
 import language
@@ -107,6 +106,7 @@ def help(message):
 @bot.message_handler(commands)
 def commands(message):
     text = message.text.split()[0][1:]
+
     if text == "start":
         language.Welcome(message)
         logs.Info(message)
@@ -119,9 +119,6 @@ def commands(message):
 
     elif text == "crypto":
         crypto_handler.Crypto(message)
-    
-    elif text == "channels":
-        control_panel.Publisihbg(message)
 
 @bot.message_handler(func=lambda message: True)
 def function(message):
@@ -130,6 +127,3 @@ def function(message):
         
     elif message.chat.type in ["group", "supergroup"]:
         group_handler.GroupHandler(message)
-    
-    else:
-        pass

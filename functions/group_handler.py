@@ -23,7 +23,7 @@ class GroupHandler:
         self.chat = message.chat.id
         language = message.from_user.language_code
 
-        if language not in ['ru', 'be']:
+        if language not in config.block_language:
             logs.Users(self.message)
             self.message_data()
     

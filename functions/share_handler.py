@@ -21,7 +21,7 @@ class ShareHandler:
         self.message = message
         language = message.from_user.language_code
         
-        if language in ['ru', 'be']:
+        if language in config.block_language:
             bot.send_message(
                 message.chat.id,
                 "[¯\_(ツ)_/¯ I do not understand your language](http://surl.li/dhmwi)",

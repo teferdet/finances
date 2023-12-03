@@ -1,5 +1,4 @@
 import re 
-import time 
 import pymongo
 import config
 import __main__ as main 
@@ -47,7 +46,7 @@ class InlineMode:
         
         wait = "¯\_(ツ)_/¯ I do not understand your language"
         
-        if language_code in ["ru", "be"]:
+        if language_code in config.block_language:
             keypad = types.InlineQueryResultArticle(
                 "1", wait, types.InputTextMessageContent(wait)
             )

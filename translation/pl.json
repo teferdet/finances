@@ -8,7 +8,8 @@
     "cancel":"❌ Anuluj",
     "input":"📥 Zmień odbierane dane",
     "output":"📤 Zmień dane wyjściowe",
-    "groups":"👥 Ustawienia grupowe"
+    "groups":"👥 Ustawienia grupowe",
+    "add bots":"➕ Dodaj do grupy"
     },
   "time":{
     "morning":"Dzień dobry",

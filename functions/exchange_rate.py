@@ -1,6 +1,5 @@
 import re 
 import pymongo
-import random
 import time 
 import __main__ as main
 import config
@@ -26,7 +25,7 @@ class ExchangeRate:
         self.message = message
         language = message.from_user.language_code
         
-        if language in ['ru', 'be']:
+        if language in config.block_language:
             bot.send_message(
                 message.chat.id,
                 "[¯\_(ツ)_/¯ I do not understand your language](http://surl.li/dhmwi)",
@@ -41,15 +40,15 @@ class ExchangeRate:
         ID = self.message.from_user.id
 
         self.currency_name = re.findall(r"\b[a-zA-Z]{3}\b", self.message.text)
-        self.number = re.findall(r"\d+\.*\d*", self.message.text)
+        self.amount = re.findall(r"\d+\.*\d*", self.message.text)
 
         if self.currency_name != []:
             self.currency_name = self.currency_name[0].upper()
-            self.number = self.number[0] if self.number != [] else 1
+            self.amount = self.amount[0] if self.amount != [] else 1
 
             user_db.update_one(
                 {'_id':ID}, 
-                {'$set':{"Convert":self.number}}
+                {'$set':{"Convert":self.amount}}
             )
             self.request()
 
@@ -76,7 +75,10 @@ class ExchangeRate:
             bot.send_message(self.message.chat.id, "❌")           
             
         else:
-            self.parser = parser.CurrencyHandler(self.currency_name, self.number, currency_list, index)
+            self.parser = parser.CurrencyHandler(
+                self.currency_name, self.amount,
+                currency_list, index
+            )
             self.publishing()
 
     def publishing(self):
@@ -105,10 +107,10 @@ class AlternativeCurrency:
         self.call = call 
         
         query = {'_id':ID}
-        for number in user_db.find(query, {'_id':0, 'Convert':1}):
-            number = number['Convert']
+        for amount in user_db.find(query, {'_id':0, 'Convert':1}):
+            amount = amount['Convert']
             
-        self.parser = parser.CurrencyHandler(currency_name, number, currency_list, 0)
+        self.parser = parser.CurrencyHandler(currency_name, amount, currency_list, 0)
         self.publishing()
         
     def publishing(self):

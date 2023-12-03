@@ -2,22 +2,28 @@ import config
 import telebot
 import threading
 import sys
+import time
 
 bot = telebot.TeleBot(config.token)
 
+sys.path.append('parser')
 sys.path.append('translation')
 sys.path.append('functions')
-sys.path.append('parser')
+sys.path.append('settings')
 
 import parser
 import message_handler
 import inline_mode
 
-params = {
-    "timeout": 10,
-    "long_polling_timeout": 5
-}
+def work():
+    while True:
+        try:
+            bot.polling(none_stop=True)
+        
+        except:
+            time.sleep(5)
+            continue
 
 if __name__ == '__main__':
-    threading.Thread(target=bot.infinity_polling, kwargs=params).start()
-    threading.Thread(target=parser.main).start()
+    threading.Thread(target=work).start()
+    threading.Thread(target=parser.refreshed).start()

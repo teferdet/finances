@@ -29,12 +29,15 @@ convert_currency = [
 class Currency:
     def __init__(self, currency: list, convert_currency: list):
         self.convert_currency = convert_currency
-        update = int(time.strftime("%H"))
+        times = int(time.strftime("%H"))
+        day = time.strftime("%m.%d")
 
         for self.item in currency:
             cash["currency"][self.item] = {}
+            cash["currency"][self.item]['update'] = {}
             self.cash = cash["currency"][self.item]
-            self.cash['time'] = update
+            self.cash['update']['time'] = times
+            self.cash['update']['day'] = day
 
             url = f"https://fx-rate.net/{self.item}/"
             self.response = requests.get(url, timeout=5)
@@ -78,7 +81,7 @@ class Currency:
             except AttributeError:
                 pass
         
-        print("Parser: Currency. Successful upgrade")
+        print(f"Parser: Currency. Successful update {self.item}")
 
     def info(self, name):
         path = "parser/currency_data.json"
@@ -134,6 +137,8 @@ class Crypto:
             }},
             upsert=True
         )
+        
+        print(f"Parser: Crypto. Successful update {self.currency}")
 
     def symbol(self):
         path = "parser/currency_data.json"
@@ -178,6 +183,8 @@ class Share:
             {"$set":data_object},
             upsert=True
         )
+
+        print("Parser: Share. Successful upgrade")
     
     def share_list(self):
         path = "parser/currency_data.json"
@@ -190,25 +197,27 @@ class Share:
 class CurrencyHandler:
     def __init__(self, currency: str, amount: float,
                  convert_currency: list, index: int):
-        self.currency = currency
-        self.amount = amount
+        self.currency = currency.upper()
+        self.amount = float(amount)
         self.index = index
         self.convert_currency = convert_currency
 
         data = list(cash['currency'])
         time_now = int(time.strftime("%H"))
+        date = time.strftime("%m.%d")
 
         if self.currency not in data:
             Currency([self.currency], self.convert_currency)
         
         else:
-            update = int(cash['currency'][self.currency]['time']) + 2
+            update = cash['currency'][self.currency]['update']
+            times = int(update['time']) + 2
+            day = update['day']
 
-            if update <= time_now:
+            if times <= time_now or day != date:
                 Currency([self.currency], self.convert_currency)
         
         self.cash = cash['currency'][self.currency]
-        
         if self.cash['status'] == 200:
             self.__str__()
 
@@ -223,26 +232,33 @@ class CurrencyHandler:
                 info = self.cash[item]
 
                 if self.index == 0:
-                    convert = round(info[1]*self.amount, 2)
-                    symbol = self.cash['symbol']                
-                    currency = f"{info[3]}/{self.currency}"
-
-                else:
                     convert = round(info[0]*self.amount, 2)
                     symbol = info[4]                
                     currency = f"{self.currency}/{info[3]}"
 
+                else:
+                    convert = round(info[1]*self.amount, 2)
+                    symbol = self.cash['symbol']                
+                    currency = f"{info[3]}/{self.currency}"
+
                 data =  f"{info[2]} {currency.upper()} | {convert}{symbol}"
                 message.append(data)
-        
+
         self.cash['inline'] = message 
         return "\n".join(map(str, message))
 
-def main():
+def refreshed():
     while True:
-        Currency(currencies, convert_currency)
+        times = time.strftime("%H:%M")
+        currency_update = 3
+
+        if currency_update == 3:
+            Currency(currencies, convert_currency)
+            currency_update = 0
+        
         Share()
         Crypto()
-  
-        print("Update data")
-        time.sleep(7200)
+        
+        print(f"Update of all cryptocurrency currencies is completed at {times}\n")
+        currency_update += 1
+        time.sleep(3600)

@@ -8,7 +8,8 @@
     "cancel":"❌ Cancel",
     "input":"📥 Change receiving data",
     "output":"📤 Change output data",
-    "groups":"👥 Group settings"
+    "groups":"👥 Group settings",
+    "add bots":"➕ Add to the group"
   },
   "time":{
     "morning": "Good morning",

@@ -1,31 +1,29 @@
+import __main__ as main
 import pymongo
 import telebot 
-import time
 import config
-import parser
-from telebot import types
 
 bot = telebot.TeleBot(config.token)
+bot_id = bot.get_me().id
 
 client = pymongo.MongoClient(config.database)
 users_db = client["finances"]["Users"]
 groups_db = client["finances"]["Groups"]
 settings = client["finances"]["Settings"]
 
+@main.bot.message_handler(content_types=['new_chat_members'])
 class Info:
     def __init__(self, message):
-        chat_type = message.chat.type
-
-        if chat_type == "private":
-            Users(message)
-        
-        elif chat_type in ["group", "supergroup"]:
+        if message.json['new_chat_member']['id'] == bot_id:
             Groups(message)
+        
+        elif message.json['new_chat_member']['is_bot'] is False:
+            Users(message)
 
 class Users:
     def __init__(self, message):
         self.message = message
-        self.ID = message.chat.id
+        self.ID = message.from_user.id
         users = [item['_id'] for item in users_db.find()]
 
         if self.ID not in users:
@@ -45,6 +43,7 @@ class Users:
             'Premium':self.message.from_user.is_premium,
             'Convert':0,
             'Admin groups':{},
+            'Admin channels':{},
             'Inline currency list':[
                 'American Dollar', 'Euro', 'British Pound', 
                 'Czech Koruna','Japanese Yen', 'Polish Zloty',
@@ -73,12 +72,14 @@ class Users:
 
 class Groups:
     def __init__(self, message):
-        self.message = message
-        self.ID = message.chat.id
-        groups = [item['_id'] for item in groups_db.find()]
-
-        if self.ID not in groups:
-            self.data_collection()
+        for member in message.new_chat_members:
+            if member.id == bot_id:
+                self.message = message
+                self.ID = message.chat.id
+                groups = [item['_id'] for item in groups_db.find()]
+        
+                if self.ID not in groups:
+                    self.data_collection()
 
     def data_collection(self):
         self.title = self.message.chat.title
@@ -92,6 +93,7 @@ class Groups:
             "_id":self.ID,
             "Name":self.title,
             "Username":self.message.chat.username,
+            "Admins":self.admins,
             "Currency output list":[
                 'American Dollar', 'Euro', 'British Pound', 
                 'Czech Koruna','Japanese Yen', 'Polish Zloty',
@@ -113,5 +115,25 @@ class Groups:
         for ID in self.admins:
             users_db.update_one(
                 {'_id':ID}, 
-                {'$set':{f"Admin groups.{self.title}":self.ID}}
+                {'$set':{f"Admin groups.{self.ID}":self.title}}
             )
+
+@main.bot.message_handler(content_types=['left_chat_member'])
+class Remove:
+    def __init__(self, message):
+        self.message = message
+        self.ID = message.chat.id 
+
+        for data in groups_db.find({'_id':self.ID}):
+            self.admins_list = data['Admins']
+
+        self.remove()
+    
+    def remove(self):
+        for admin in self.admins_list:
+            users_db.update_one(
+                {"_id":admin},
+                {'$unset':{f"Admin groups.{self.ID}":1}}
+            )
+
+        groups_db.delete_one({'_id':self.ID})

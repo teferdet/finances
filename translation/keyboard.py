@@ -30,18 +30,8 @@ currency_keyboard.row(
 )
 
 def database():
-    global github
-    global call
-    global news    
-    global buymeacoffee
-    global thanks
-    
     for links in settings_db.find({'_id':0}):
-        github = links['links'][0]
-        call = links['links'][1]
-        news = links['links'][2]
-        buymeacoffee = links['links'][3]
-        thanks = links['links'][4]
+        return links
 
 def translate(code):
     language = code.from_user.language_code    
@@ -56,36 +46,12 @@ def translate(code):
     
     return translate
 
+#settings
 def cancel(call):
     cancel = types.ReplyKeyboardMarkup(resize_keyboard=True)
     cancel.add(types.KeyboardButton(translate(call)['cancel']))
 
     return cancel
-
-def inline(message):
-    global link
-    global info_link
-    global donate_link
-
-    database()
-    
-    link = types.InlineKeyboardMarkup()
-    link.row(   
-        types.InlineKeyboardButton(
-            text=translate(message)["communication"],
-            url=call
-        )
-    )
-
-    info_link = types.InlineKeyboardMarkup()
-    info_link.row(
-        types.InlineKeyboardButton(text=translate(message)["news"], url=news),
-        types.InlineKeyboardButton(text='ℹ️ GitHub', url=github)            
-    )
-
-    donate_link = types.InlineKeyboardMarkup()
-    donate_link.row(types.InlineKeyboardButton(text="☕️ Buy me a coffee", url=buymeacoffee))
-    donate_link.row(types.InlineKeyboardButton(text='❤️ Дяка', url=thanks))
 
 def setting_keyboard(message):
     settings_menu = types.InlineKeyboardMarkup()
@@ -106,9 +72,10 @@ def group_settings(call, ID):
 
     return group_settings
 
+#group
 def groups_keypad(admin_access):
     groups_keypad = types.InlineKeyboardMarkup()
-    for name, ID  in admin_access[0].items():
+    for ID, name  in admin_access[0].items():
         groups_keypad.row(
             types.InlineKeyboardButton(
                 text=name, callback_data=f'settings group {ID}'
@@ -135,6 +102,51 @@ def group_keypad_handler(message, currency_name):
     delete.add(
         types.InlineKeyboardButton(text=translate(message)['delete'], callback_data='delete')
     )
+
+
+#in bot
+def communication_link(message):
+    urls = database()['links']
+    
+    link = types.InlineKeyboardMarkup().row(   
+        types.InlineKeyboardButton(
+            text=translate(message)["communication"],
+            url=urls[1]
+        )
+    )
+
+    return link
+
+def info_link(message):
+    urls = database()['links']
+
+    link = types.InlineKeyboardMarkup().row(
+        types.InlineKeyboardButton(text=translate(message)["news"], url=urls[2]),
+        types.InlineKeyboardButton(text='ℹ️ GitHub', url=urls[0])            
+    )
+
+    return link 
+
+def donate_link(message):
+    urls = database()['links']
+
+    link = types.InlineKeyboardMarkup()
+    link.row(types.InlineKeyboardButton(text="☕️ Buy me a coffee", url=urls[3]))
+    link.row(types.InlineKeyboardButton(text='❤️ Дяка', url=urls[4]))
+    
+    return link 
+
+def add_bot(message):
+    urls = database()['links']
+    
+    link = types.InlineKeyboardMarkup().row(
+        types.InlineKeyboardButton(
+            text=translate(message)["add bots"],
+            url=urls[5]
+        )
+    )
+
+    return link
 
 def alternative_currency_keyboard(message, currency_name):
     currency = types.InlineKeyboardMarkup()    
