@@ -248,17 +248,18 @@ class CurrencyHandler:
         return "\n".join(map(str, message))
 
 def refreshed():
+    currency_update = 3
+
     while True:
         times = time.strftime("%H:%M")
-        currency_update = 3
-
         if currency_update == 3:
             Currency(currencies, convert_currency)
             currency_update = 0
         
-        Share()
         Crypto()
-        
+        Share()
+
         print(f"Update of all cryptocurrency currencies is completed at {times}\n")
+
         currency_update += 1
         time.sleep(3600)
