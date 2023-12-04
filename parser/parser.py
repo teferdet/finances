@@ -211,7 +211,7 @@ class CurrencyHandler:
         
         else:
             update = cash['currency'][self.currency]['update']
-            times = int(update['time']) + 2
+            times = int(update['time']) + 3
             day = update['day']
 
             if times <= time_now or day != date:
