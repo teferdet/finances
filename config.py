@@ -1,7 +1,16 @@
-# Token, API key, database
-token = "<Your Telegram API token>"
-crypto_api_key = "<Your CoinMarketCap API key>"
-share_api_kay = '<Your Financial Modeling Prep API kay>'
-database = "<MongoDB url>"
-block_language = ['ru', 'be']
-languages = ["uk", "pl"]
+import json 
+
+def data(option: list):
+    data = []
+
+    for item in option:
+        path = "files/config.json"
+    
+        with open(path, "rb") as file:
+            if len(option) != 1:
+                data.append(json.load(file)[item]) 
+
+            else:
+                data = json.load(file)[item]
+
+    return data

@@ -7,7 +7,7 @@ import config
 
 bot = main.bot 
 
-client = pymongo.MongoClient(config.database)
+client = pymongo.MongoClient(config.data(["database"]))
 group = client['finances']['Groups']
 users = client['finances']['Users']
 

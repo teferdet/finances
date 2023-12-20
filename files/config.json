@@ -1,0 +1,38 @@
+{
+    "token":"<Your Telegram API token>",
+    "crypto api key":"<Your CoinMarketCap API kay>'",
+    "share api kay":"<Your Financial Modeling Prep API kay>",
+    "database":"<MongoDB url>",
+    "block language":["ru", "be"],
+    "languages":["uk", "pl"],
+    "convert currency":[
+        "Argentine Peso", "Australian Dollar", "British Pound",
+        "Bulgarian Lev", "Canadian Dollar", "Chinese Yuan Renminbi",
+        "Czech Koruna", "Danish Krone", "Egyptian Pound",
+        "Euro", "Iceland Krona", "Indian Rupee",
+        "Israeli New Shekel", "Japanese Yen", "Korean Won",
+        "Norwegian Krone", "Polish Zloty", "Romanian Leu",
+        "Singapore Dollar", "Swedish Krona", "Swiss Franc",
+        "Turkish Lira", "Ukraine Hryvnia", "American Dollar"
+    ],
+    "currencies":[
+        "USD", "EUR", "GBP",
+        "PLN", "CZK", "UAH",
+        "CHF", "BGN", "JPY"
+    ],
+    "cryptocurrencies":[
+        "BTC", "ETH", "BNB", "SOL", 
+        "USDT", "TRX", "TON", "LTC"
+    ],
+    "currency for crypto":[
+        "USD", "EUR", "GBP",
+        "UAH", "PLN", "CZK"
+    ],
+    "company":[
+        "APPL", "META", "AMZN", "ADBE",
+        "PYPL", "GOOGL", "INTC", "AMD",
+        "NFLX", "MSFT", "ORCL", "NVDA"
+    ],
+    "block currency":["BYR", "HUF", "RSD", "RUB"]
+
+}

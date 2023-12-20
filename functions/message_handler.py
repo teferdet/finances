@@ -16,7 +16,7 @@ import language
 import settings 
 import logs
 
-client = pymongo.MongoClient(config.database)
+client = pymongo.MongoClient(config.data(["database"]))
 settings_db = client["finances"]["Settings"]
 commands = ['share', 'settings', "crypto"]
 
@@ -26,7 +26,7 @@ class Start:
         self.message = message
         self.language = message.from_user.language_code
 
-        if self.language in ['ru', 'be']:
+        if self.language in config.data(['block language']):
             bot.send_message(
                 message.chat.id,
                 "[¯\_(ツ)_/¯ I do not understand your language](http://surl.li/dhmwi)",

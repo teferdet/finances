@@ -9,34 +9,11 @@ import language
 from telebot import types 
 
 bot = main.bot 
-client = pymongo.MongoClient(config.database)
+client = pymongo.MongoClient(config.data(["database"]))
 currency = client['finances']['Currency']
 settings = client['finances']['Settings']
 
 data = 'inline mode'
-currency_list = [
-    'Argentine Peso', 'Australian Dollar', 'British Pound',
-    'Bulgarian Lev', 'Canadian Dollar', 'Chinese Yuan Renminbi',
-    'Czech Koruna', 'Danish Krone', 'Egyptian Pound',
-    'Euro', 'Iceland Krona', 'Indian Rupee',
-    'Israeli New Shekel', 'Japanese Yen', 'Korean Won',
-    'Norwegian Krone', 'Polish Zloty', 'Romanian Leu',
-    'Singapore Dollar', 'Swedish Krona', 'Swiss Franc',
-    'Turkish Lira', 'Ukraine Hryvnia', 'American Dollar'
-]
-crypto_list = [
-    "BTC", 'ETH', "BNB", "SOL", 
-    "USDT", "TRX", "TON", "LTC"
-]
-currency_for_crypto = [
-    'USD', "EUR", "GBP",
-    "UAH", "PLN", "CZK"
-]
-company = [
-    'APPL', 'META', 'AMZN', 'ADBE',
-    'PYPL', 'GOOGL', 'INTC', 'AMD',
-    'NFLX', 'MSFT', 'ORCL', 'NVDA'
-] 
 
 @bot.inline_handler(func=lambda query: True)
 class InlineMode: 
@@ -46,7 +23,7 @@ class InlineMode:
         
         wait = "¯\_(ツ)_/¯ I do not understand your language"
         
-        if language_code in config.block_language:
+        if language_code in config.data(['block language']):
             keypad = types.InlineQueryResultArticle(
                 "1", wait, types.InputTextMessageContent(wait)
             )
@@ -102,10 +79,7 @@ class CurrencyHandler:
         self.processing()
 
     def processing(self):
-        block_list = [
-            item['block currency list']
-            for item in settings.find({'_id':0})
-        ]
+        block_list = config.data(["block currency"])
 
         if self.currency_name in block_list[0]:
             self.block()
@@ -115,13 +89,15 @@ class CurrencyHandler:
             self.request()
     
     def request(self):
+        currency_list = config.data(['convert currency'])
+
         answer = parser.CurrencyHandler(
             self.currency_name, self.number,
             currency_list, self.index
         )
 
         if answer != "server error" and answer != "bad request":
-            self.send_list = parser.cash['currency'][self.currency_name]['inline']
+            self.send_list = parser.cash[self.currency_name]['inline']
             self.publishing()
 
         else:
@@ -188,7 +164,7 @@ class CryptoHandler:
         if self.currency_name != []: 
             self.currency_name = self.currency_name[0].upper()
 
-            if self.currency_name in currency_for_crypto:
+            if self.currency_name in config.data(["currency for crypto"]):
                 self.number = re.findall(r"\d+\.*\d*", self.inline_query.query)
                 self.number = self.number[0] if self.number != [] else 1
 
@@ -213,7 +189,7 @@ class CryptoHandler:
             database = info[self.currency_name]
 
         for key in database:   
-            if key in crypto_list:
+            if key in config.data(['cryptocurrencies']):
                 name = database[key][0]
                 price = float(database[key][1])
                 price = round(price*float(self.number), 4)
@@ -256,7 +232,7 @@ class ShareHandler:
         info = [info for info in currency.find(query)][0]
     
         for key in info:   
-            if key in company:    
+            if key in config.data(["company"]):    
                 symbol = info[key][0]
                 price = float(info[key][2])
                 price = round(price*float(self.number), 4)

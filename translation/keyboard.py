@@ -9,7 +9,7 @@ import crypto_handler
 from telebot import types
 
 bot = main.bot
-client = pymongo.MongoClient(config.database)
+client = pymongo.MongoClient(config.data(["database"]))
 settings_db = client["finances"]["Settings"]
 
 currency_keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
@@ -36,10 +36,10 @@ def database():
 def translate(code):
     language = code.from_user.language_code    
     
-    if language not in config.languages:
+    if language not in config.data(["languages"]):
         language = 'en'
 
-    path = f'translation/{language}.json'
+    path = f'files/languages/{language}.json'
     with open(path, "rb") as file:
         file = json.load(file)
         translate = file["keyboard"]

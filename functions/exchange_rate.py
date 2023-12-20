@@ -8,7 +8,7 @@ import language
 import keyboard
 
 bot = main.bot
-client = pymongo.MongoClient(config.database)
+client = pymongo.MongoClient(config.data(["database"]))
 user_db = client["finances"]["Users"]
 settings = client["finances"]["Settings"]
 
@@ -25,7 +25,7 @@ class ExchangeRate:
         self.message = message
         language = message.from_user.language_code
         
-        if language in config.block_language:
+        if language in config.data(['block language']):
             bot.send_message(
                 message.chat.id,
                 "[¯\_(ツ)_/¯ I do not understand your language](http://surl.li/dhmwi)",
@@ -66,12 +66,8 @@ class ExchangeRate:
         else:
             currency = self.currency_name
             index = 1
-
-        query = {'_id':0}
-        for data in settings.find(query, {'_id':0, 'block currency list':1}):
-            block_currency_list = data['block currency list']
         
-        if self.currency_name.upper() in block_currency_list: 
+        if self.currency_name.upper() in config.data(["block currency"]): 
             bot.send_message(self.message.chat.id, "❌")           
             
         else:

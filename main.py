@@ -4,7 +4,7 @@ import threading
 import sys
 import time
 
-bot = telebot.TeleBot(config.token)
+bot = telebot.TeleBot(config.data(["token"]))
 
 sys.path.append('parser')
 sys.path.append('translation')
@@ -20,7 +20,8 @@ def work():
         try:
             bot.polling(none_stop=True)
         
-        except:
+        except Exception as e:
+            print(f"\nWARNING: {e}")
             time.sleep(5)
             continue
 

@@ -7,13 +7,13 @@
   + bs4
   + pymongo
 ## Bot run
-To run the bot, you need to enter the necessary data into the config.py file:
+To run the bot, you need to enter the necessary data into the files/config.json file:
 ### Config
 ```
-# Token, API keys, database
-token = "<Your Telegram API token>"
-share_api_kay = '<Your Financial Modeling Prep API kay>'
-database = "<MongoDB url>"
+    "token":"<Your Telegram API token>",
+    "crypto api key":"<Your CoinMarketCap API kay>'",
+    "share api kay":<Your Financial Modeling Prep API kay>",
+    "database":"<MongoDB url>",
 ```
 >You can change other information: list of blocked currencies, version, database name, Telegram file id in database 
 ### Database 

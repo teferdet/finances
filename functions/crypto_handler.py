@@ -9,14 +9,9 @@ import language
 import keyboard
 
 bot = main.bot
-client = pymongo.MongoClient(config.database)
+client = pymongo.MongoClient(config.data(["database"]))
 finances = client["finances"]["Currency"]
 user_db = client["finances"]["Users"]
-
-crypto_currency = [
-    "BTC", 'ETH', "BNB", "SOL", 
-    "USDT", "TRX", "TON", "LTC"
-]
 data = 'exchange rate'
 
 class Crypto:
@@ -24,7 +19,7 @@ class Crypto:
         self.message = message
         language = message.from_user.language_code
         
-        if language in config.block_language:
+        if language in config.data(['block language']):
             bot.send_message(
                 message.chat.id,
                 "[¯\_(ツ)_/¯ I do not understand your language](http://surl.li/dhmwi)",
@@ -57,7 +52,7 @@ class Crypto:
             data = info['USD']
 
         for key in data:   
-            if key in crypto_currency:
+            if key in config.data(['cryptocurrencies']):
                 name = data[key][0]
                 price = float(data[key][1])
                 price = round(price*self.number, 4)
@@ -97,7 +92,7 @@ class AlternativeCrypto:
             data = info[self.currency]
 
         for key in data:   
-            if key in crypto_currency:
+            if key in config.data(['cryptocurrencies']):
                 name = data[key][0]
                 price = float(data[key][1])
                 price = round(price*number, 4)

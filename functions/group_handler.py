@@ -10,7 +10,7 @@ import time
 
 bot = __main__.bot
 
-client = pymongo.MongoClient(config.database)
+client = pymongo.MongoClient(config.data(["database"]))
 user = client["finances"]["Users"]
 group = client['finances']['Groups']
 settings = client["finances"]["Settings"]
@@ -23,7 +23,7 @@ class GroupHandler:
         self.chat = message.chat.id
         language = message.from_user.language_code
 
-        if language not in config.block_language:
+        if language not in config.data(['block language']):
             logs.Users(self.message)
             self.message_data()
     
@@ -52,11 +52,8 @@ class GroupHandler:
 
     def processing(self):
         user.update_one({'_id':self.ID}, {'$set':{"Convert":self.number}})
-
-        for item in settings.find({'_id':0}):
-            block_list = item['block currency list']
         
-        if self.currency_name not in block_list: 
+        if self.currency_name not in config.data(["block currency"]): 
             self.index = 0 if self.currency_name in ['BTC', 'ETH'] else 1
             self.keypad()
 

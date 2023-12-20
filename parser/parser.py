@@ -5,26 +5,9 @@ import time
 import pymongo
 from bs4 import BeautifulSoup as bs4
 
-client = pymongo.MongoClient(config.database)
+client = pymongo.MongoClient(config.data(["database"]))
 database = client["finances"]["Currency"]
-cash = {"currency": {}}
-
-currencies = [
-    "USD", "EUR", "GBP",
-    "PLN", "CZK", "UAH",
-    "CHF", "BGN", "JPY"
-]
-
-convert_currency = [
-    'Argentine Peso', 'Australian Dollar', 'British Pound',
-    'Bulgarian Lev', 'Canadian Dollar', 'Chinese Yuan Renminbi',
-    'Czech Koruna', 'Danish Krone', 'Egyptian Pound',
-    'Euro', 'Iceland Krona', 'Indian Rupee',
-    'Israeli New Shekel', 'Japanese Yen', 'Korean Won',
-    'Norwegian Krone', 'Polish Zloty', 'Romanian Leu',
-    'Singapore Dollar', 'Swedish Krona', 'Swiss Franc',
-    'Turkish Lira', 'Ukraine Hryvnia', 'American Dollar'
-]
+cash = {}
 
 class Currency:
     def __init__(self, currency: list, convert_currency: list):
@@ -33,9 +16,9 @@ class Currency:
         day = time.strftime("%m.%d")
 
         for self.item in currency:
-            cash["currency"][self.item] = {}
-            cash["currency"][self.item]['update'] = {}
-            self.cash = cash["currency"][self.item]
+            cash[self.item] = {}
+            cash[self.item]['update'] = {}
+            self.cash = cash[self.item]
             self.cash['update']['time'] = times
             self.cash['update']['day'] = day
 
@@ -65,7 +48,7 @@ class Currency:
             print(f"Parser: Currency. Error. Data retrieval: {error}")
 
     def data_processin(self):
-        cash["currency"][self.item]['symbol'] = self.symbol
+        cash[self.item]['symbol'] = self.symbol
 
         for data in self.site_data:
             info = self.info("currency_info")
@@ -95,7 +78,7 @@ class Crypto:
     def __init__(self):
         url = "https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest"
         headers = {
-            "X-CMC_PRO_API_KEY":config.crypto_api_key,
+            "X-CMC_PRO_API_KEY":config.data(['crypto api key']),
             "Accepts":"application/json"
         }
         currencies = [
@@ -150,7 +133,8 @@ class Crypto:
 
 class Share:
     def __init__(self):
-        url = f"https://financialmodelingprep.com/api/v3/stock/list?apikey={config.share_api_kay}"
+        key = config.data(['share api kay'])
+        url = f"https://financialmodelingprep.com/api/v3/stock/list?apikey={key}"
         self.response = requests.get(url)
 
         if self.response.status_code == 200:             
@@ -202,22 +186,21 @@ class CurrencyHandler:
         self.index = index
         self.convert_currency = convert_currency
 
-        data = list(cash['currency'])
         time_now = int(time.strftime("%H"))
         date = time.strftime("%m.%d")
 
-        if self.currency not in data:
+        if self.currency not in list(cash):
             Currency([self.currency], self.convert_currency)
         
         else:
-            update = cash['currency'][self.currency]['update']
+            update = cash[self.currency]['update']
             times = int(update['time']) + 3
             day = update['day']
 
             if times <= time_now or day != date:
                 Currency([self.currency], self.convert_currency)
         
-        self.cash = cash['currency'][self.currency]
+        self.cash = cash[self.currency]
         if self.cash['status'] == 200:
             self.__str__()
 
@@ -253,7 +236,8 @@ def refreshed():
     while True:
         times = time.strftime("%H:%M")
         if currency_update == 3:
-            Currency(currencies, convert_currency)
+            data = config.data(['currencies', 'convert currency'])
+            Currency(data[0], data[1])
             currency_update = 0
         
         Crypto()

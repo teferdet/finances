@@ -3,10 +3,10 @@ import pymongo
 import telebot 
 import config
 
-bot = telebot.TeleBot(config.token)
+bot = telebot.TeleBot(config.data(["token"]))
 bot_id = bot.get_me().id
 
-client = pymongo.MongoClient(config.database)
+client = pymongo.MongoClient(config.data(["database"]))
 users_db = client["finances"]["Users"]
 groups_db = client["finances"]["Groups"]
 settings = client["finances"]["Settings"]

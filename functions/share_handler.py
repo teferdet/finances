@@ -7,7 +7,7 @@ import language
 import time
 
 bot = main.bot
-client = pymongo.MongoClient(config.database)
+client = pymongo.MongoClient(config.data(["database"]))
 finance = client["finances"]["Currency"]
 company = [
     'APPL', 'META', 'AMZN', 'ADBE',
@@ -21,7 +21,7 @@ class ShareHandler:
         self.message = message
         language = message.from_user.language_code
         
-        if language in config.block_language:
+        if language in config.data(['block language']):
             bot.send_message(
                 message.chat.id,
                 "[¯\_(ツ)_/¯ I do not understand your language](http://surl.li/dhmwi)",
@@ -33,8 +33,6 @@ class ShareHandler:
             self.massage_handler()
     
     def massage_handler(self):
-        ID = self.message.from_user.id
-
         self.number = re.findall(r"\d+\.*\d*", self.message.text)
         self.number = float(self.number[0]) if self.number != [] else 1
 
