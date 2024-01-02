@@ -39,8 +39,8 @@ class Currency:
     def data_retrieval(self):
         try:
             soup = bs4(self.response.text, "html.parser")
-            self.site_data = soup.find_all("tbody")[1]
-            self.symbol = soup.find("div", class_="c_symbols").get_text(strip=True)
+            self.site_data = soup.find_all("tbody")[1].find_all("tr")
+            self.symbol = soup.find("div", class_="fmenu2").find_all("li")[1].text[-1]
             self.data_processin()
 
         except IndexError as error:
@@ -52,18 +52,22 @@ class Currency:
 
         for data in self.site_data:
             info = self.info("currency_info")
+            
             try:
-                name = data.find("td").get_text(strip=True)
+                cells = data.find_all("td")
+                name = cells[0].get_text(strip=True)
+
                 if name in self.convert_currency:
                     self.cash[name] = [
-                        float(data.find_all("a")[0].text),
-                        float(data.find_all("a")[1].text),
-                        info[name][0], info[name][1], info[name][2]
+                        float(cells[1].text),
+                        float(cells[2].text),
+                        info[name][0], info[name][1],
+                        info[name][2]
                     ] 
-
-            except AttributeError:
+            
+            except IndexError:
                 pass
-        
+
         print(f"Parser: Currency. Successful update {self.item}")
 
     def info(self, name):
