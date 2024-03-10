@@ -29,7 +29,7 @@ class Start:
         if self.language in config.data(['block language']):
             bot.send_message(
                 message.chat.id,
-                "[¯\_(ツ)_/¯ I do not understand your language](http://surl.li/dhmwi)",
+                "¯\_(ツ)_/¯ I do not understand your language",
                 reply_markup=keyboard.communication_link(message),
                 parse_mode='MarkdownV2'
             )    
@@ -71,8 +71,7 @@ class Start:
         bot.send_message(self.message.chat.id, f"{hello} {self.name} 👋") 
         bot.send_message(self.message.chat.id, menu, reply_markup=self.keypad)
         
-        if self.message.chat.type != "private":
-            logs.Users(self.message)
+        logs.Users(self.message)
 
 @bot.message_handler(commands=['info'])
 def info(message):

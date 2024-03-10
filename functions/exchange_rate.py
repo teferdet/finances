@@ -16,7 +16,7 @@ currency_list = [
     'American Dollar', 'British Pound','Bulgarian Lev',
     'Chinese Yuan Renminbi', 'Czech Koruna', 'Euro', 'Indian Rupee', 
     'Israeli New Shekel', 'Japanese Yen', 'Polish Zloty',
-    'Swiss Franc', 'Turkish Lira', 'Ukraine Hryvnia'    
+    'Swiss Franc', 'Turkish Lira', 'Ukraine Hryvnia', "Russian Ruble"    
 ]
 data = 'exchange rate'
 
@@ -28,7 +28,7 @@ class ExchangeRate:
         if language in config.data(['block language']):
             bot.send_message(
                 message.chat.id,
-                "[¯\_(ツ)_/¯ I do not understand your language](http://surl.li/dhmwi)",
+                "¯\_(ツ)_/¯ I do not understand your language",
                 reply_markup=keyboard.communication_link(message),
                 parse_mode='MarkdownV2'
             )    

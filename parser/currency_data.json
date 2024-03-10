@@ -23,7 +23,8 @@
         "Swedish Krona":["🇸🇪", "SEK", "kr"],
         "Swiss Franc":["🇨🇭", "CHF", "F"],
         "Turkish Lira":["🇹🇷", "TRY", "₺"],
-        "Ukraine Hryvnia":["🇺🇦", "UAH", "₴"]
+        "Ukraine Hryvnia":["🇺🇦", "UAH", "₴"],
+        "Russian Ruble":["🇷🇺", "RUB", "₽"]
     },
     "symbol":{
         "USD":"$", 

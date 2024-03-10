@@ -21,7 +21,7 @@ def work():
             bot.polling(none_stop=True)
         
         except Exception as e:
-            print(f"\nWARNING: {e}")
+            print(f"[Bot Error] {time.strftime('%d.%m.%y %H:%M%S')}: {e}")
             time.sleep(5)
             continue
 

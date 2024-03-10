@@ -22,7 +22,7 @@ class Crypto:
         if language in config.data(['block language']):
             bot.send_message(
                 message.chat.id,
-                "[¯\_(ツ)_/¯ I do not understand your language](http://surl.li/dhmwi)",
+                "¯\_(ツ)_/¯ I do not understand your language",
                 reply_markup=keyboard.communication_link(message),
                 parse_mode='MarkdownV2'
             )    

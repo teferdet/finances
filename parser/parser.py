@@ -33,7 +33,7 @@ class Currency:
 
             else:
                 self.cash['status'] = "server error"
-                print(f"Parser error. Status code: {status_code}")
+                print(f"[Parser Error] {time.strftime('%d.%m.%y %H:%M%S')}. Connection error, status code: {status_code}")
                 break
 
     def data_retrieval(self):
@@ -45,7 +45,7 @@ class Currency:
 
         except IndexError as error:
             self.cash['status'] = "bad request"
-            print(f"Parser: Currency. Error. Data retrieval: {error}")
+            print(f"[Parser Error] {time.strftime('%d.%m.%y %H:%M%S')}: Currency. Data retrieval: {error}")
 
     def data_processin(self):
         cash[self.item]['symbol'] = self.symbol
@@ -68,7 +68,7 @@ class Currency:
             except IndexError:
                 pass
 
-        print(f"Parser: Currency. Successful update {self.item}")
+        print(f"[Parser] {time.strftime('%d.%m.%y %H:%M%S')}: Currency. Successful update {self.item}")
 
     def info(self, name):
         path = "parser/currency_data.json"
@@ -125,7 +125,7 @@ class Crypto:
             upsert=True
         )
         
-        print(f"Parser: Crypto. Successful update {self.currency}")
+        print(f"[Parser] {time.strftime('%d.%m.%y %H:%M%S')}: Crypto. Successful update {self.currency}")
 
     def symbol(self):
         path = "parser/currency_data.json"
@@ -172,7 +172,7 @@ class Share:
             upsert=True
         )
 
-        print("Parser: Share. Successful upgrade")
+        print("[Parser] {time.strftime('%d.%m.%y %H:%M%S')}: Share. Successful upgrade")
     
     def share_list(self):
         path = "parser/currency_data.json"
@@ -225,6 +225,10 @@ class CurrencyHandler:
 
                 else:
                     convert = round(info[1]*self.amount, 2)
+
+                    if convert == "0.0":
+                        convert = round(info[1]*self.amount, 4)
+
                     symbol = self.cash['symbol']                
                     currency = f"{info[3]}/{self.currency}"
 
@@ -247,7 +251,7 @@ def refreshed():
         Crypto()
         Share()
 
-        print(f"Update of all cryptocurrency currencies is completed at {times}\n")
+        print(f"[Parser] {time.strftime('%d.%m.%y %H:%M%S')}: Update of all cryptocurrency currencies is completed")
 
         currency_update += 1
         time.sleep(3600)

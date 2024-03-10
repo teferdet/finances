@@ -19,7 +19,7 @@
   },
   "menu":{
     "in bot":"Functions and how to work with them\n\n📊 To find out the exchange rate of fiat currencies, select it from the menu or write your own.  If you need to convert a currency, add the conversion amount to the name: 45 UAH or USD 5\n💵 To get the cryptocurrency rate - /crypto\n📑 To get the share rate - /share\n\n👆If you need to convert cryptocurrency or shares, add the conversion amount to their command: /crypto 4\nOther commands are in the menu\n\nThe bot also supports inline mode and works with chats",
-    "in group":"Functions and how to work with them\n\n📊 To find out the exchange rate of fiat currencies, select it from the menu or write your own.  If you need to convert a currency, add the conversion amount to the name: 45 UAH or USD 5\n💵 To get the cryptocurrency rate - /crypto\n📑 To get the share rate - /share\n👆If you need to convert cryptocurrency or shares, add the conversion amount to their command: /crypto 4\nOther commands are in the menu \n\n⚙️ Bot settings can be changed in personal messages ",
+    "in group":"Functions and how to work with them\n\n📊 To find out the exchange rate of fiat currencies, select it from the menu or write your own.  If you need to convert a currency, add the conversion amount to the name: 45 UAH or USD 5\n💵 To get the cryptocurrency rate - /crypto\n📑 To get the share rate - /share\n👆If you need to convert cryptocurrency or shares, add the conversion amount to their command: /crypto 4\nOther commands are in the menu \n\n⚙️ Bot settings can be changed in personal messages "
   },
   "exchange rate":{
     "currency user error":"😖 Unclear command! Select the currency from the keys or write it correctly.",
