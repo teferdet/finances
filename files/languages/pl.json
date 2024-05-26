@@ -1,55 +1,118 @@
 {
   "keyboard":{
-    "crypto":"💵 Kryptowaluta",
-    "communication":"🔗 Połączenie",
-    "news":"📰 Aktualności",
-    "other":"Inny",
-    "delte":"🗑 Usuwanie",
-    "cancel":"❌ Anuluj",
-    "input":"📥 Zmień odbierane dane",
-    "output":"📤 Zmień dane wyjściowe",
-    "groups":"👥 Ustawienia grupowe",
-    "add bots":"➕ Dodaj do grupy"
+    "settings":{
+      "bot":"🤖 Bot",
+      "groups":"👥 Grupy",
+      "add bot":"➕ Dodaj do grupy",
+      "error":"❌ Błąd. Spróbuj ponownie!",
+      "remove":"🗑 Usuń bota",
+      "save":"💾 Zapisz",
+      "confirm":"✅ Potwierdź",
+      "next list":"▶️ Dalej",
+      "back list":"◀️ Wstecz",
+      "back":"◀️ Wróć",
+      "fiat":"💶 Waluty fiducjarne",
+      "crypto":"💵 Kryptowaluta",
+      "stocks":"📑 Akcje spółek",
+      "input":"📥 Dane wejściowe",
+      "output":"📤 Dane wyjściowe"
     },
+    "help":{
+      "q&a":"💬 Pytania\\Odpowiedzi",
+      "communication":"🔗 Kontakt"
+    },
+    "news":"📰 Wiadomości",
+    "other":"Inne",
+    "delete":"🗑 Usuń"
+  },
   "time":{
     "morning":"Dzień dobry",
-    "day":"Dobry dzień",
+    "day":"Dzień dobry",
     "evening":"Dobry wieczór",
-    "night":"dobranocі"
-    },
-    "menu":{
-      "in bot":"Funkcje i sposób pracy z nimi\n\n📊 Aby sprawdzić kurs wymiany walut fiducjarnych, wybierz go z menu lub wpisz własny.  Jeśli chcesz przeliczyć walutę, dodaj kwotę przeliczenia do nazwy: 45 UAH lub 5 USD\n💵 Aby uzyskać kurs kryptowaluty - /crypto\n📑 Aby uzyskać kurs akcji - /share\n\n👆Jeśli potrzebujesz przekonwertować kryptowalutę lub akcje, dodaj kwotę konwersji do ich polecenia: /crypto 4\nInne polecenia znajdują się w menu\n\nBot obsługuje również tryb inline i działa z czatami",
-      "in group":"Funkcje i sposób pracy z nimi\n\n📊 Aby sprawdzić kurs wymiany walut fiducjarnych, wybierz go z menu lub wpisz własny.  Jeśli chcesz przeliczyć walutę, dodaj kwotę przeliczenia do nazwy: 45 UAH lub 5 USD\n💵 Aby uzyskać kurs kryptowaluty - /crypto\n📑 Aby uzyskać kurs akcji - /share\n👆Jeśli potrzebujesz przekonwertować kryptowalutę lub akcje, dodaj kwotę konwersji do ich polecenia: /crypto 4\nInne polecenia znajdują się w menu \n\n⚙️ Ustawienia bota można zmienić w wiadomościach osobistych. "
-    },  
-    "exchange rate":{
-    "currency user error":"😖 Niezrozumiałe polecenie! Wybierz walutę z kluczy lub wpisz ją poprawnie",
-    "server error":"😖 Serwer chwilowo nie działa, spróbuj ponownie później",
-    "rate":"Ocena | "
+    "night":"Dobranoc"
+  },
+  "menu":{
+    "private":[
+      "<b>finances — twój asystent finansowy</b>\n\n", 
+      "📊 Kursy walut — wpisz dowolną walutę świata i otrzymaj aktualny kurs.",
+      "Napisz walutę, którą chcesz przeliczyć w dowolnym formacie oraz opcjonalnie kwotę.",
+      "Albo przeliczaj* waluty od razu kilka, wpisując kilka walut w jednej wiadomości!\n",
+      "💵 Kryptowaluta — użyj komendy /crypto, aby otrzymać kurs kryptowalut do sześciu walut fiducjarnych (hrywna, dolar, euro, funt, korona, złoty) i przelicz ją* na żądaną kwotę.\n",
+      "📑 Akcje spółek — sprawdź interesujące cię akcje spółek.\n\n",
+      "💬 Szybko i wygodnie korzystaj z wymiany kursów walut w korespondencji z bliskimi\\koleżankami i kolegami dzięki integracji z czatami. Napisz: @fStatisticsBot oraz żądaną opcję.\n",
+      "👥 Dodawaj finances do swoich grup i przeliczaj waluty podczas rozmowy bez zbędnych ruchów i czynności. Bot zrobi to za ciebie**\n\n",
+      "<i>* — aby przeliczyć, wpisz kwotę cyframi\n",
+      "** — wcześniej może być konieczne dostosowanie bota do swoich potrzeb</i>"
+    ],
+    "group":[
+      "<b>finances chat manager — twój wierny sługa w przeliczaniu walut</b>\n",
+      "🤖 Automatyczne przeliczanie potrzebnych* ci walut fiducjarnych na dowolne waluty świata według twojego życzenia. Podaj botowi informacje o swoich preferencjach walutowych i otrzymuj automatyczne przeliczanie bez zbędnych czynności**. Wygodnie i szybko\n",
+      "<i>* — aby przeglądać kryptowaluty, należy użyć komendy /crypto (wyjątek BTC, ETH)\n",
+      "** — aby przeliczyć, wpisz kwotę cyframi</i>"
+    ]
+  },
+  "exchange rate":{
+    "input error":"😖 Niezrozumiała komenda! Użyj szybkiego wpisu lub wpisz ją poprawnie",
+    "server error":"😖 Serwer nie działa, spróbuj później",
+    "main rate":"Kurs na {}\n{}\n\n{}",
+    "sub rate":"Kurs na {}\n{}"
   },
   "inline mode":{
-    "server error":"😖 Serwer jest chwilowo nieczynny, proszę spróbować ponownie później.",
-    "choose":"Wpisz walutę i kwotę konwersji (jeśli to konieczne).:",
-    "choose warning":"! - dla kryptowalut i share dla akcji",
-    "warning crypto":"Dodaj walutę i kwotę (jeśli to konieczne):",
-    "user error":"😖 Nieprawidłowo wpisana waluta lub kwota przeliczeniowa",
-    "warning":"☝️ Aby przeliczyć walutę, dodaj kwotę, która ma być przeliczona",
-    "warning info":"☝️ Aby dokonać konwersji w trybie inline, należy dodać kwotę konwersji. Na przykład: \"pln 11\", \"GBP 57\" itd...",
-    "choose error":"🔁 Waluta nie została zapisana, spróbuj ponownie"
+    "server error":"😖 Serwer nie działa, spróbuj później",
+    "choose":"Wpisz walutę lub komendę:",
+    "choose warning":"crypto - dla kryptowalut \\\\ stocks - akcje",
+    "warning crypto":"Dodaj walutę z poniższej listy:",
+    "bad request":"😖 Niepoprawnie wpisana waluta!",
+    "warning":"☝️ Aby przeliczyć, wpisz kwotę",
+    "warning info":"☝️ Aby przeliczyć, musisz wpisać kwotę przeliczenia. Na przykład: \"PLN 11\", \"GBP 57\" itp...",
+    "choose error":"🔁 Waluta nie została wpisana, spróbuj ponownie"
   },
   "settings":{
-    "menu":"⚙️ Ustawienia \nWybierz funkcję, której chcesz użyć:",
-    "choose group":"Wybierz grupę, którą chcesz skonfigurować:", 
-    "write input":"✍️ Napisz nową listę walut, które bot będzie przetwarzał na czacie (Tylko kod alfabetyczny. Na przykład: Ils, USD, inne...):", 
-    "write output":"✍️ Napisz nową listę walut, które chcesz zobaczyć (tylko kod alfabetyczny. Na przykład: Ils, USD, inne...):",
-    "warning":"Ostrzeżenie!!! Niestety, bot nie obsługuje wypłaty wszystkich walut świata, a jedynie listę sugerowanych walut. Możesz wybrać tylko waluty wymienione poniżej:\n",
-    "success":"🎉 Ustawienia zostały pomyślnie zaktualizowane",
-    "exit":"Zmiany nie zostały zastosowan",
-    "group item":"Wybierz, co chcesz zmienić w grupie:",
-    "item error":"😢 Ta waluta nie jest obsługiwana",
-    "settings locate error":"Ustawienia można zmieniać tylko w czacie bota",
-    "error group list":"😢 Nie masz jeszcze żadnych grup do założenia"
+    "menu":[
+      "⚙️ Ustawienia, wybierz odpowiednią opcję:\n\n",
+      "🤖 Bot — zmień listę walut do przeliczania dla walut fiducjarnych, kryptowalut oraz akcji spółek\n",
+      "👥 Grupy — zmień listy walut do przeliczania oraz walut do obsługi. "
+    ],
+    "choose group":"👥 Wybierz grupę do edycji:", 
+    "input":"✍️ Wybierz potrzebne ci waluty i potwierdź je!:", 
+    "alert add":"➕ Waluta dodana do listy",
+    "alert remove":"➖ Waluta usunięta z listy",
+    "output":"✍️ Wybierz z poniższej listy waluty, które potrzebujesz:",
+    "success":"🎉 Zmiany zostały pomyślnie zastosowane",
+    "exit":"Zmiany nie zostały zastosowane",
+    "settings option":"Wybierz, chcesz zmienić w grupie:",
+    "local error":"Ustawienia dostępne tylko w prywatnych wiadomościach bota!",  
+    "error group list":"😢 Niestety, nie masz jeszcze grup, które możesz edytować...",
+    "remove":"UWAGA! Ryzykujesz utratą wszystkich ustawień i usunięciem bota z grupy!",
+    "success remove":"🎉 Dane zostały pomyślnie usunięte!"
   },
-  "donate":"🙏 Przyczynić się do rozwoju bota i wesprzeć autora pieniędzmi: ",
-  "help":"Jeśli masz problem lub sugestię dotyczącą nowych funkcji, skontaktuj się ze mną",
-  "bot info":"🤖 Wersja:"
+  "other":{
+    "donate":[
+      "<b>Wspieraj rozwój nowych aktualizacji dla finances!</b>",
+      "\nfinances — to projekt open source, rozwijany z pasją i pomysłem na stworzenie wygodnego narzędzia do przeglądania, przeliczania walut",
+      "\nkryptowalut w Telegramie, z którego możesz korzystać w każdej chwili.\n",
+      "Wspieraj tworzenie nowych aktualizacji swoimi darowiznami!",
+      "Lub przez kartę bankową pod poniższymi linkami 👇"
+    ],
+    "help":{
+      "main":[
+        "<b>Wyjaśnienie funkcji bota:</b>\n\n", 
+        "📊 Kursy walut — wpisz dowolną walutę świata i otrzymaj aktualny kurs. Napisz walutę, którą chcesz przeliczyć w dowolnym formacie oraz opcjonalnie kwotę.",
+        "Albo przeliczaj* waluty od razu kilka, wpisując kilka walut w jednej wiadomości!\n",
+        "💵 Kryptowaluta — użyj komendy /crypto, aby otrzymać kurs kryptowalut do sześciu walut fiducjarnych (hrywna, dolar, euro, funt, korona, złoty) i przelicz ją* na żądaną kwotę.\n",
+        "📑 Akcje spółek — sprawdź interesujące cię akcje spółek.\n\n",
+        "Jeśli znalazłeś błąd lub masz problem, skontaktuj się ze mną!\n\n",
+        "<i>* — aby przeliczyć, wpisz kwotę cyframi</i>"
+      ],
+      "q&a":[
+        "💬 Pytania i odpowiedzi:\n\n",
+        "P: Bot pisze, że nie rozumie N-waluty, co robić?\n",
+        "O: Trudno jest wspierać wszystkie możliwe zapisy i nazwy walut. Spróbuj wpisać kod waluty lub inaczej (jeśli używałeś slangu\\po swojemu)\n",
+        "P: Wpisuję kwotę przeliczenia i waluty, na które chcę przeliczyć, ale przelicza tylko jedną lub dwie waluty?\n",
+        "O: Algorytm działania bota wymaga, aby użytkownik wpisywał kwotę przeliczenia w takim przypadku za każdym razem lub co drugi raz.\n\n",
+        "Masz pytania? Skontaktuj się za pomocą przycisku poniżej" 
+      ]
+    },
+    "info":"🤖 Wersja: {}"
+  }
 }

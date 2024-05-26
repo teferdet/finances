@@ -2,3 +2,4 @@ pyTelegramBotAPI
 bs4
 requests
 pymongo
+json-cfg

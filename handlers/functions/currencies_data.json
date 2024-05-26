@@ -1,0 +1,2302 @@
+[
+    {
+        "symbol": "AED",
+        "name": "United Arab Emirates Dirham",
+        "code": "AED",
+        "emoji": "🇦🇪",
+        "text": [
+            "дырхам",
+            "дирхам",
+            "dirham",
+            "aed",
+            "dhs",
+            "dh"
+        ]
+    },
+    {
+        "symbol": "Af",
+        "name": "Afghan Afghani",
+        "code": "AFN",
+        "emoji": "🇦🇫",
+        "text": [
+            "afn",
+            "афганi",
+            "afghani",
+            "афгані",
+            "afs",
+            "afa",
+            "афгани"
+        ]
+    },
+    {
+        "symbol": "ALL",
+        "name": "Albanian Lek",
+        "code": "ALL",
+        "emoji": "🇦🇱",
+        "text": [
+            "лек",
+            "all",
+            "lek",
+            "alk"
+        ]
+    },
+    {
+        "symbol": "AMD",
+        "name": "Armenian Dram",
+        "code": "AMD",
+        "emoji": "🇦🇲",
+        "text": [
+            "amd",
+            "драм",
+            "dram",
+            "֏"
+        ]
+    },
+    {
+        "symbol": "ƒ",
+        "name": "Netherlands Antillean guilder",
+        "code": "ANG",
+        "emoji": "🇧🇶",
+        "text": [
+            "antillen gulden",
+            "naf",
+            "гульдэн",
+            "guilder",
+            "naƒ",
+            "гульден",
+            "ang"
+        ]
+    },
+    {
+        "symbol": "Kz",
+        "name": "Angolan Kwanza",
+        "code": "AOA",
+        "emoji": "🇦🇴",
+        "text": [
+            "kwanza",
+            "aoa",
+            "kzr",
+            "kz",
+            "кванз"
+        ]
+    },
+    {
+        "symbol": "AR$",
+        "name": "Argentine Peso",
+        "code": "ARS",
+        "emoji": "🇦🇷",
+        "text": [
+            "argentine peso",
+            "аргентынскі песа",
+            "ars",
+            "аргентынскіх песа",
+            "аргентинських песо",
+            "аргентинський песо",
+            "argentinische peso"
+        ]
+    },
+    {
+        "symbol": "AU$",
+        "name": "Australian Dollar",
+        "code": "AUD",
+        "emoji": "🇦🇺",
+        "text": [
+            "а$",
+            "ад",
+            "australische dollar",
+            "австралійських долар",
+            "aud",
+            "аўстралійскі долар",
+            "австралійський долар",
+            "австралійські долар",
+            "a$",
+            "аўстралійскіх долар",
+            "au$",
+            "australian dollar"
+        ]
+    },
+    {
+        "symbol": "Afl",
+        "name": "Aruban or Dutch Guilder",
+        "code": "AWG",
+        "emoji": "🇦🇼",
+        "text": [
+            "gulden",
+            "awg"
+        ]
+    },
+    {
+        "symbol": "₼",
+        "name": "Azerbaijani Manat",
+        "code": "AZN",
+        "emoji": "🇦🇿",
+        "text": [
+            "манат",
+            "azn",
+            "manat"
+        ]
+    },
+    {
+        "symbol": "KM",
+        "name": "Bosnia-Herzegovina Convertible Mark",
+        "code": "BAM",
+        "emoji": "🇧🇦",
+        "text": [
+            "kovertible mark",
+            "bam"
+        ]
+    },
+    {
+        "symbol": "BBD$",
+        "name": "Barbadian dollar",
+        "code": "BBD",
+        "emoji": "🇧🇧",
+        "text": [
+            "барбадоскі долар",
+            "барбадоскіх долар",
+            "bbd",
+            "барбадоський доллар",
+            "барбадоських доллар",
+            "barbados dollar",
+            "барбадоських долар",
+            "барбадоський долар"
+        ]
+    },
+    {
+        "symbol": "Tk",
+        "name": "Bangladeshi Taka",
+        "code": "BDT",
+        "emoji": "🇧🇩",
+        "text": [
+            "taka",
+            "bdt"
+        ]
+    },
+    {
+        "symbol": "BGN",
+        "name": "Bulgarian Lev",
+        "code": "BGN",
+        "emoji": "🇧🇬",
+        "text": [
+            "балгарскі леў",
+            "болгарський лев",
+            "болгарських лев",
+            "балгарскіх лев",
+            "bgn",
+            "bulgarische lew",
+            "bulgarian lev"
+        ]
+    },
+    {
+        "symbol": "BD",
+        "name": "Bahraini Dinar",
+        "code": "BHD",
+        "emoji": "🇧🇭",
+        "text": [
+            "bahraini dinar",
+            "бахрэйнскіх дэнар",
+            "бахрэйнскі дэнар",
+            "бахрейнських динар",
+            "bahrainische dinar",
+            "bhd",
+            "бахрейнський динар"
+        ]
+    },
+    {
+        "symbol": "FBu",
+        "name": "Burundian Franc",
+        "code": "BIF",
+        "emoji": "🇧🇮",
+        "text": [
+            "burundische franc",
+            "бурундыйскі франк",
+            "бурундыйскіх франк",
+            "bif"
+        ]
+    },
+    {
+        "symbol": "B$",
+        "name": "Bermudian Dollar",
+        "code": "BMD",
+        "emoji": "🇧🇲",
+        "text": [
+            "бермудскіх долар",
+            "бермудскі долар",
+            "bmd",
+            "bermudische dollar"
+        ]
+    },
+    {
+        "symbol": "BN$",
+        "name": "Brunei Dollar",
+        "code": "BND",
+        "emoji": "🇧🇳",
+        "text": [
+            "брунейскі долар",
+            "bnd",
+            "brunei dollar",
+            "брунейскіх долар"
+        ]
+    },
+    {
+        "symbol": "Bs",
+        "name": "Bolivian Boliviano",
+        "code": "BOB",
+        "emoji": "🇧🇴",
+        "text": [
+            "boliviano",
+            "болівіан",
+            "bolíviano",
+            "bob",
+            "балівіан"
+        ]
+    },
+    {
+        "symbol": "R$",
+        "name": "Brazilian Real",
+        "code": "BRL",
+        "emoji": "🇧🇷",
+        "text": [
+            "бразільскі рэал",
+            "бразільський реал",
+            "brasilianische real",
+            "бразільскіх рэал",
+            "brl",
+            "бразильських реал",
+            "бразильського реал",
+            "brazilian Real"
+        ]
+    },
+    {
+        "symbol": "BD$",
+        "name": "Bahamian Dollar",
+        "code": "BSD",
+        "emoji": "🇧🇸",
+        "text": [
+            "багамскі долар",
+            "багамскіх долар",
+            "bsd",
+            "bahamas dollar"
+        ]
+    },
+    {
+        "symbol": "Nu.",
+        "name": "Bhutanese Ngultrum",
+        "code": "BTN",
+        "emoji": "🇧🇹",
+        "text": [
+            "бутанскіх нгултрум",
+            "бутанскі нгултрум",
+            "btn",
+            "ngultrum"
+        ]
+    },
+    {
+        "symbol": "BWP",
+        "name": "Botswanan Pula",
+        "code": "BWP",
+        "emoji": "🇧🇼",
+        "text": [
+            "батсванская пул",
+            "pula",
+            "bwp",
+            "батсванскіх пул"
+        ]
+    },
+    {
+        "symbol": "BYN",
+        "name": "Belarusian Ruble",
+        "code": "BYN",
+        "emoji": "🇧🇾",
+        "text": [
+            "belarusian rouble",
+            "беларускіх рубл",
+            "беларускага рубл",
+            "бр",
+            "белорусский рубл",
+            "білоруських рубл",
+            "byn",
+            "білоруського рубл",
+            "weißrussischer rubel",
+            "weissrussische rubel",
+            "білруб",
+            "белрубл",
+            "belarusian ruble",
+            "belarussischer rubel",
+            "білоруській рубл",
+            "белорусских рубл",
+            "belarussische rubel",
+            "беларускі рубл"
+        ]
+    },
+    {
+        "symbol": "BZ$",
+        "name": "Belize Dollar",
+        "code": "BZD",
+        "emoji": "🇧🇿",
+        "text": [
+            "белізскіх долар",
+            "белізскі долар",
+            "belize dollar",
+            "bzd"
+        ]
+    },
+    {
+        "symbol": "CA$",
+        "name": "Canadian Dollar",
+        "code": "CAD",
+        "emoji": "🇨🇦",
+        "text": [
+            "cad",
+            "канадскі долар",
+            "канадський доллар",
+            "канадських долларів",
+            "канадського доллару",
+            "kanadische dollar",
+            "канадський долар",
+            "канадскіх долар",
+            "канадскага долар",
+            "канадського долару",
+            "канадських доларів",
+            "canadian dollar"
+        ]
+    },
+    {
+        "symbol": "CDF",
+        "name": "Congolese Franc",
+        "code": "CDF",
+        "emoji": "🇨🇩",
+        "text": [
+            "кангалезскі франк",
+            "kongolesische franc",
+            "cdf",
+            "кангалезскіх франк"
+        ]
+    },
+    {
+        "symbol": "₣",
+        "name": "Swiss Franc",
+        "code": "CHF",
+        "emoji": "🇨🇭",
+        "text": [
+            "chf",
+            "franken",
+            "franc",
+            "франк",
+            "schweizer franken"
+        ]
+    },
+    {
+        "symbol": "UF",
+        "name": "Unidad de Fomento",
+        "code": "CLF",
+        "emoji": "🇨🇱",
+        "text": [
+            "unidad de fomento",
+            "unidades de fomento",
+            "clf"
+        ]
+    },
+    {
+        "symbol": "CL$",
+        "name": "Chilean Peso",
+        "code": "CLP",
+        "emoji": "🇨🇱",
+        "text": [
+            "clp",
+            "чілійських песо",
+            "chilenische peso",
+            "чылійскі песа",
+            "чілійський песо",
+            "чілійського песо",
+            "чылійскіх песа"
+        ]
+    },
+    {
+        "symbol": "CN¥",
+        "name": "Chinese Yuan Renminbi",
+        "code": "CNY",
+        "emoji": "🇨🇳",
+        "text": [
+            "cny",
+            "rmb",
+            "женьміньбі",
+            "renminbi yuan",
+            "жэньминьби",
+            "renminbi",
+            "yuan",
+            "юан"
+        ]
+    },
+    {
+        "symbol": "CO$",
+        "name": "Colombian Peso",
+        "code": "COP",
+        "emoji": "🇨🇴",
+        "text": [
+            "колумбійський песо",
+            "колумбійського песо",
+            "калумбійскіх песа",
+            "colombian peso",
+            "колумбійських песо",
+            "cop",
+            "kolumbische peso",
+            "калумбійскі песа"
+        ]
+    },
+    {
+        "symbol": "₡",
+        "name": "Costa Rican Colón",
+        "code": "CRC",
+        "emoji": "🇨🇷",
+        "text": [
+            "crc",
+            "colón",
+            "costa-rica-colón"
+        ]
+    },
+    {
+        "symbol": "CUC$",
+        "name": "Cuban convertible peso",
+        "code": "CUC",
+        "emoji": "🇨🇺",
+        "text": [
+            "cuc",
+            "peso convertible"
+        ]
+    },
+    {
+        "symbol": "$MN",
+        "name": "Cuban peso",
+        "code": "CUP",
+        "emoji": "🇨🇺",
+        "text": [
+            "кубинських песо",
+            "кубинський песо",
+            "кубинського песо",
+            "cup",
+            "кубійскі песа",
+            "кубійскіх песа",
+            "cuban peso",
+            "kubanische peso"
+        ]
+    },
+    {
+        "symbol": "CV$",
+        "name": "Cape Verdean Escudo",
+        "code": "CVE",
+        "emoji": "🇨🇻",
+        "text": [
+            "cap verdische escudo",
+            "cve"
+        ]
+    },
+    {
+        "symbol": "Kč",
+        "name": "Czech Koruna",
+        "code": "CZK",
+        "emoji": "🇨🇿",
+        "text": [
+            "czk",
+            "крон",
+            "tschechische krone",
+            "krone",
+            "tschechische kronen",
+            "kc",
+            "kč",
+            "koruna"
+        ]
+    },
+    {
+        "symbol": "Fdj",
+        "name": "Djiboutian Franc",
+        "code": "DJF",
+        "emoji": "🇩🇯",
+        "text": [
+            "dschibuti franc",
+            "djf"
+        ]
+    },
+    {
+        "symbol": "Dkr",
+        "name": "Danish Krone",
+        "code": "DKK",
+        "emoji": "🇩🇰",
+        "text": [
+            "данської крон",
+            "danish krone",
+            "данська крон",
+            "dänische krone",
+            "dkk",
+            "дацкая крон",
+            "дацкіх крон ",
+            "данських крон"
+        ]
+    },
+    {
+        "symbol": "RD$",
+        "name": "Dominican Peso",
+        "code": "DOP",
+        "emoji": "🇩🇴",
+        "text": [
+            "дамініканскіх песа",
+            "dop",
+            "дамініканскі песа",
+            "dominikanische peso"
+        ]
+    },
+    {
+        "symbol": "DA",
+        "name": "Algerian Dinar",
+        "code": "DZD",
+        "emoji": "🇩🇿",
+        "text": [
+            "dzd",
+            "алжырскі дынар",
+            "алжырскіх дынар",
+            "algerische dinar"
+        ]
+    },
+    {
+        "symbol": "EGP",
+        "name": "Egyptian Pound",
+        "code": "EGP",
+        "emoji": "🇪🇬",
+        "text": [
+            "ägyptische pfund",
+            "єгипетських фунт",
+            "egyptian pound",
+            "єгипетського фунт",
+            "егіпецкіх фунт",
+            "egp",
+            "єгипетський фунт",
+            "егіпецкі фунт"
+        ]
+    },
+    {
+        "symbol": "Nfk",
+        "name": "Eritrean Nakfa",
+        "code": "ERN",
+        "emoji": "🇪🇷",
+        "text": [
+            "nakfa",
+            "ern",
+            "eritreische nakfa"
+        ]
+    },
+    {
+        "symbol": "Br",
+        "name": "Ethiopian Birr",
+        "code": "ETB",
+        "emoji": "🇪🇹",
+        "text": [
+            "эфіопскіх быр",
+            "etb",
+            "äthiopische birr",
+            "birr",
+            "эфіопскі быр"
+        ]
+    },
+    {
+        "symbol": "€",
+        "name": "Euro",
+        "code": "EUR",
+        "emoji": "🇪🇺",
+        "text": [
+            "євро",
+            "евро",
+            "eur",
+            "еўра",
+            "euro"
+        ]
+    },
+    {
+        "symbol": "FJ$",
+        "name": "Fijian dollar",
+        "code": "FJD",
+        "emoji": "🇫🇯",
+        "text": [
+            "fjd",
+            "fidschi dollar"
+        ]
+    },
+    {
+        "symbol": "£",
+        "name": "Falkland Island Pound",
+        "code": "FKP",
+        "emoji": "🇫🇰",
+        "text": [
+            "fkp",
+            "falkländische pfund"
+        ]
+    },
+    {
+        "symbol": "£",
+        "name": "British Pound",
+        "code": "GBP",
+        "emoji": "🇬🇧",
+        "text": [
+            "фунти стерлінгів",
+            "фунта стерлингов",
+            "pounds sterling",
+            "pfund",
+            "фунтаў сцерлінг",
+            "pound sterling",
+            "gbp",
+            "фунт стерлингов",
+            "sterling pfund",
+            "фунт стерлінгів",
+            "фунты сцерлінг",
+            "фунт сцерлінг",
+            "фунтов стерлингов",
+            "pound",
+            "pfund sterling",
+            "фунт",
+            "фунтів стерлінгів",
+            "britisches pfund",
+            "britische pfund"
+        ]
+    },
+    {
+        "symbol": "₾",
+        "name": "Georgian Lari",
+        "code": "GEL",
+        "emoji": "🇬🇪",
+        "text": [
+            "lari",
+            "gel",
+            "лары",
+            "georgische lari",
+            "georgian lari",
+            "ларі",
+            "лари"
+        ]
+    },
+    {
+        "symbol": "£",
+        "name": "Guernsey Pound",
+        "code": "GGP",
+        "emoji": "🇬🇬",
+        "text": [
+            "ggp",
+            "guernsey pfund"
+        ]
+    },
+    {
+        "symbol": "GH₵",
+        "name": "Ghanaian Cedi",
+        "code": "GHS",
+        "emoji": "🇬🇭",
+        "text": [
+            "ghana cedi",
+            "ghs",
+            "ghanaische cedi"
+        ]
+    },
+    {
+        "symbol": "£",
+        "name": "Gibraltar Pound",
+        "code": "GIP",
+        "emoji": "🇬🇮",
+        "text": [
+            "гібралтарскіх фунт",
+            "гібралтарскі фунт",
+            "gibraltar pfund",
+            "gip"
+        ]
+    },
+    {
+        "symbol": "D",
+        "name": "Gambian Dalasi",
+        "code": "GMD",
+        "emoji": "🇬🇲",
+        "text": [
+            "dalasi",
+            "gmd"
+        ]
+    },
+    {
+        "symbol": "FG",
+        "name": "Guinean Franc",
+        "code": "GNF",
+        "emoji": "🇬🇳",
+        "text": [
+            "гвінейскі франк",
+            "gnf",
+            "гвінейскіх франк",
+            "guinea franc"
+        ]
+    },
+    {
+        "symbol": "GTQ",
+        "name": "Guatemalan Quetzal",
+        "code": "GTQ",
+        "emoji": "🇬🇹",
+        "text": [
+            "quetzal",
+            "gtq"
+        ]
+    },
+    {
+        "symbol": "G$",
+        "name": "Guyanese dollar",
+        "code": "GYD",
+        "emoji": "🇬🇾",
+        "text": [
+            "guyana dollar",
+            "gyd"
+        ]
+    },
+    {
+        "symbol": "元",
+        "name": "Hong Kong Dollar",
+        "code": "HKD",
+        "emoji": "🇭🇰",
+        "text": [
+            "ганконгскіх долар",
+            "гонконзьких доллар",
+            "гонконгський доллар",
+            "гонконгський долар",
+            "hkd",
+            "гонконгських долар",
+            "гонконгських доллар",
+            "гонконгського долар",
+            "долар гонконг",
+            "доллар гонконг",
+            "гонконгського доллар",
+            "ганконгскі долар",
+            "hk$",
+            "hongkong dollar",
+            "гонконзьких долар"
+        ]
+    },
+    {
+        "symbol": "HNL",
+        "name": "Honduran Lempira",
+        "code": "HNL",
+        "emoji": "🇭🇳",
+        "text": [
+            "lempira",
+            "hnl"
+        ]
+    },
+    {
+        "symbol": "kn",
+        "name": "Croatian Kuna",
+        "code": "HRK",
+        "emoji": "🇭🇷",
+        "text": [
+            "hrk",
+            "kroatische kuna",
+            "хорватської кун",
+            "kuna",
+            "хорватська куна",
+            "харвацкая куна",
+            "харвацкіх кун",
+            "croatian kuna",
+            "хорватських кун"
+        ]
+    },
+    {
+        "symbol": "G",
+        "name": "Haitian Gourde",
+        "code": "HTG",
+        "emoji": "🇭🇹",
+        "text": [
+            "gourde",
+            "htg"
+        ]
+    },
+    {
+        "symbol": "Ft",
+        "name": "Hungarian Forint",
+        "code": "HUF",
+        "emoji": "🇭🇺",
+        "text": [
+            "венгерскіх фарынт",
+            "ungarische forint",
+            "венгерскі фарынт",
+            "huf"
+        ]
+    },
+    {
+        "symbol": "Rp",
+        "name": "Indonesian Rupiah",
+        "code": "IDR",
+        "emoji": "🇮🇩",
+        "text": [
+            "інданэзійская рупія",
+            "інданэзійскіх рупій",
+            "indonesische rupiah",
+            "idr"
+        ]
+    },
+    {
+        "symbol": "₪",
+        "name": "Israeli New Shekel",
+        "code": "ILS",
+        "emoji": "🇮🇱",
+        "text": [
+            "nis",
+            "шэкел",
+            "schekel",
+            "israelische schekel",
+            "ils",
+            "shekel",
+            "₪",
+            "israelischer neuer schekel",
+            "шекел"
+        ]
+    },
+    {
+        "symbol": "£",
+        "name": "Isle of Man Pound",
+        "code": "IMP",
+        "emoji": "🇮🇲",
+        "text": [
+            "imp",
+            "isle-of-man pfund"
+        ]
+    },
+    {
+        "symbol": "₹",
+        "name": "Indian Rupee",
+        "code": "INR",
+        "emoji": "🇮🇳",
+        "text": [
+            "rupee",
+            "індійська рупія",
+            "indische rupie",
+            "індыйскіх рупі",
+            "рупі",
+            "рупи",
+            "індійських рупі",
+            "inr",
+            "rupie",
+            "індыйская рупі",
+            "індійської рупі"
+        ]
+    },
+    {
+        "symbol": "IQD",
+        "name": "Iraqi Dinar",
+        "code": "IQD",
+        "emoji": "🇮🇶",
+        "text": [
+            "іракскі дынар",
+            "іракскіх дынар",
+            "irakische dinar",
+            "iqd",
+            "Irak-Dinar",
+            "irakischer dinar"
+        ]
+    },
+    {
+        "symbol": "IRR",
+        "name": "Iranian Rial",
+        "code": "IRR",
+        "emoji": "🇮🇷",
+        "text": [
+            "irr",
+            "іранскі рыал",
+            "іранскіх рыал",
+            "iranischer rial",
+            "iranische rial"
+        ]
+    },
+    {
+        "symbol": "Ikr",
+        "name": "Iceland Krona",
+        "code": "ISK",
+        "emoji": "🇮🇸",
+        "text": [
+            "ісландская крона",
+            "ісландська крона",
+            "isländische krone",
+            "ісландскіх крон",
+            "ісланської крон",
+            "ісландських крон",
+            "ісландськими крон",
+            "isk"
+        ]
+    },
+    {
+        "symbol": "£",
+        "name": "Jersey pound",
+        "code": "JEP",
+        "emoji": "🇯🇪",
+        "text": [
+            "jep",
+            "jersey pfund",
+            "jersey sterling pfund"
+        ]
+    },
+    {
+        "symbol": "J$",
+        "name": "Jamaican Dollar",
+        "code": "JMD",
+        "emoji": "🇯🇲",
+        "text": [
+            "ямайскіх долар",
+            "jamaikanischer dollar",
+            "jmd",
+            "jamaikanische dollar",
+            "jamaika dollar",
+            "ямайскі долар"
+        ]
+    },
+    {
+        "symbol": "JD",
+        "name": "Jordanian Dinar",
+        "code": "JOD",
+        "emoji": "🇯🇴",
+        "text": [
+            "іарданскі дынар",
+            "jordanische dinar",
+            "jod",
+            "jordanischer dinar",
+            "іарданскіх дынар"
+        ]
+    },
+    {
+        "symbol": "¥",
+        "name": "Japanese Yen",
+        "code": "JPY",
+        "emoji": "🇯🇵",
+        "text": [
+            "japanese yen",
+            "йен",
+            "иена",
+            "єна",
+            "japanischer yen",
+            "japanische yen",
+            "японська єна",
+            "японських єн",
+            "иен",
+            "jpy",
+            "єн",
+            "ен",
+            "yen",
+            "японская ен",
+            "японскіх ен",
+            "йена"
+        ]
+    },
+    {
+        "symbol": "Ksh",
+        "name": "Kenyan Shilling",
+        "code": "KES",
+        "emoji": "🇰🇪",
+        "text": [
+            "кенійскі шылінг",
+            "kenianische schilling",
+            "kenianischer schilling",
+            "кенійскіх шылінг",
+            "kenia schilling",
+            "kes"
+        ]
+    },
+    {
+        "symbol": "С̲",
+        "name": "Kyrgyzstani som",
+        "code": "KGS",
+        "emoji": "🇰🇬",
+        "text": [
+            "кіргізскі сом",
+            "kirgisischer som",
+            "киргизький сом",
+            "kirgisische som",
+            "kgs",
+            "киргизького сом",
+            "кіргізскіх сом",
+            "киргизьких сом",
+            "kyrgyzstani som"
+        ]
+    },
+    {
+        "symbol": "KHR",
+        "name": "Cambodian Riel",
+        "code": "KHR",
+        "emoji": "🇰🇭",
+        "text": [
+            "камбаджыйскі рыэль",
+            "khr",
+            "камбаджыйскіх рыэль",
+            "kambodschanische riel",
+            "kambodschanischer riel"
+        ]
+    },
+    {
+        "symbol": "CF",
+        "name": "Comorian Franc",
+        "code": "KMF",
+        "emoji": "🇰🇲",
+        "text": [
+            "komorischer franc",
+            "kmf",
+            "каморскіх франк",
+            "komoren-franc",
+            "komoren franc",
+            "каморскі франк",
+            "komorische franc"
+        ]
+    },
+    {
+        "symbol": "₩",
+        "name": "North Korean Won",
+        "code": "KPW",
+        "emoji": "🇰🇵",
+        "text": [
+            "паўночнакарэйскіх вон",
+            "паўночнакарэйская вон",
+            "kpw",
+            "nordkoreanische won",
+            "nordkoreanischer won"
+        ]
+    },
+    {
+        "symbol": "₩",
+        "name": "Korean Won",
+        "code": "KRW",
+        "emoji": "🇰🇷",
+        "text": [
+            "südkoreanische won",
+            "корейский вон",
+            "корейського вон",
+            "південнокорейськими вон",
+            "паўдневакарэйскіх вон",
+            "корейских вон",
+            "won",
+            "південнокорейських вон",
+            "südkoreanischer won",
+            "паўдневакарэйская вон",
+            "southkorean won",
+            "корейськими вон",
+            "krw",
+            "₩",
+            "korean won",
+            "південнокорейського вон",
+            "корейських вон",
+            "корейський вон",
+            "південнокорейський вон"
+        ]
+    },
+    {
+        "symbol": "KD",
+        "name": "Kuwaiti Dinar",
+        "code": "KWD",
+        "emoji": "🇰🇼",
+        "text": [
+            "dinar",
+            "кувэйцкі дынар",
+            "kwd",
+            "kuwaitischer dinar",
+            "kuwaiti dinar",
+            "кувэйцкіх дынар",
+            "kuwaitische dinar",
+            "динар"
+        ]
+    },
+    {
+        "symbol": "K$",
+        "name": "Cayman Islands dollar",
+        "code": "KYD",
+        "emoji": "🇰🇾",
+        "text": [
+            "kyd",
+            "кайманскі долар",
+            "cayman dollar",
+            "кайманскіх долар"
+        ]
+    },
+    {
+        "symbol": "₸",
+        "name": "Kazakhstani Tenge",
+        "code": "KZT",
+        "emoji": "🇰🇿",
+        "text": [
+            "тнг",
+            "тэнге",
+            "kzt",
+            "tenge",
+            "kasachische tenge",
+            "kazakhstani tenge",
+            "тг",
+            "тенге",
+            "kazakhstan tenge",
+            "kasachischer tenge",
+            "теньге"
+        ]
+    },
+    {
+        "symbol": "₭",
+        "name": "Lao kip",
+        "code": "LAK",
+        "emoji": "🇱🇦",
+        "text": [
+            "laotischer kip",
+            "laotische kip",
+            "lao kip",
+            "kip",
+            "lak"
+        ]
+    },
+    {
+        "symbol": "LB£",
+        "name": "Lebanese Pound",
+        "code": "LBP",
+        "emoji": "🇱🇧",
+        "text": [
+            "lbp",
+            "ліванскі фунт",
+            "ліванскіх фунт",
+            "libanesischer pfund",
+            "libanesische pfund",
+            "libanesisches pfund"
+        ]
+    },
+    {
+        "symbol": "SLRs",
+        "name": "Sri Lankan Rupee",
+        "code": "LKR",
+        "emoji": "🇱🇰",
+        "text": [
+            "sri lankischer rupie",
+            "шры-ланкійскіх рупі",
+            "sri-lankischer rupie",
+            "sri-lankische rupie",
+            "sri lankische rupie",
+            "sri lanka rupie",
+            "sri-lanka rupie",
+            "шры-ланкійская рупі",
+            "lkr"
+        ]
+    },
+    {
+        "symbol": "L$",
+        "name": "Liberian Dollar",
+        "code": "LRD",
+        "emoji": "🇱🇷",
+        "text": [
+            "ліберыйскі долар",
+            "liberianischer dollar",
+            "ліберыйскіх долар",
+            "lrd",
+            "liberianische dollar"
+        ]
+    },
+    {
+        "symbol": "L",
+        "name": "Basotho Loti",
+        "code": "LSL",
+        "emoji": "🇱🇸",
+        "text": [
+            "lesothische loti",
+            "lesothischer loti",
+            "loti",
+            "lsl"
+        ]
+    },
+    {
+        "symbol": "Lt",
+        "name": "Lithuanian Litas",
+        "code": "LTL",
+        "emoji": "🇱🇹",
+        "text": [
+            "литовськими лит",
+            "лит",
+            "литовських лит",
+            "литовського лит",
+            "ltl",
+            "litauischer litas",
+            "літоўскі літ",
+            "літоўскіх літ",
+            "litas",
+            "литовський лит",
+            "lithuanian litas",
+            "літ",
+            "litauische litas"
+        ]
+    },
+    {
+        "symbol": "Ls",
+        "name": "Latvian Lats",
+        "code": "LVL",
+        "emoji": "🇱🇻",
+        "text": [
+            "lati",
+            "lats",
+            "латвійськими лат",
+            "lvl",
+            "латвійський лат",
+            "latvian lats",
+            "latvian lati",
+            "лат",
+            "латвійскі лат",
+            "lettischer lats",
+            "lettische lats",
+            "латвійського лат",
+            "латвійських лат",
+            "латвійскіх лат"
+        ]
+    },
+    {
+        "symbol": "LD",
+        "name": "Libyan Dinar",
+        "code": "LYD",
+        "emoji": "🇱🇾",
+        "text": [
+            "lyd",
+            "libysche dinar",
+            "libyscher dinar",
+            "лібійскі дынар",
+            "лібійскіх дынар"
+        ]
+    },
+    {
+        "symbol": "MAD",
+        "name": "Moroccan Dirham",
+        "code": "MAD",
+        "emoji": "🇲🇦",
+        "text": [
+            "mad",
+            "marokkanischer dirham",
+            "мараканскі дырхам",
+            "marokkanische dirham",
+            "мараканскіх дырхам"
+        ]
+    },
+    {
+        "symbol": "MDL",
+        "name": "Moldovan Leu",
+        "code": "MDL",
+        "emoji": "🇲🇩",
+        "text": [
+            "лей",
+            "mdl",
+            "moldauischer leu",
+            "moldauische leu",
+            "молдавських леїв",
+            "лея",
+            "молдавськими леям",
+            "малдоўскі лей",
+            "малдаўскіх лея",
+            "малдоўскіх лея",
+            "moldovan leu",
+            "молдавського лея",
+            "молдавські леї",
+            "leu",
+            "лею",
+            "малдаўскі лей",
+            "леї"
+        ]
+    },
+    {
+        "symbol": "MGA",
+        "name": "Malagasy Ariary",
+        "code": "MGA",
+        "emoji": "🇲🇬",
+        "text": [
+            "madagassischer ariary",
+            "madagassische ariary",
+            "mga"
+        ]
+    },
+    {
+        "symbol": "MKD",
+        "name": "Macedonian Denar",
+        "code": "MKD",
+        "emoji": "🇲🇰",
+        "text": [
+            "македонскі дынар",
+            "mazedonische denar",
+            "mkd",
+            "макендонскіх дынар",
+            "mazedonischer denar"
+        ]
+    },
+    {
+        "symbol": "MMK",
+        "name": "Myanma Kyat",
+        "code": "MMK",
+        "emoji": "🇲🇲",
+        "text": [
+            "кьят",
+            "mmk",
+            "к'ят",
+            "kyat",
+            "myanmarischer kyat",
+            "myanmarische kyat"
+        ]
+    },
+    {
+        "symbol": "₮",
+        "name": "Mongolian Tughrik",
+        "code": "MNT",
+        "emoji": "🇲🇳",
+        "text": [
+            "монгольськими тугрик",
+            "mongolischer tögrög",
+            "mongolian tughrik",
+            "mongolische tugrik",
+            "tugrik",
+            "монгольських тугрик",
+            "монгольського тугрик",
+            "мангольскі тугрык",
+            "монгольський тугрик",
+            "тугрык",
+            "tögrög",
+            "mongolische tögrög",
+            "мангольскіх тугрык",
+            "тугрик",
+            "mnt",
+            "mongolischer tugrik"
+        ]
+    },
+    {
+        "symbol": "MOP$",
+        "name": "Macanese Pataca",
+        "code": "MOP",
+        "emoji": "🇲🇴",
+        "text": [
+            "mop",
+            "macau pataca"
+        ]
+    },
+    {
+        "symbol": "UM",
+        "name": "Mauritanian Ouguiya",
+        "code": "MRO",
+        "emoji": "🇲🇷",
+        "text": [
+            "mro",
+            "mauretanische ouguiya",
+            "mauretanischer ouguiya"
+        ]
+    },
+    {
+        "symbol": "MURs",
+        "name": "Mauritian Rupee",
+        "code": "MUR",
+        "emoji": "🇲🇺",
+        "text": [
+            "mur",
+            "mauritius rupie"
+        ]
+    },
+    {
+        "symbol": "MVR",
+        "name": "Maldivian Rufiyaa",
+        "code": "MVR",
+        "emoji": "🇲🇻",
+        "text": [
+            "maledivischer rufiyaa",
+            "mvr",
+            "maledivische rufiyaa"
+        ]
+    },
+    {
+        "symbol": "MK",
+        "name": "Malawian Kwacha",
+        "code": "MWK",
+        "emoji": "🇲🇼",
+        "text": [
+            "maledivischer rufiyaa",
+            "mwk",
+            "maledivische rufiyaa"
+        ]
+    },
+    {
+        "symbol": "MX$",
+        "name": "Mexican Peso",
+        "code": "MXN",
+        "emoji": "🇲🇽",
+        "text": [
+            "мексіканскіх песа ",
+            "mxn",
+            "мексиканськими песо",
+            "mexikanische peso",
+            "mexican peso",
+            "мексіканскі песа",
+            "мексиканський песо",
+            "мексиканських песо",
+            "mexikanischer peso",
+            "мексиканського песо"
+        ]
+    },
+    {
+        "symbol": "RM",
+        "name": "Malaysian Ringgit",
+        "code": "MYR",
+        "emoji": "🇲🇾",
+        "text": [
+            "malaysische ringgit",
+            "myr",
+            "ringgit",
+            "malaysischer ringgit"
+        ]
+    },
+    {
+        "symbol": "MTn",
+        "name": "Mozambican Metical",
+        "code": "MZN",
+        "emoji": "🇲🇿",
+        "text": [
+            "mosambikanische metical",
+            "meticais",
+            "mosambikanischer metical",
+            "mzn",
+            "metical",
+            "neue metical"
+        ]
+    },
+    {
+        "symbol": "N$",
+        "name": "Namibian Dollar",
+        "code": "NAD",
+        "emoji": "🇳🇦",
+        "text": [
+            "namibische dollar",
+            "nad",
+            "namibia-dollar",
+            "намібскі долар",
+            "namibischer dollar",
+            "намібскіх долар",
+            "namibia dollar"
+        ]
+    },
+    {
+        "symbol": "₦",
+        "name": "Nigerian Naira",
+        "code": "NGN",
+        "emoji": "🇳🇬",
+        "text": [
+            "ngn",
+            "naira",
+            "nigerianische naira",
+            "nigerianischer naira"
+        ]
+    },
+    {
+        "symbol": "C$",
+        "name": "Nicaraguan Córdoba",
+        "code": "NIO",
+        "emoji": "🇳🇮",
+        "text": [
+            "córdoba",
+            "córdoba oro",
+            "nicaraguanische córdoba",
+            "nio",
+            "nicaraguanischer córdoba"
+        ]
+    },
+    {
+        "symbol": "Nkr",
+        "name": "Norwegian Krone",
+        "code": "NOK",
+        "emoji": "🇳🇴",
+        "text": [
+            "норвезька крона",
+            "нарвежскіх крон",
+            "норвезької крон",
+            "norwegische krone",
+            "nok",
+            "норвезькими крон",
+            "norwegischer krone",
+            "норвезьких крон",
+            "нарвежская крон",
+            "norwegian krone"
+        ]
+    },
+    {
+        "symbol": "NPRs",
+        "name": "Nepalese Rupee",
+        "code": "NPR",
+        "emoji": "🇳🇵",
+        "text": [
+            "npr",
+            "nepalesische rupie",
+            "nepalesischer rupie"
+        ]
+    },
+    {
+        "symbol": "NZ$",
+        "name": "New Zealand Dollar",
+        "code": "NZD",
+        "emoji": "🇳🇿",
+        "text": [
+            "neuseeland dollar",
+            "новазеландскіх долар",
+            "neuseeländischer dollar",
+            "neuseeländische dollar",
+            "новазеландскі долар",
+            "nzd"
+        ]
+    },
+    {
+        "symbol": "OMR",
+        "name": "Omani Rial",
+        "code": "OMR",
+        "emoji": "🇴🇲",
+        "text": [
+            "omr",
+            "omanische rial",
+            "omanischer rial"
+        ]
+    },
+    {
+        "symbol": "B/.",
+        "name": "Panamanian Balboa",
+        "code": "PAB",
+        "emoji": "🇵🇦",
+        "text": [
+            "panamaischer balboa",
+            "panamaische balboa",
+            "pab"
+        ]
+    },
+    {
+        "symbol": "S/.",
+        "name": "Peruvian Nuevo Sol",
+        "code": "PEN",
+        "emoji": "🇵🇪",
+        "text": [
+            "nuevo sol",
+            "peruanische nuevo sol",
+            "peruanische sol",
+            "peruanischer nuevo sol",
+            "peruanischer sol",
+            "pen"
+        ]
+    },
+    {
+        "symbol": "K",
+        "name": "Papua New Guinean Kina",
+        "code": "PGK",
+        "emoji": "🇵🇬",
+        "text": [
+            "papua-neuguineischer kina",
+            "pgk",
+            "papua-neuguineische kina"
+        ]
+    },
+    {
+        "symbol": "₱",
+        "name": "Philippine Peso",
+        "code": "PHP",
+        "emoji": "🇵🇭",
+        "text": [
+            "філіпінскі песа",
+            "philippinischer peso",
+            "php",
+            "philippinische peso",
+            "філіпінскіх песа"
+        ]
+    },
+    {
+        "symbol": "PKRs",
+        "name": "Pakistani Rupee",
+        "code": "PKR",
+        "emoji": "🇵🇰",
+        "text": [
+            "pkr",
+            "pakistanischer rupie",
+            "pakistanische rupie"
+        ]
+    },
+    {
+        "symbol": "zł",
+        "name": "Polish Zloty",
+        "code": "PLN",
+        "emoji": "🇵🇱",
+        "text": [
+            "złoty",
+            "zl",
+            "польські злот",
+            "polnische zloty",
+            "zł",
+            "pln",
+            "зл",
+            "polish zloty",
+            "польських злот",
+            "злот",
+            "польскі злот",
+            "plz",
+            "польського злот",
+            "польськими злот",
+            "zloty",
+            "польскіх злот",
+            "polnischer zloty"
+        ]
+    },
+    {
+        "symbol": "₲",
+        "name": "Paraguayan Guarani",
+        "code": "PYG",
+        "emoji": "🇵🇾",
+        "text": [
+            "paraguayischer guaraní",
+            "paraguayischer guarani",
+            "pyg",
+            "paraguayische guaraní",
+            "paraguayische guarani"
+        ]
+    },
+    {
+        "symbol": "QR",
+        "name": "Qatari Rial",
+        "code": "QAR",
+        "emoji": "🇶🇦",
+        "text": [
+            "katarische riyal",
+            "katar-riyal",
+            "katarische rial",
+            "qar",
+            "katarischer rial",
+            "katarischer riyal",
+            "qatar rial"
+        ]
+    },
+    {
+        "symbol": "RON",
+        "name": "Romanian Leu",
+        "code": "RON",
+        "emoji": "🇷🇴",
+        "text": [
+            "rumänischer leu",
+            "rumänische leu",
+            "ron",
+            "румынскіх ле",
+            "румынскі лей"
+        ]
+    },
+    {
+        "symbol": "din.",
+        "name": "Serbian Dinar",
+        "code": "RSD",
+        "emoji": "🇷🇸",
+        "text": [
+            "rsd",
+            "сербский динар",
+            "сербских динар",
+            "сербскіх дынар",
+            "сербського динар",
+            "сербські динар",
+            "сербськими динар",
+            "serbische dinar",
+            "serbischer dinar",
+            "serbian dinar",
+            "сербський динар",
+            "сербскі дынар",
+            "сербських динар"
+        ]
+    },
+    {
+        "symbol": "RUB",
+        "name": "Russian Ruble",
+        "code": "RUB",
+        "emoji": "🇷🇺",
+        "text": [
+            "руб",
+            "russische rubel",
+            "rub",
+            "russischer rubel",
+            "кацапскіх грош",
+            "rubel",
+            "рублів",
+            "₽",
+            "кацапських грошей",
+            "rouble",
+            "рубл",
+            "rubl",
+            "кацапскі грош",
+            "rur"
+        ]
+    },
+    {
+        "symbol": "RWF",
+        "name": "Rwandan Franc",
+        "code": "RWF",
+        "emoji": "🇷🇼",
+        "text": [
+            "ruandischer franc",
+            "rwf",
+            "ruandische franc"
+        ]
+    },
+    {
+        "symbol": "SR",
+        "name": "Saudi Riyal",
+        "code": "SAR",
+        "emoji": "🇸🇦",
+        "text": [
+            "saudischer rial",
+            "sar",
+            "saudi-arabische riyal",
+            "saudische rial",
+            "saudi-arabischer riyal"
+        ]
+    },
+    {
+        "symbol": "D$",
+        "name": "Solomon Islander Dollar",
+        "code": "SBD",
+        "emoji": "🇸🇧",
+        "text": [
+            "salomonische dollar",
+            "salomonischer dollar",
+            "sbd"
+        ]
+    },
+    {
+        "symbol": "₨",
+        "name": "Seychellois Rupee",
+        "code": "SCR",
+        "emoji": "🇸🇨",
+        "text": [
+            "seychellische rupie",
+            "scr",
+            "seychellen-rupie",
+            "seychellen rupie",
+            "seychellische rupien"
+        ]
+    },
+    {
+        "symbol": "SDG",
+        "name": "Sudanese Pound",
+        "code": "SDG",
+        "emoji": "🇸🇩",
+        "text": [
+            "sudanesischer pfund",
+            "sudanesisches pfund",
+            "sdg"
+        ]
+    },
+    {
+        "symbol": "Skr",
+        "name": "Swedish Krona",
+        "code": "SEK",
+        "emoji": "🇸🇪",
+        "text": [
+            "шведська крона",
+            "шведські крон",
+            "schwedische krone",
+            "шведських крон",
+            "sek",
+            "шведская крон",
+            "schwedischer krone",
+            "шведськими крон",
+            "шведської крон",
+            "шведскіх крон",
+            "swedish krona"
+        ]
+    },
+    {
+        "symbol": "S$",
+        "name": "Singapore Dollar",
+        "code": "SGD",
+        "emoji": "🇸🇬",
+        "text": [
+            "singapur-dollar",
+            "сінгапурскіх долар",
+            "singapur dollar",
+            "sgd",
+            "сінгапурскі долар"
+        ]
+    },
+    {
+        "symbol": "£",
+        "name": "Saint Helenian Pound",
+        "code": "SHP",
+        "emoji": "🇸🇭",
+        "text": [
+            "shp",
+            "st.-helena pfund"
+        ]
+    },
+    {
+        "symbol": "Le",
+        "name": "Sierra Leonean Leone",
+        "code": "SLL",
+        "emoji": "🇸🇱",
+        "text": [
+            "sll",
+            "sierra-leonische leone",
+            "sierra-leonischer leone"
+        ]
+    },
+    {
+        "symbol": "Ssh",
+        "name": "Somali Shilling",
+        "code": "SOS",
+        "emoji": "🇸🇴",
+        "text": [
+            "somalische schilling",
+            "самалійскі шылінг",
+            "самалійскіх шылінг",
+            "somalischer schilling",
+            "somalia schilling",
+            "sos",
+            "somalia-schilling"
+        ]
+    },
+    {
+        "symbol": "Sr$",
+        "name": "Surinamese Dollar",
+        "code": "SRD",
+        "emoji": "🇸🇷",
+        "text": [
+            "suriname dollar",
+            "surinamischer dollar",
+            "surinamische dollar",
+            "сурынамскіх долар",
+            "srd"
+        ]
+    },
+    {
+        "symbol": "₡",
+        "name": "Salvadoran Colon",
+        "code": "SVC",
+        "emoji": "🇸🇻",
+        "text": [
+            "svc",
+            "el-salvador-colón"
+        ]
+    },
+    {
+        "symbol": "SY£",
+        "name": "Syrian Pound",
+        "code": "SYP",
+        "emoji": "🇸🇾",
+        "text": [
+            "syrische pfund",
+            "сірыйскі фунт",
+            "syp",
+            "syrisches pfund",
+            "сірыйскіх фунт"
+        ]
+    },
+    {
+        "symbol": "L",
+        "name": "Swazi Lilangeni",
+        "code": "SZL",
+        "emoji": "🇸🇿",
+        "text": [
+            "szl",
+            "lilangeni",
+            "swazi lilangeni",
+            "emalangeni"
+        ]
+    },
+    {
+        "symbol": "฿",
+        "name": "Thai Baht",
+        "code": "THB",
+        "emoji": "🇹🇭",
+        "text": [
+            "thailändische baht",
+            "thailändischer baht",
+            "thb"
+        ]
+    },
+    {
+        "symbol": "ЅМ",
+        "name": "Tajikistani Somoni",
+        "code": "TJS",
+        "emoji": "🇹🇭",
+        "text": [
+            "таджыкскі самоні",
+            "таджыкскіх самоні",
+            "tadschikistan somoni",
+            "somoni",
+            "tjs",
+            "самоні",
+            "tadschikistan-somoni"
+        ]
+    },
+    {
+        "symbol": "m",
+        "name": "Turkmenistani Manat",
+        "code": "TMT",
+        "emoji": "🇹🇲",
+        "text": [
+            "turkmenistan manat",
+            "туркменістанскі манат",
+            "turkmenistan-manat",
+            "туркменістанскіх манат",
+            "turkmenische manat",
+            "turkmenischer manat",
+            "tmt"
+        ]
+    },
+    {
+        "symbol": "DT",
+        "name": "Tunisian Dinar",
+        "code": "TND",
+        "emoji": "🇹🇳",
+        "text": [
+            "tunesischer dinar",
+            "туніскіх дынар",
+            "tnd",
+            "tunesische dinar",
+            "туніскі дынар"
+        ]
+    },
+    {
+        "symbol": "T$",
+        "name": "Tongan Paʻanga",
+        "code": "TOP",
+        "emoji": "🇹🇴",
+        "text": [
+            "pa'anga",
+            "tonga-dollar",
+            "top"
+        ]
+    },
+    {
+        "symbol": "TL",
+        "name": "Turkish Lira",
+        "code": "TRY",
+        "emoji": "🇹🇷",
+        "text": [
+            "turkish lira",
+            "₤",
+            "лір",
+            "try",
+            "турэцкая лір",
+            "турецьої лір",
+            "турецька лір",
+            "турецьких лір",
+            "турецькими лір",
+            "лир",
+            "турэцкіх лір",
+            "türkischer lira",
+            "турецькі лір",
+            "türkische lira",
+            "lira"
+        ]
+    },
+    {
+        "symbol": "TT$",
+        "name": "Trinidad and Tobago Dollar",
+        "code": "TTD",
+        "emoji": "🇹🇹",
+        "text": [
+            "ttd",
+            "trinidad und tobago dollar"
+        ]
+    },
+    {
+        "symbol": "NT$",
+        "name": "New Taiwan Dollar",
+        "code": "TWD",
+        "emoji": "🇹🇼",
+        "text": [
+            "taiwan-dollar",
+            "neue taiwan-dollar",
+            "新臺幣",
+            "twd",
+            "新台币"
+        ]
+    },
+    {
+        "symbol": "TSh",
+        "name": "Tanzanian Shilling",
+        "code": "TZS",
+        "emoji": "🇹🇿",
+        "text": [
+            "tansanische schilling",
+            "танзанскі шылінг",
+            "tansania schilling",
+            "tzs",
+            "танзанскіх шылінг",
+            "tansanischer schilling",
+            "tansania-schilling"
+        ]
+    },
+    {
+        "symbol": "₴",
+        "name": "Ukraine Hryvnia",
+        "code": "UAH",
+        "emoji": "🇺🇦",
+        "text": [
+            "₴",
+            "hryvna",
+            "hrn",
+            "hryvnia",
+            "гривня",
+            "гривень",
+            "грн",
+            "украінская грыўн",
+            "hrywnja",
+            "грыўн",
+            "гривн",
+            "hryvnya",
+            "українські гривн",
+            "українськими гривн",
+            "українська гривн",
+            "української гривн",
+            "uah",
+            "ukrainischer hrywnja",
+            "українських гривен",
+            "украінскіх грыўн",
+            "гривен",
+            "ukrainische hrywnja"
+        ]
+    },
+    {
+        "symbol": "USh",
+        "name": "Ugandan Shilling",
+        "code": "UGX",
+        "emoji": "🇺🇬",
+        "text": [
+            "угандыйскіх шылінг",
+            "uganda schilling",
+            "угандыйскі шылінг",
+            "uganda-schilling",
+            "ugandischer schilling",
+            "ugandische schilling",
+            "ugx"
+        ]
+    },
+    {
+        "symbol": "$",
+        "name": "American Dollar",
+        "code": "USD",
+        "emoji": "🇺🇸",
+        "text": [
+            "американськими долар",
+            "долар",
+            "us-dollar",
+            "бакс",
+            "buck",
+            "даляр",
+            "us dollar",
+            "американських долар",
+            "amerikanische dollar",
+            "доларів сша",
+            "американського долар",
+            "зелён",
+            "дол",
+            "дол сша",
+            "amerikanischer dollar",
+            "dollar",
+            "доллар",
+            "usd",
+            "амерыканскі долар",
+            "амерыканскіх долар",
+            "бачей"
+        ]
+    },
+    {
+        "symbol": "$U",
+        "name": "Uruguayan Peso",
+        "code": "UYU",
+        "emoji": "🇺🇾",
+        "text": [
+            "уругвайскіх песа",
+            "uruguayische peso",
+            "uruguayischer peso",
+            "уругвайскі песа",
+            "uyu"
+        ]
+    },
+    {
+        "symbol": "UZS",
+        "name": "Uzbekistan Som",
+        "code": "UZS",
+        "emoji": "🇺🇿",
+        "text": [
+            "usbekischer som",
+            "сумо",
+            "узбекскі сом",
+            "uzs",
+            "usbekistan som",
+            "сом",
+            "uzbekische so'm",
+            "суму",
+            "сум",
+            "som",
+            "сумы",
+            "узбецькими сом",
+            "узбецькі сом",
+            "сўм",
+            "usbekische som",
+            "uzbekischer so'm",
+            "узбецький сом",
+            "usbekistan-som",
+            "узбецького сом",
+            "узбецьких сом",
+            "сума",
+            "узбекскіх сом"
+        ]
+    },
+    {
+        "symbol": "Bs.F.",
+        "name": "Venezuelan Bolívar",
+        "code": "VEF",
+        "emoji": "🇻🇪",
+        "text": [
+            "venezolanischer bolívar",
+            "venezolanischer bolivar",
+            "венесуэльскі балівар",
+            "venezolanische bolívar",
+            "венесуэльскіх балівар",
+            "venezolanische bolivar",
+            "vef"
+        ]
+    },
+    {
+        "symbol": "₫",
+        "name": "Vietnamese Dong",
+        "code": "VND",
+        "emoji": "🇻🇳",
+        "text": [
+            "vietnamesischer dong",
+            "Đồng",
+            "vietnamesische dong",
+            "vnd",
+            "донг",
+            "dong"
+        ]
+    },
+    {
+        "symbol": "Vt",
+        "name": "Ni-Vanuatu Vatu",
+        "code": "VUV",
+        "emoji": "🇻🇺",
+        "text": [
+            "vanuatu vatu",
+            "vuv"
+        ]
+    },
+    {
+        "symbol": "WS$",
+        "name": "Samoan Tala",
+        "code": "WST",
+        "emoji": "🇼🇸",
+        "text": [
+            "samoanischer tala",
+            "wst",
+            "samoanische tala"
+        ]
+    },
+    {
+        "symbol": "FCFA",
+        "name": "CFA Franc BEAC",
+        "code": "XAF",
+        "emoji": "🇨🇫",
+        "text": [
+            "cfa-franc beac",
+            "xaf"
+        ]
+    },
+    {
+        "symbol": "X$",
+        "name": "East Caribbean Dollar",
+        "code": "XCD",
+        "emoji": "🇦🇬",
+        "text": [
+            "ostkaribischer dollar",
+            "xcd",
+            "усходнекарыбскіх долар",
+            "усходнекарыбскі долар",
+            "ostkaribische dollar"
+        ]
+    },
+    {
+        "symbol": "CFA",
+        "name": "CFA Franc BCEAO",
+        "code": "XOF",
+        "emoji": "🇨🇮",
+        "text": [
+            "cfa-franc bceao",
+            "xof"
+        ]
+    },
+    {
+        "symbol": "Fr",
+        "name": "CFP franc",
+        "code": "XPF",
+        "emoji": "🇵🇫",
+        "text": [
+            "cfp-franc",
+            "pazifische franc",
+            "xpf"
+        ]
+    },
+    {
+        "symbol": "YR",
+        "name": "Yemeni Rial",
+        "code": "YER",
+        "emoji": "🇾🇪",
+        "text": [
+            "yer",
+            "jemen-rial",
+            "jemenitische rial",
+            "jemenitischer rial",
+            "jemen rial"
+        ]
+    },
+    {
+        "symbol": "R",
+        "name": "South African Rand",
+        "code": "ZAR",
+        "emoji": "🇿🇦",
+        "text": [
+            "südafrikanischer rand",
+            "südafrikanische rand",
+            "рэнд",
+            "zar",
+            "ранд"
+        ]
+    },
+    {
+        "symbol": "ZK",
+        "name": "Zambian Kwacha",
+        "code": "ZMW",
+        "emoji": "🇿🇲",
+        "text": [
+            "замбійскі квача",
+            "sambischer kwacha",
+            "замбійскіх квач",
+            "sambische kwacha",
+            "замбійская квача",
+            "zmw"
+        ]
+    },
+    {
+        "symbol": "Z$",
+        "name": "Zimbabwean dollar",
+        "code": "ZWL",
+        "emoji": "🇿🇼",
+        "text": [
+            "simbabwe dollar",
+            "зімбабвійскі долар",
+            "zwl",
+            "зімбабвійскіх долар",
+            "simbabwe-dollar"
+        ]
+    },
+    {
+        "symbol": "₿",
+        "name": "Bitcoin",
+        "code": "BTC",
+        "emoji": "💵",
+        "text": [
+            "btc",
+            "біток",
+            "біткоїн"
+        ]
+    },
+    {
+        "symbol": "ETH",
+        "name": "Ethereum",
+        "code": "ETH",
+        "emoji": "💵",
+        "text": [
+            "ETH",
+            "езеріум"
+        ]
+    }
+]

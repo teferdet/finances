@@ -1,55 +1,118 @@
 {
-  "keyboard":{
-    "crypto":"💵 Cryptocurrency",
-    "communication":"🔗 Communication",
-    "news":"📰 News",
+  "keyboard": {
+    "settings": {
+      "bot": "🤖 Bot",
+      "groups": "👥 Groups",
+      "add bot": "➕ Add to group",
+      "error": "❌ Error. Try again!",
+      "remove": "🗑 Remove bot",
+      "save": "💾 Save",
+      "confirm": "✅ Confirm",
+      "next list": "▶️ Next",
+      "back list": "◀️ Back",
+      "back": "◀️ Return",
+      "fiat": "💶 Fiat currencies",
+      "crypto": "💵 Cryptocurrency",
+      "stocks": "📑 Company stocks",
+      "input": "📥 Data input",
+      "output": "📤 Data output"
+    },
+    "help": {
+      "q&a": "💬 Questions\\Answers",
+      "communication": "🔗 Contact"
+    },
+    "news": "📰 News",
     "other": "Other",
-    "delete":"🗑 Delete",
-    "cancel":"❌ Cancel",
-    "input":"📥 Change receiving data",
-    "output":"📤 Change output data",
-    "groups":"👥 Group settings",
-    "add bots":"➕ Add to the group"
+    "delete": "🗑 Delete"
   },
-  "time":{
+  "time": {
     "morning": "Good morning",
-    "day": "Good afternoon",
+    "day": "Good day",
     "evening": "Good evening",
     "night": "Good night"
   },
-  "menu":{
-    "in bot":"Functions and how to work with them\n\n📊 To find out the exchange rate of fiat currencies, select it from the menu or write your own.  If you need to convert a currency, add the conversion amount to the name: 45 UAH or USD 5\n💵 To get the cryptocurrency rate - /crypto\n📑 To get the share rate - /share\n\n👆If you need to convert cryptocurrency or shares, add the conversion amount to their command: /crypto 4\nOther commands are in the menu\n\nThe bot also supports inline mode and works with chats",
-    "in group":"Functions and how to work with them\n\n📊 To find out the exchange rate of fiat currencies, select it from the menu or write your own.  If you need to convert a currency, add the conversion amount to the name: 45 UAH or USD 5\n💵 To get the cryptocurrency rate - /crypto\n📑 To get the share rate - /share\n👆If you need to convert cryptocurrency or shares, add the conversion amount to their command: /crypto 4\nOther commands are in the menu \n\n⚙️ Bot settings can be changed in personal messages "
+  "menu": {
+    "private": [
+      "<b>finances — your financial assistant</b>\n\n", 
+      "📊 Exchange rates — enter any currency in the world and get the current rate.",
+      "Write the currency you want to convert in a format convenient for you and the conversion amount (optional).",
+      "Or convert* multiple currencies at once by writing several currencies in one message!\n",
+      "💵 Cryptocurrency — use the /crypto command to get cryptocurrency rates to six fiat currencies (hryvnia, dollar, euro, pound, krone, zloty) and convert* it to the desired amount.\n",
+      "📑 Company stocks — review the company stocks you need.\n\n",
+      "💬 Quickly and conveniently exchange currency rates directly in chats with friends\\colleagues thanks to integration into chats. Write: @fStatisticsBot and your desired option.\n",
+      "👥 Add finances to your groups and convert currencies right during the conversation without extra moves and actions. The bot will do everything for you**\n\n",
+      "<i>* — to convert, you need to write the amount in numbers\n",
+      "** — you may need to set it up for yourself in advance</i>"
+    ],
+    "group": [
+      "<b>finances chat manager — your humble servant in currency conversion</b>\n",
+      "🤖 Automatic conversion of the fiat currencies* you need into any world currencies as you wish. Provide the bot with information about your currency preferences and get automatic conversion without any extra actions**. Convenient and fast\n",
+      "<i>* — to review cryptocurrencies, you need to enter the command /crypto (except BTC, ETH)\n",
+      "** — to convert, write the amount in numbers</i>"
+    ]
   },
-  "exchange rate":{
-    "currency user error":"😖 Unclear command! Select the currency from the keys or write it correctly.",
-    "server error":"😖 The server is temporarily down, please try again later",
-    "rate": "Rate | "
+  "exchange rate": {
+    "input error": "😖 Unclear command! Use quick entry or write it correctly",
+    "server error": "😖 Server is down, try again later",
+    "main rate": "Rate as of {}\n{}\n\n{}",
+    "sub rate": "Rate as of {}\n{}"
   },
-  "inline mode":{
-    "server error":"😖 The server is temporarily down, please try again later",
-    "choose":"Write the currency and conversion amount (if necessary):",
-    "choose warning":"'!' for cryptocurrencies and 'share' for shares",
-    "warning crypto":"Add the currency and amount (if necessary):",
-    "user error":"😖 Currency or conversion amount is incorrect.",
-    "warning":"☝️ To convert currency, add the amount to be converted.",
-    "warning info":"☝️ To convert in inline mode, you need to add the conversion amount. For example: \"UAH 11\", \"gpb 57\", etc...",
-    "choose error":"🔁 The currency was not written, try again"
+  "inline mode": {
+    "server error": "😖 Server is down, try again later",
+    "choose": "Write the currency or command:",
+    "choose warning": "crypto - for cryptocurrencies \\\\ stocks - stocks",
+    "warning crypto": "Add a currency from the list below:",
+    "bad request": "😖 Incorrectly written currency!",
+    "warning": "☝️ To convert, add the amount",
+    "warning info": "☝️ To convert, you need to add the conversion amount. For example: \"грн 11\", \"gpb 57\" etc...",
+    "choose error": "🔁 Currency was not written, try again"
   },
-  "settings":{
-    "menu":"⚙️ Settings \nSelect the function you need:",
-    "choose group": "Select the group you want to edit:", 
-    "write input":"✍️ Write a list of currencies that the bot should process (Alphabetic code only. For example: Ils, USD...):", 
-    "write output":"✍️ Write the currencies that the bot should display(Alphabetic code only. For example: Ils, USD...):",
-    "warning": "Attention! Unfortunately, the bot does not support the output of all world currencies, but only a list of suggested currencies. You can choose only those currencies that are listed below:\n",
-    "success":"🎉 Changes have been successfully applied",
+  "settings": {
+    "menu": [
+      "⚙️ Settings, choose the option you need:\n\n",
+      "🤖 Bot — change the list of conversion currencies for fiat, cryptocurrencies, and company stocks\n",
+      "👥 Groups — change the lists of conversion currencies and currencies to be processed."
+    ],
+    "choose group": "👥 Choose the group to edit:", 
+    "input": "✍️ Choose the currencies you need and confirm them!", 
+    "alert add": "➕ Currency added to the list",
+    "alert remove": "➖ Currency removed from the list",
+    "output": "✍️ Select the currencies you need from the list below:",
+    "success": "🎉 Changes applied successfully",
     "exit": "Changes were not applied",
-    "item error":"😖 This currency is not supported",
-    "group item": "Select what you want to change in the group:",
-    "settings locate error": "Settings are only available in the bot's private messages",
-    "group list error":"😢 Unfortunately you don't have any groups to edit yet"
+    "settings option": "Choose the option you need to edit:",
+    "local error": "Settings are only available in bot's private messages!",  
+    "error group list": "😢 Unfortunately, you don't have any groups that you can edit yet...",
+    "remove": "WARNING! You risk losing all settings and removing the bot from the group!",
+    "success remove": "🎉 Data deleted successfully!"
   },
-  "donate":"🙏 Contribute to the development of the bot, support the development with money: ",
-  "help": "If you have a problem or a suggestion for new features, please contact me.",
-  "bot info":"🤖 Version:"
+  "other": {
+    "donate": [
+      "<b>Support the development of new updates for finances!</b>",
+      "\nfinances is an open-source project developed with enthusiasm and the idea of creating a convenient tool for currency review and conversion",
+      "\ncryptocurrencies in Telegram, which you can use every second.\n",
+      "Join the creation of new updates with your donations!",
+      "Or via bank card using the links below 👇"
+    ],
+    "help": {
+      "main": [
+        "<b>Explanation of bot functions:</b>\n\n", 
+        "📊 Exchange rates — enter any currency in the world and get the current rate. Write the currency you want to convert in a format convenient for you and the conversion amount (optional).",
+        "Or convert* multiple currencies at once by writing several currencies in one message!\n",
+        "💵 Cryptocurrency — use the /crypto command to get cryptocurrency rates to six fiat currencies (hryvnia, dollar, euro, pound, krone, zloty) and convert* it to the desired amount.\n",
+        "📑 Company stocks — review the company stocks you need.\n\n",
+        "If you find an error or a problem, please contact me!\n\n",
+        "<i>* — to convert, you need to write the amount in numbers</i>"
+      ],
+      "q&a": [
+        "💬 Questions and answers:\n\n",
+        "Q: The bot says it doesn't understand the N-currency, what should I do?\n",
+        "A: It's hard to support all possible entries and currency names. Try writing the currency code or differently (if you used slang name\\your own).\n",
+        "Q: I write the conversion amount and the currencies I want to convert to, but it converts only one or two currencies?\n",
+        "A: The bot's algorithm requires the user to write the conversion amount every time or every other time in such cases.\n\n",
+        "Have questions? Contact via the button below"
+      ]
+    },
+    "info": "🤖 Version: {}"
+  }
 }

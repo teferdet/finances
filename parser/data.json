@@ -1,5 +1,5 @@
 {
-    "currency_info":{
+    "currencies_info":{
         "American Dollar":["🇺🇸", "USD", "$"],
         "Argentine Peso":["🇦🇷", "ARS", "$"],
         "Australian Dollar":["🇦🇺", "AUD", "$"],
@@ -31,10 +31,10 @@
         "EUR":"€",
         "GBP":"£",
         "UAH":"₴",
-        "PLN":"zł‎",
+        "PLN":"zł",
         "CZK":"Kč"
     },
-    "symbols company":[
+    "company":[
         "AAPL", "MSFT", "2222.SR", "GOOG",
         "AMZN", "NVDA", "TSLA", "META", "BRK-B", 
         "TSM", "V", "UNH", "MC.PA", "JPM", "JNJ", 
@@ -50,5 +50,26 @@
         "TCS.NS", "PM", "MS", "INTC", "CAT", "QCOM", "TTE", "NEE",  
         "INTU", "COP", "UNP", "VZ", "LOW", "RY", "UL", 
         "SNY", "IBM", "SIE.DE", "BMY", "HON"
+    ],
+    "crypto":[
+        "BTC", "ETH", "USDT", "BNB", "SOL",
+        "USDC", "XRP", "DOGE", "TON", "ADA",
+        "AVAX", "SHIB", "DOT", "LINK", "TRX",
+        "BCH", "NEAR", "MATIC", "UNI", "LTC",
+        "PEPE", "ICP", "LEO", "DAI", "ETC", "APT", 
+        "RNDR", "HBAR", "IMX", "MNT", "ATOM", 
+        "FIL", "CRO", "XLM", "KAS", "ARB", 
+        "FDUSD", "GRT", "WIF", "TAO", "OKB", 
+        "STX", "OP", "AR", "XMR", "MKR", 
+        "VET", "SUI", "INJ", "BONK", "THETA", 
+        "FTM", "RUNE", "LDO", "FLOKI", "FET", 
+        "CORE", "ONDO", "TIA", "PYTH", "ALGO", 
+        "BGB", "JUP", "SEI", "AAVE", "STRK", 
+        "FLOW", "BEAM", "ENA", "GALA", "AKT", 
+        "BSV", "AGIX", "BTT", "AXS", "DYDX", 
+        "QNT", "FLR", "NEO", "EGLD", "JASMY", 
+        "RON", "CHZ", "WLD", "PENDLE", "W", 
+        "SAND", "XTZ", "XEC", "KCS", "EOS",
+        "GNO", "SNX", "AIOZ", "MINA", "CFX"
     ]
 }
