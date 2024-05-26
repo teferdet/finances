@@ -89,9 +89,9 @@ Telegram bot that supports 3 modes, which allows you to use it conveniently and 
 Enter the keys and tokens of the listed services in the fields below in the files/config.json file for the bot to work properly. Without this, some functionality will not work.
 ```
 "telegram_token":"<Your Telegram API token>",
-"database":"<Your CoinMarketCap API kay>",
-"crypto_api_key":"<Your Financial Modeling Prep API kay>",
-"stocks_api_key":"<MongoDB url>",
+"database":"<MongoDB url>",
+"crypto_api_key":"<Your CoinMarketCap API kay>",
+"stocks_api_key":"<Your Financial Modeling Prep API kay>",
 ```
 The config.json file has a large number of editable items that can be changed at any time at your request. One of these options is to set up automatic data updates: 
 ```

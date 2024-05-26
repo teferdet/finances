@@ -73,8 +73,7 @@ class GetCurrencyData:
                 item = f"💵 {name}/USD {price}{symbol}"
                 self.value.append(item)
 
-        self.value = "\n".join(self.value)
         self.__str__()
 
     def __str__(self) -> str:
-        return self.value
+        return "\n".join(self.value)

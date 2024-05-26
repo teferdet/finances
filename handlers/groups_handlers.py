@@ -19,8 +19,8 @@ class GroupsHandler:
         
         if self.results:
             for item in database.find({"_id":self.chat}):
-                self.output_currenies = item["output"]
-                input_currenies = item["input"]
+                self.output_currenies = item["Output"]
+                input_currenies = item["Input"]
             
             if any(i in input_currenies for i in self.curensies): 
                 self.request()

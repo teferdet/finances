@@ -64,7 +64,7 @@ class Uppend:
             admin_ID = item.user.id
             is_bot = item.user.is_bot
 
-            if not is_bot:
+            if is_bot is False:
                 User(self.message)
 
                 self.update.append(UpdateOne(

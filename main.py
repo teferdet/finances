@@ -1,6 +1,5 @@
 import os
 import sys
-from signal import signal, SIGINT
 from threading import Thread
 from time import sleep, strftime
 
@@ -11,29 +10,37 @@ os.environ["PYTHONWARNINGS"] = "ignore:::atexit"
 from messages_handler import bot
 from parser_handler import Updater
 
-def signal_handler(sig, frame):
-    print('Stopping...')
-    updater_instance.stop()
-    parser_handler.join()
-    bot.stop_polling()
-    sys.exit(0)
+updater_instance = Updater()
+option = True
 
-signal(SIGINT, signal_handler)
-    
-if __name__ == "__main__":
-    global updater_instance, parser_handler
-    
+def bot_run():
+    global option
     print(f"[BOT] {strftime('%d.%m.%y %H:%M:%S')}: Start work")
-    
-    updater_instance = Updater()
-    parser_handler = Thread(target=updater_instance.start, name="Parser")
-    parser_handler.start()
-    
-    while True:
+
+    while option:
         try:
-            bot.polling(none_stop=True, timeout=30)
+            bot.polling(none_stop=True)
 
         except Exception as e:
-            print(f"[BOT ERROR] {strftime('%d.%m.%y %H:%M:%S')}: {e}")
+            print(f"[Bot Error] {strftime('%d.%m.%y %H:%M%S')}: {e}")
             sleep(5)
-            bot.stop_polling()
+            continue
+
+if __name__ == "__main__":
+    parser_handler = Thread(target=updater_instance.start, name="Parser")    
+    bot_handler = Thread(target=bot_run, name="Bot")
+
+    try:
+        bot_handler.start()
+        parser_handler.start()
+
+        bot_handler.join()
+        parser_handler.join()
+
+    except KeyboardInterrupt:
+        print(f"[BOT] {strftime('%d.%m.%y %H:%M:%S')}: Stop working...")
+
+        bot.stop_polling()
+        option = False
+        updater_instance.stop()
+    
