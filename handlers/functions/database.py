@@ -1,5 +1,5 @@
 from jsoncfg import load_config
-from time import strptime
+from time import strftime
 from messages_handler import bot, client, UpdateOne
 
 users_database = client["Users"]
@@ -19,7 +19,7 @@ class User:
     def add_user(self):
         curencies = config()
         name = "{0.first_name} {0.last_name}".format(self.message.from_user)
-        sing_up = strptime('%d.%m.%y %H:%M:%S')
+        sing_up = strftime('%d.%m.%y %H:%M:%S')
 
         if self.message.from_user.last_name == "None":
             name = self.message.from_user.first_name
