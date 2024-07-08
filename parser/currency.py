@@ -1,13 +1,17 @@
 import requests
 import time
+import json
 from bs4 import BeautifulSoup as bs4
 from jsoncfg import load_config
+from logs_handler import logger
+
 
 class Currency:
     def __init__(self, currencies: list):
         from parser.parser_handler import CACHE
 
         self.CACHE = CACHE 
+        self.success_update = []
 
         times = int(time.strftime("%H"))
         day = time.strftime("%m.%d")
@@ -21,6 +25,10 @@ class Currency:
                 "day": day
             }
             self.request()
+        
+        else:
+            success_update = ", ".join(self.success_update)
+            logger.info(f"[Parser] Successful update of currencies {success_update}")
 
     def request(self):
         url = f"https://fx-rate.net/{self.currency}/"
@@ -34,22 +42,21 @@ class Currency:
 
         else:
             self.currency_cash["status"] = "server error"
-            print(f"[Parser Error] {self.log_time}. Connection error, status code: {status_code}")
+            logger.error(f"[Parser Error] Connection error, status code: {status_code}")
 
     def data_retrieval(self):
         try:
             soup = bs4(self.response.text, "html.parser")
             self.site_data = soup.find_all("tbody")[1].find_all("tr")
-            self.symbol = soup.find("div", class_="fmenu2").find_all("li")[1].text[-1]
             self.data_processin()
 
         except IndexError as e:
             self.currency_cash["status"] = "bad request"
-            print(f"[Parser Error] {self.log_time}: Currency. Data retrieval: {e}")
+            logger.info(f"[Parser Error] Currency. Data retrieval: {e}")
 
     def data_processin(self):
         self.currency_cash["status"] = "good"
-        self.currency_cash["symbol"] = self.symbol
+        self.currency_cash["symbol"] = self.symbol()
 
         for data in self.site_data:
             info = load_config("parser/data.json").currencies_info
@@ -70,4 +77,14 @@ class Currency:
             except IndexError:
                 pass
         
-        print(f"[Parser] {self.log_time}: Currency. Successful update {self.currency}")
+        self.success_update.append(self.currency)
+
+    def symbol(self):
+        path = "handlers/functions/currencies_data.json"
+        with open(path, encoding="utf-8") as f:
+            data = json.load(f)
+        
+        for i in data:
+            if i["code"] == self.currency:
+                return i["symbol"]
+            

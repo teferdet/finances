@@ -59,15 +59,24 @@ def about():
 
     return keypad
 
+def mini_app():
+    url = urls()
+    keypad = types.InlineKeyboardMarkup()
+    keypad.row( 
+        types.InlineKeyboardButton(text="🌐 Open", url=url["mini app"]),
+    )
+
+    return keypad
+    
 def donate():
     url = urls()
     keypad = types.InlineKeyboardMarkup()
     keypad.row(
         types.InlineKeyboardButton(text="☕️ Buy me a coffee", url=url["buymeacoffee"]),    
-        types.InlineKeyboardButton(text="❤️ Дяка", url=url["donatello"])
+        types.InlineKeyboardButton(text="❤️ Donatello", url=url["donatello"])
     )
     keypad.row(
-        types.InlineKeyboardButton(text="🏦 Monobank", url=url["bank"]),
+        types.InlineKeyboardButton(text="💳 Google pay\\Apple pay", url=url["bank"]),
     )
 
     return keypad

@@ -2,11 +2,14 @@ import requests
 import json
 import time
 from jsoncfg import load_config
+from logs_handler import logger
+
 
 class Crypto:
     def __init__(self, config: dict):
         self.config = config.currencies_settings
         self.crypto_data = {}
+        self.success_update = []
         self.url = "https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest"
         self.headers = {
             "X-CMC_PRO_API_KEY": config.crypto_api_key.value,
@@ -26,6 +29,12 @@ class Crypto:
             
             self.status_code()
         
+        else:
+            log_time = time.strftime("%d.%m.%y %H:%M:%S")
+            success_update = ", ".join(self.success_update)
+
+            logger.info(f"[Parser] Successful update of cryptocurrencies {success_update}")
+
         self.return_data()
 
     def status_code(self):
@@ -36,11 +45,12 @@ class Crypto:
             self.data = json.loads(self.response.text)["data"]
             self.data_processin()
         
-            print(f"[Parser] {log_time}: Crypto. Successful update {self.currency}")
+            self.success_update.append(self.currency)
         
         except requests.HTTPError as e:
             self.crypto_data == {}
-            print(f"[Parser Error] {log_time}. Crypto. Connection error: {e}")
+            self.error = e 
+            logger.error(f"[Parser Error] Crypto. Connection error: {e}")
 
     def data_processin(self):
         symbol = load_config("parser/data.json")["symbol"][self.currency].value
@@ -51,4 +61,8 @@ class Crypto:
             self.item_data[name] = [name, price, symbol]
 
     def return_data(self) -> dict:
-        return self.crypto_data
+        if self.crypto_data == {}: 
+            return {"Error": f"{self.error}"}
+        else: 
+            return self.crypto_data
+            

@@ -1,12 +1,13 @@
 import os
 import sys
 from threading import Thread
-from time import sleep, strftime
+from time import sleep
 
 sys.path.append("handlers")
 sys.path.append("parser")
 os.environ["PYTHONWARNINGS"] = "ignore:::atexit"
 
+from logs_handler import logger
 from messages_handler import bot
 from parser_handler import Updater
 
@@ -15,14 +16,14 @@ option = True
 
 def bot_run():
     global option
-    print(f"[BOT] {strftime('%d.%m.%y %H:%M:%S')}: Start work")
+    logger.info(f"[BOT] Start work")
 
     while option:
         try:
             bot.polling(none_stop=True)
 
         except Exception as e:
-            print(f"[Bot Error] {strftime('%d.%m.%y %H:%M%S')}: {e}")
+            logger.error(f"[Bot Error] {e}")
             sleep(5)
             continue
 
@@ -38,7 +39,7 @@ if __name__ == "__main__":
         parser_handler.join()
 
     except KeyboardInterrupt:
-        print(f"[BOT] {strftime('%d.%m.%y %H:%M:%S')}: Stop working...")
+        logger.info(f"[BOT] Stop working...")
 
         bot.stop_polling()
         option = False

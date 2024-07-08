@@ -86,6 +86,19 @@ def about(message: dict):
         reply_markup=keyboard.about()
     )
 
+@bot.message_handler(commands=["expense_manager"])
+def about(message: dict):
+    if message.from_user.id == 1693890078:
+        bot.send_message(
+            message.chat.id, "finances: Expense manager",
+            reply_markup=keyboard.mini_app()
+        )
+    
+    else:
+        bot.send_message(
+            message.chat.id, "Sorry, this feature is not available for you now",
+        )
+
 @bot.message_handler(commands=["donate"])
 def donate(message: dict):
     text = translate(message, "other")["donate"]
@@ -93,6 +106,21 @@ def donate(message: dict):
     bot.send_message(
         message.chat.id, "".join(text),
         reply_markup=keyboard.donate(),
+        parse_mode="HTML"
+    )
+
+@bot.message_handler(commands=["privacy"])
+def privacy(message: dict):
+    contant =translate(message, "other")["privacy"]
+    version = config.privacy_update.value
+
+    privacy_text = "".join(contant['text'])
+    update = contant['update']
+
+    text = f"{privacy_text}\n\n{update}".format(version)
+
+    bot.send_message(
+        message.chat.id, text,
         parse_mode="HTML"
     )
 

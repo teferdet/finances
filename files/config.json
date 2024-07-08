@@ -1,12 +1,13 @@
 {
     "telegram_token":"<Your Telegram API token>",
-    "database":"<Your CoinMarketCap API kay>",
-    "crypto_api_key":"<Your Financial Modeling Prep API kay>",
-    "stocks_api_key":"<MongoDB url>",
+    "database":"<MongoDB url>",
+    "crypto_api_key":"<Your CoinMarketCap API kay>",
+    "stocks_api_key":"<Your Financial Modeling Prep API kay>",
     "languages":["uk", "pl"],
-    "version":"finances 4 build 9 release Vol. 1",
+    "version":"finances 4 build 11 release Vol. 1",
+    "privacy_update":"08.07.2024",
     "update":{
-        "automatic_update":true,
+        "automatic_update":false,
         "number_of_repeats":3,
         "sleep_time":3600
     },
@@ -47,11 +48,12 @@
         ]    
     },
     "urls":{
-        "invite":"https://t.me/<your bot username>?startgroup=true",
-        "github":"",
-        "communication":"",
-        "buymeacoffee":"",
-        "donatello":"",
-        "bank":""
+        "invite":"https://t.me/fStatisticsBot?startgroup=true",
+        "github":"https://github.com/teferdet/finances",
+        "communication":"https://t.me/teferdet",
+        "buymeacoffee":"https://www.buymeacoffee.com/teferdet",
+        "donatello":"https://donatello.to/teferdet",
+        "bank":"https://send.monobank.ua/jar/8TC79v49FX",
+        "mini app":"https://t.me/fStatisticsBot/app"
     }
 }

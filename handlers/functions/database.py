@@ -1,4 +1,5 @@
 from jsoncfg import load_config
+from time import strptime
 from messages_handler import bot, client, UpdateOne
 
 users_database = client["Users"]
@@ -18,6 +19,7 @@ class User:
     def add_user(self):
         curencies = config()
         name = "{0.first_name} {0.last_name}".format(self.message.from_user)
+        sing_up = strptime('%d.%m.%y %H:%M:%S')
 
         if self.message.from_user.last_name == "None":
             name = self.message.from_user.first_name
@@ -29,6 +31,7 @@ class User:
             "Password":None,
             "Language":self.message.from_user.language_code,
             "Premium":self.message.from_user.is_premium,
+            "Sign up":sing_up,
             "Fiat currency":[i.value for i in curencies.small_convert_currencies],
             "Crypto currency":[i.value for i in curencies.crypto],
             "Stocks":[i.value for i in curencies.company],

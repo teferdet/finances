@@ -4,6 +4,7 @@ from jsoncfg import load_config
 from parser.currency import Currency
 from parser.crypto import Crypto 
 from parser.stocks import Stocks
+from logs_handler import logger
 
 config = load_config("files/config.json")
 database = client['Currency']
@@ -103,7 +104,6 @@ class Updater:
                 time.sleep(5)
 
     def update(self):
-        log_time = time.strftime('%d.%m.%y %H:%M:%S')
         self.number_of_repeats = self.config.update.number_of_repeats.value
         sleep_time = self.config.update.sleep_time.value
         text = " "
@@ -118,7 +118,7 @@ class Updater:
             self.repeat = 0
             
         self.database()
-        print(f"[Parser] {log_time}: Update of all cryptocurrencies,{text}stocks are completed")
+        logger.info(f"[Parser] Update of all cryptocurrencies,{text}stocks are completed")
 
         self.repeat += 1
         time.sleep(sleep_time)
@@ -127,11 +127,10 @@ class Updater:
         crypto_data = Crypto(self.config).return_data()
         stocks_data = Stocks(self.config).return_data()
 
-        if crypto_data != {} and stocks_data != {}:
-            database.bulk_write([
-                UpdateOne({"_id": "stocks"}, {"$set": stocks_data}, upsert=True),
-                UpdateOne({"_id": "Crypto"}, {"$set": crypto_data}, upsert=True)
-            ])
+        database.bulk_write([
+            UpdateOne({"_id": "stocks"}, {"$set": stocks_data}, upsert=True),
+            UpdateOne({"_id": "Crypto"}, {"$set": crypto_data}, upsert=True)
+        ])
     
     def stop(self):
         self.option = False

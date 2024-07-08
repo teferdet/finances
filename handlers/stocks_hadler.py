@@ -19,7 +19,7 @@ class StocksHandler:
         self.data_processin()
     
     def data_processin(self):
-        query = {"_id":"Shares"}
+        query = {"_id":"stocks"}
         data = [i for i in database.find(query)][0]
         user_data = users_database.find_one({"_id":self.ID})["Stocks"]
 
