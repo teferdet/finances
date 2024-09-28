@@ -6,21 +6,17 @@ from messages_handler import bot
 keys = ["delete", "er", "crypto", "q&a"]
 
 main_keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
-main_keyboard.row(  
-    types.KeyboardButton("🇺🇦 UAH"), 
+main_keyboard.row(   
     types.KeyboardButton("🇺🇸 USD"),
+    types.KeyboardButton("🇪🇺 EUR"),
     types.KeyboardButton("🇬🇧 GBP")
 ) 
 main_keyboard.row(  
-    types.KeyboardButton("🇪🇺 EUR"),
-    types.KeyboardButton("🇵🇱 PLN"), 
-    types.KeyboardButton("🇨🇿 CZK")
-)
-main_keyboard.row(  
     types.KeyboardButton("🇨🇭 CHF"),
-    types.KeyboardButton("🇧🇬 BGN"), 
-    types.KeyboardButton("🇯🇵 JPY")
+    types.KeyboardButton("🇵🇱 PLN"), 
+    types.KeyboardButton("🇺🇦 UAH"),
 )
+
 
 # Main keypads 
 def er_keypad(message: object, currency: str, amount: float, index: int):

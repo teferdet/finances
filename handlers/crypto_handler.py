@@ -1,3 +1,4 @@
+from calendar import c
 from re import findall
 from time import strftime
 from functions.language import translate
@@ -53,11 +54,12 @@ class AlternativeConvert:
 class GetCurrencyData:
     def __init__(self, currency: str, amount: float, ID: int):
         self.amount = amount
+        self.currency = currency
         self.value = []
         self.ID = ID
 
         query = {"_id":"Crypto"}
-        self.data = [i[currency] for i in database.find(query)][0]
+        self.data = [i[self.currency] for i in database.find(query)][0]
 
         self.data_processin()
 
@@ -70,7 +72,7 @@ class GetCurrencyData:
                 price = round(price*self.amount, 4)
                 symbol = self.data[key][2]
 
-                item = f"💵 {name}/USD {price}{symbol}"
+                item = f"💵 {name}/{self.currency.upper()} {price}{symbol}"
                 self.value.append(item)
 
         self.__str__()

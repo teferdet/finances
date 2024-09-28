@@ -3,7 +3,6 @@ import json
 from jsoncfg import load_config
 from logs_handler import logger
 
-
 class Stocks:
     def __init__(self, config):
         self.stocks_data = {}

@@ -3,3 +3,5 @@ bs4
 requests
 pymongo
 json-cfg
+cloudscraper
+fake_useragent

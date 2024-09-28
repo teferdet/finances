@@ -1,10 +1,12 @@
-import requests
 import time
 import json
+import random
+import requests
 from bs4 import BeautifulSoup as bs4
 from jsoncfg import load_config
 from logs_handler import logger
-
+from fake_useragent import UserAgent
+import cloudscraper
 
 class Currency:
     def __init__(self, currencies: list):
@@ -12,6 +14,9 @@ class Currency:
 
         self.CACHE = CACHE 
         self.success_update = []
+        self.scraper = cloudscraper.create_scraper(browser='chrome')
+        self.ua = UserAgent()
+        self.setup_session()
 
         times = int(time.strftime("%H"))
         day = time.strftime("%m.%d")
@@ -30,29 +35,66 @@ class Currency:
             success_update = ", ".join(self.success_update)
             logger.info(f"[Parser] Successful update of currencies {success_update}")
 
-    def request(self):
+    def setup_session(self):
+        self.scraper.headers.update({
+            'User-Agent': self.ua.random,
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+            'Accept-Language': 'en-US,en;q=0.9',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Referer': 'https://www.google.com/',
+            'DNT': '1',
+            'Connection': 'keep-alive',
+            'Upgrade-Insecure-Requests': '1',
+            'Sec-Fetch-Dest': 'document',
+            'Sec-Fetch-Mode': 'navigate',
+            'Sec-Fetch-Site': 'cross-site',
+            'Sec-Fetch-User': '?1',
+            'Cache-Control': 'max-age=0',
+        })
+
+    def get_cf_clearance(self):
+        try:
+            response = self.scraper.get('https://fx-rate.net/')
+            return self.scraper.cookies.get('cf_clearance')
+        except Exception as e:
+            logger.error(f"Error getting Cloudflare clearance: {e}")
+            return None
+
+    def request(self):       
         url = f"https://fx-rate.net/{self.currency}/"
-        self.response = requests.get(url, timeout=5)
+        
+        self.scraper.headers.update({
+            'User-Agent': self.ua.random,
+            'Referer': 'https://fx-rate.net/',
+        })
 
-        status_code = self.response.status_code
-        self.currency_cash["status"] = status_code
-
-        if status_code == 200:
+        cf_clearance = self.get_cf_clearance()
+        if cf_clearance:
+            self.scraper.cookies.set('cf_clearance', cf_clearance)
+        
+        try:
+            time.sleep(random.uniform(2, 5))
+            
+            response = self.scraper.get(url, timeout=15)
+            response.raise_for_status()
+            
+            self.response = response.text
+            self.currency_cash["status"] = "good"
             self.data_retrieval()
-
-        else:
-            self.currency_cash["status"] = "server error"
-            logger.error(f"[Parser Error] Connection error, status code: {status_code}")
+        except requests.RequestException as e:
+            self.currency_cash["status"] = "bad request"
+            logger.info(f"[Parser Error] Currency. Request error: {e}")
+            logger.info(f"Response content: {response.text[:500]}...") 
 
     def data_retrieval(self):
         try:
-            soup = bs4(self.response.text, "html.parser")
+            soup = bs4(self.response, "html.parser")
             self.site_data = soup.find_all("tbody")[1].find_all("tr")
             self.data_processin()
-
         except IndexError as e:
             self.currency_cash["status"] = "bad request"
             logger.info(f"[Parser Error] Currency. Data retrieval: {e}")
+            logger.info(f"Response content: {self.response[:500]}...")
 
     def data_processin(self):
         self.currency_cash["status"] = "good"
@@ -87,4 +129,3 @@ class Currency:
         for i in data:
             if i["code"] == self.currency:
                 return i["symbol"]
-            

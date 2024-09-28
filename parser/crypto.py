@@ -4,7 +4,6 @@ import time
 from jsoncfg import load_config
 from logs_handler import logger
 
-
 class Crypto:
     def __init__(self, config: dict):
         self.config = config.currencies_settings
@@ -30,7 +29,6 @@ class Crypto:
             self.status_code()
         
         else:
-            log_time = time.strftime("%d.%m.%y %H:%M:%S")
             success_update = ", ".join(self.success_update)
 
             logger.info(f"[Parser] Successful update of cryptocurrencies {success_update}")
@@ -38,8 +36,6 @@ class Crypto:
         self.return_data()
 
     def status_code(self):
-        log_time = time.strftime("%d.%m.%y %H:%M:%S")
-
         try:
             self.response.raise_for_status()
             self.data = json.loads(self.response.text)["data"]

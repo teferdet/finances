@@ -19,16 +19,18 @@ def bot_run():
     logger.info(f"[BOT] Start work")
 
     while option:
-        try:
+        #try:
             bot.polling(none_stop=True)
+            break
 
-        except Exception as e:
-            logger.error(f"[Bot Error] {e}")
-            sleep(5)
-            continue
+        #except Exception as e:
+            #logger.error(f"[Bot Error] {e}")
+            #sleep(5)
+            #continue
+
 
 if __name__ == "__main__":
-    parser_handler = Thread(target=updater_instance.start, name="Parser")    
+    parser_handler = Thread(target=updater_instance.start, name="Parser")
     bot_handler = Thread(target=bot_run, name="Bot")
 
     try:
@@ -44,4 +46,3 @@ if __name__ == "__main__":
         bot.stop_polling()
         option = False
         updater_instance.stop()
-    

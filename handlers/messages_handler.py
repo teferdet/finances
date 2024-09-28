@@ -64,14 +64,6 @@ class Start:
 
         return time
 
-@bot.message_handler(commands=["crypto", "stocks"])
-def commands(message: dict):
-    if message.text == "/stocks":
-        StocksHandler(message)
-
-    elif message.text == "/crypto":
-        CryptoHandler(message)
-
 @bot.message_handler(commands=["settings"])
 def settings(message: dict):
     settings_handler.Menu(message)
@@ -136,7 +128,14 @@ def help(message: dict):
 
 @bot.message_handler(func=lambda message: True)
 def all_massages(message: dict):
+    command = message.text.split()[0]
+
     if message.chat.type == "private":
-        ExchangeRate(message)
+        if command == "/stocks":
+            StocksHandler(message)
+        elif command == "/crypto":
+            CryptoHandler(message)
+        else:
+            ExchangeRate(message)
     else:
         GroupsHandler(message)
