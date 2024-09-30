@@ -19,14 +19,14 @@ def bot_run():
     logger.info(f"[BOT] Start work")
 
     while option:
-        #try:
+        try:
             bot.polling(none_stop=True)
             break
 
-        #except Exception as e:
-            #logger.error(f"[Bot Error] {e}")
-            #sleep(5)
-            #continue
+        except Exception as e:
+            logger.error(f"[Bot Error] {e}")
+            sleep(5)
+            continue
 
 
 if __name__ == "__main__":
