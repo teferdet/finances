@@ -1,0 +1,85 @@
+{
+  "bot": {
+    "token": "",
+    "admin_ids": [],
+    "version": "finances 6.0 pre-release 1"
+  },
+  "database": {
+    "mongo_uri": "",
+    "mongo_database": "finances",
+    "pool_min": 5,
+    "pool_max": 50
+  },
+  "api_keys": {
+    "crypto": "",
+    "stocks": ""
+  },
+  "urls": {
+    "github": "",
+    "communication": "",
+    "invite": "",
+    "buymeacoffee": "",
+    "donatello": "",
+    "bank": "",
+    "mini_app": ""
+  },
+  "i18n": {
+    "supported_languages": [
+      "en",
+      "uk",
+      "pl",
+      "cs",
+      "sk",
+      "de",
+      "fr"
+    ],
+    "default_language": "en"
+  },
+  "parser": {
+    "auto_update": true,
+    "update_interval_sec": 3600,
+    "fiat_source_url": "https://fx-rate.net",
+    "retry_attempts": 3,
+    "retry_delay_sec": 5,
+    "request_delay_min_sec": 3,
+    "request_delay_max_sec": 7,
+    "critical_currencies": [
+      "USD",
+      "EUR",
+      "GBP",
+      "UAH",
+      "PLN",
+      "CZK",
+      "CHF",
+      "CNY",
+      "JPY",
+      "CAD",
+      "AUD",
+      "SEK",
+      "NOK",
+      "DKK",
+      "SGD",
+      "INR",
+      "ILS",
+      "KRW",
+      "TRY",
+      "RON",
+      "BGN",
+      "ISK",
+      "EGP",
+      "ARS",
+      "RUB"
+    ],
+    "on_demand_cache_ttl_hours": 5,
+    "crypto_stocks_interval_sec": 10800
+  },
+  "security": {
+    "rate_limit_requests": 30,
+    "rate_limit_window_sec": 60,
+    "max_message_length": 1000,
+    "fernet_key": ""
+  },
+  "features": {
+    "mini_app_enabled": false
+  }
+}
