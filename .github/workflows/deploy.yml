@@ -117,6 +117,12 @@ jobs:
               python3 -m venv "$VENV_DIR"
             fi
 
+            echo "🔍 APP_DIR is: $APP_DIR"
+            echo "🔍 VENV_DIR is: $VENV_DIR"
+            echo "🔍 whoami: $(whoami)"
+            echo "🔍 HOME: $HOME"
+            ls "$VENV_DIR/lib/" 2>/dev/null || echo "VENV does not exist at $VENV_DIR"
+
             echo "📥 Installing / updating dependencies..."
             "$VENV_DIR/bin/pip" install --upgrade pip -q
             "$VENV_DIR/bin/pip" install -r requirements.txt -q
@@ -125,6 +131,8 @@ jobs:
             "$VENV_DIR/bin/python" -c "import motor; print('motor OK:', motor.version)"
             echo "🔍 Pip list motor:"
             "$VENV_DIR/bin/pip" show motor
+
+
 
             # ── 4. Install systemd service ────────────────────────────
             echo "⚙️  Setting up systemd service..."
