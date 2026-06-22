@@ -1,0 +1,22 @@
+# Editor directories and files
+venv
+.venv
+.vscode
+.idea
+__pycache__
+*.pyc
+tests
+
+# Logs
+*.log
+logs/
+
+# Configuration (keep examples)
+config/settings.json
+config/.encryption_key
+.env
+
+# Data
+files/stats.json
+files/price_alerts.json
+files/portfolios.json

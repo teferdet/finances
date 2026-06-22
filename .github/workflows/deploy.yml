@@ -1,0 +1,156 @@
+name: Deploy to Oracle VPS
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Deploy to Oracle VPS via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SERVER_PORT }}
+          envs: BOT_TOKEN,MONGO_URI,CRYPTO_API_KEY,STOCKS_API_KEY,FERNET_KEY,BOT_ADMIN_IDS,URL_COMMUNICATION,URL_INVITE,URL_BUYMEACOFFEE,URL_DONATELLO,URL_BANK,URL_MINI_APP
+          script: |
+            set -e
+
+            APP_DIR="$HOME/finances-dev"
+            VENV_DIR="$APP_DIR/venv"
+            SERVICE_NAME="finances-bot"
+
+            # ── 1. Clone or pull ──────────────────────────────────────
+            if [ ! -d "$APP_DIR" ]; then
+              echo "📦 First deploy — cloning repository..."
+              git clone https://github.com/${{ github.repository }}.git "$APP_DIR"
+            else
+              echo "🔄 Pulling latest changes..."
+              cd "$APP_DIR"
+              git fetch origin main
+              git reset --hard origin/main
+            fi
+
+            cd "$APP_DIR"
+
+            # ── 2. Generate settings.json from GitHub Secrets ─────────
+            echo "🔐 Generating settings.json from secrets..."
+            cat > "$APP_DIR/config/settings.json" << 'SETTINGS_EOF'
+            SETTINGS_EOF
+
+            # Use python to generate valid JSON with injected secrets
+            python3 -c "
+            import json, os
+            settings = {
+                'bot': {
+                    'token': os.environ.get('BOT_TOKEN', ''),
+                    'admin_ids': json.loads(os.environ.get('BOT_ADMIN_IDS', '[1693890078]')),
+                    'version': 'finances v6.0 \'black & blue\''
+                },
+                'database': {
+                    'mongo_uri': os.environ.get('MONGO_URI', ''),
+                    'mongo_database': 'finances',
+                    'pool_min': 5,
+                    'pool_max': 50
+                },
+                'api_keys': {
+                    'crypto': os.environ.get('CRYPTO_API_KEY', ''),
+                    'stocks': os.environ.get('STOCKS_API_KEY', '')
+                },
+                'urls': {
+                    'github': 'https://github.com/${{ github.repository }}',
+                    'communication': os.environ.get('URL_COMMUNICATION', 'https://t.me/teferdet'),
+                    'invite': os.environ.get('URL_INVITE', 'https://t.me/fStatisticsBot?startgroup=true'),
+                    'buymeacoffee': os.environ.get('URL_BUYMEACOFFEE', 'https://www.buymeacoffee.com/teferdet'),
+                    'donatello': os.environ.get('URL_DONATELLO', 'https://donatello.to/teferdet'),
+                    'bank': os.environ.get('URL_BANK', 'https://donatello.to/teferdet'),
+                    'mini_app': os.environ.get('URL_MINI_APP', 'https://t.me/fStatisticsBot/app')
+                },
+                'i18n': {
+                    'supported_languages': ['en', 'uk', 'pl', 'cs', 'sk', 'de', 'fr'],
+                    'default_language': 'en'
+                },
+                'parser': {
+                    'auto_update': True,
+                    'update_interval_sec': 3600,
+                    'fiat_source_url': 'https://fx-rate.net',
+                    'retry_attempts': 3,
+                    'retry_delay_sec': 5,
+                    'request_delay_min_sec': 3,
+                    'request_delay_max_sec': 7,
+                    'critical_currencies': [
+                        'USD', 'EUR', 'GBP', 'UAH', 'PLN', 'CZK', 'CHF', 'CNY', 'JPY',
+                        'CAD', 'AUD', 'SEK', 'NOK', 'DKK', 'SGD', 'INR', 'ILS', 'KRW',
+                        'TRY', 'RON', 'BGN', 'ISK', 'EGP', 'ARS', 'RUB'
+                    ],
+                    'on_demand_cache_ttl_hours': 5,
+                    'crypto_stocks_interval_sec': 10800
+                },
+                'security': {
+                    'rate_limit_requests': 30,
+                    'rate_limit_window_sec': 60,
+                    'max_message_length': 1000,
+                    'fernet_key': os.environ.get('FERNET_KEY', '')
+                },
+                'features': {
+                    'mini_app_enabled': False
+                }
+            }
+            with open('$APP_DIR/config/settings.json', 'w') as f:
+                json.dump(settings, f, indent=2, ensure_ascii=False)
+            print('✅ settings.json generated successfully')
+            "
+
+            # ── 3. Virtual environment ────────────────────────────────
+            if [ ! -d "$VENV_DIR" ]; then
+              echo "🐍 Creating virtual environment..."
+              python3 -m venv "$VENV_DIR"
+            fi
+
+            source "$VENV_DIR/bin/activate"
+
+            echo "📥 Installing / updating dependencies..."
+            pip install --upgrade pip -q
+            pip install -r requirements.txt -q
+
+            # ── 4. Install systemd service ────────────────────────────
+            echo "⚙️  Setting up systemd service..."
+            sudo cp "$APP_DIR/deploy/finances-bot.service" /etc/systemd/system/finances-bot.service
+            sudo systemctl daemon-reload
+            sudo systemctl enable finances-bot.service
+
+            # ── 5. Restart the bot ────────────────────────────────────
+            echo "🚀 Restarting finances-bot..."
+            sudo systemctl restart finances-bot.service
+
+            # Wait a moment and verify the service started
+            sleep 3
+            if sudo systemctl is-active --quiet finances-bot.service; then
+              echo "✅ finances-bot is running!"
+              ps aux | grep finances.bot | grep -v grep || true
+            else
+              echo "❌ finances-bot failed to start. Logs:"
+              sudo journalctl -u finances-bot.service -n 30 --no-pager
+              exit 1
+            fi
+        env:
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          MONGO_URI: ${{ secrets.MONGO_URI }}
+          CRYPTO_API_KEY: ${{ secrets.CRYPTO_API_KEY }}
+          STOCKS_API_KEY: ${{ secrets.STOCKS_API_KEY }}
+          FERNET_KEY: ${{ secrets.FERNET_KEY }}
+          BOT_ADMIN_IDS: ${{ secrets.BOT_ADMIN_IDS }}
+          URL_COMMUNICATION: ${{ vars.URL_COMMUNICATION }}
+          URL_INVITE: ${{ vars.URL_INVITE }}
+          URL_BUYMEACOFFEE: ${{ vars.URL_BUYMEACOFFEE }}
+          URL_DONATELLO: ${{ vars.URL_DONATELLO }}
+          URL_BANK: ${{ vars.URL_BANK }}
+          URL_MINI_APP: ${{ vars.URL_MINI_APP }}
