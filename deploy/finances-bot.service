@@ -7,7 +7,7 @@ Wants=network-online.target
 Type=simple
 User=ubuntu
 Group=ubuntu
-WorkingDirectory=/home/ubuntu/finance
+WorkingDirectory=/home/ubuntu/finances
 Environment=PYTHONUNBUFFERED=1
 
 # Start the bot as a process named "finances.bot"
