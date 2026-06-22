@@ -11,7 +11,7 @@ WorkingDirectory=/home/ubuntu/finances
 Environment=PYTHONUNBUFFERED=1
 
 # Start the bot as a process named "finances.bot"
-ExecStart=/bin/bash -c 'exec -a finances.bot /home/ubuntu/finances/venv/bin/python -m app'
+ExecStart=/home/ubuntu/finances/venv/bin/python -m app
 
 # Restart policy
 Restart=always
