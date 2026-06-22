@@ -24,7 +24,7 @@ jobs:
           script: |
             set -e
 
-            APP_DIR="$HOME/finances"
+            APP_DIR="/home/ubuntu/finances"
             VENV_DIR="$APP_DIR/venv"
             SERVICE_NAME="finances-bot"
 
