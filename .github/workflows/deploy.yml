@@ -117,11 +117,9 @@ jobs:
               python3 -m venv "$VENV_DIR"
             fi
 
-            source "$VENV_DIR/bin/activate"
-
             echo "📥 Installing / updating dependencies..."
-            pip install --upgrade pip -q
-            pip install -r requirements.txt -q
+            "$VENV_DIR/bin/pip" install --upgrade pip -q
+            "$VENV_DIR/bin/pip" install -r requirements.txt -q
 
             # ── 4. Install systemd service ────────────────────────────
             echo "⚙️  Setting up systemd service..."
