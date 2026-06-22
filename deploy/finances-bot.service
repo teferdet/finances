@@ -23,9 +23,9 @@ StandardError=journal
 SyslogIdentifier=finances-bot
 
 # Security hardening
-NoNewPrivileges=true
-ProtectSystem=strict
-ReadWritePaths=/home/ubuntu/finances
+# NoNewPrivileges=true
+# ProtectSystem=strict
+# ReadWritePaths=/home/ubuntu/finances
 
 [Install]
 WantedBy=multi-user.target
