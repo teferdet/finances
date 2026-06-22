@@ -121,6 +121,11 @@ jobs:
             "$VENV_DIR/bin/pip" install --upgrade pip -q
             "$VENV_DIR/bin/pip" install -r requirements.txt -q
 
+            echo "🔍 Verifying motor installation..."
+            "$VENV_DIR/bin/python" -c "import motor; print('motor OK:', motor.version)"
+            echo "🔍 Pip list motor:"
+            "$VENV_DIR/bin/pip" show motor
+
             # ── 4. Install systemd service ────────────────────────────
             echo "⚙️  Setting up systemd service..."
             sudo cp "$APP_DIR/deploy/finances-bot.service" /etc/systemd/system/finances-bot.service
