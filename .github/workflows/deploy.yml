@@ -20,7 +20,7 @@ jobs:
           username: ${{ secrets.SERVER_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SERVER_PORT }}
-          envs: BOT_TOKEN,MONGO_URI,CRYPTO_API_KEY,STOCKS_API_KEY,FERNET_KEY,BOT_ADMIN_IDS,URL_COMMUNICATION,URL_INVITE,URL_BUYMEACOFFEE,URL_DONATELLO,URL_BANK,URL_MINI_APP
+          envs: GH_TOKEN,BOT_TOKEN,MONGO_URI,CRYPTO_API_KEY,STOCKS_API_KEY,FERNET_KEY,BOT_ADMIN_IDS,URL_COMMUNICATION,URL_INVITE,URL_BUYMEACOFFEE,URL_DONATELLO,URL_BANK,URL_MINI_APP
           script: |
             set -e
 
@@ -29,12 +29,14 @@ jobs:
             SERVICE_NAME="finances-bot"
 
             # ── 1. Clone or pull ──────────────────────────────────────
+            REPO_URL="https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
             if [ ! -d "$APP_DIR" ]; then
               echo "📦 First deploy — cloning repository..."
-              git clone https://github.com/${{ github.repository }}.git "$APP_DIR"
+              git clone "$REPO_URL" "$APP_DIR"
             else
               echo "🔄 Pulling latest changes..."
               cd "$APP_DIR"
+              git remote set-url origin "$REPO_URL"
               git fetch origin main
               git reset --hard origin/main
             fi
@@ -142,6 +144,7 @@ jobs:
               exit 1
             fi
         env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           MONGO_URI: ${{ secrets.MONGO_URI }}
           CRYPTO_API_KEY: ${{ secrets.CRYPTO_API_KEY }}
