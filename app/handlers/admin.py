@@ -114,7 +114,6 @@ async def cmd_ping(message: Message, i18n: I18n, lang: str) -> None:
     )
 
 
-
 @router.callback_query(F.data.startswith("admin_"))
 async def cb_admin(call: CallbackQuery, i18n: I18n, lang: str, state: FSMContext) -> None:
     callback_start_time = time.time()
