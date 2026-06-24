@@ -35,31 +35,41 @@ _waiting_for_alert: set[int] = set()
 
 # ── Keyboards ──────────────────────────────────────────────────────
 
+
 def _alert_menu_kb(i18n: I18n, lang: str) -> InlineKeyboardMarkup:
-    t = lambda k: str(i18n.get(f"alerts.{k}", lang))
-    return InlineKeyboardMarkup(inline_keyboard=[
-        [
-            InlineKeyboardButton(text=t("btn_my_alerts"), callback_data="alert_my"),
-            InlineKeyboardButton(text=t("btn_new_alert"), callback_data="alert_new"),
-        ],
-        [
-            InlineKeyboardButton(text=t("btn_clear_all"), callback_data="alert_clear"),
-        ],
-    ])
+    def t(k):
+        return str(i18n.get(f"alerts.{k}", lang))
+
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(text=t("btn_my_alerts"), callback_data="alert_my"),
+                InlineKeyboardButton(text=t("btn_new_alert"), callback_data="alert_new"),
+            ],
+            [
+                InlineKeyboardButton(text=t("btn_clear_all"), callback_data="alert_clear"),
+            ],
+        ]
+    )
 
 
 def _alert_back_kb(i18n: I18n, lang: str) -> InlineKeyboardMarkup:
-    t = lambda k: str(i18n.get(f"alerts.{k}", lang))
-    return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text=t("btn_back"), callback_data="alert_back")],
-    ])
+    def t(k):
+        return str(i18n.get(f"alerts.{k}", lang))
+
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text=t("btn_back"), callback_data="alert_back")],
+        ]
+    )
 
 
-def _alert_list_kb(
-    alerts: list[dict], i18n: I18n, lang: str
-) -> InlineKeyboardMarkup:
+def _alert_list_kb(alerts: list[dict], i18n: I18n, lang: str) -> InlineKeyboardMarkup:
     """Build keyboard with a delete button per alert + back button."""
-    t = lambda k: str(i18n.get(f"alerts.{k}", lang))
+
+    def t(k):
+        return str(i18n.get(f"alerts.{k}", lang))
+
     rows = []
     for a in alerts[:10]:  # Max 10 shown
         aid = str(a["_id"])
@@ -73,9 +83,12 @@ def _alert_list_kb(
 
 # ── /alert command ─────────────────────────────────────────────────
 
+
 @router.message(Command("alert"))
 async def cmd_alert(message: Message, command: CommandObject, i18n: I18n, lang: str) -> None:
-    t = lambda k: str(i18n.get(f"alerts.{k}", lang))
+    def t(k):
+        return str(i18n.get(f"alerts.{k}", lang))
+
     args = command.args
 
     if not args:
@@ -96,9 +109,7 @@ async def cmd_alert(message: Message, command: CommandObject, i18n: I18n, lang: 
     # /alert volatility <pct>
     if parts[0].lower() == "volatility":
         if len(parts) < 2:
-            await message.answer(
-                t("volatility_format_hint"), parse_mode="HTML"
-            )
+            await message.answer(t("volatility_format_hint"), parse_mode="HTML")
             return
         try:
             pct = float(parts[1])
@@ -118,16 +129,17 @@ async def cmd_alert(message: Message, command: CommandObject, i18n: I18n, lang: 
         return
 
     # /alert <BASE> <TARGET> above|below <price>
-    await _create_alert_from_text(
-        " ".join(parts), message.from_user.id, message, i18n, lang
-    )
+    await _create_alert_from_text(" ".join(parts), message.from_user.id, message, i18n, lang)
 
 
 # ── Inline callback handlers ──────────────────────────────────────
 
+
 @router.callback_query(F.data == "alert_back")
 async def cb_alert_back(call: CallbackQuery, i18n: I18n, lang: str) -> None:
-    t = lambda k: str(i18n.get(f"alerts.{k}", lang))
+    def t(k):
+        return str(i18n.get(f"alerts.{k}", lang))
+
     _waiting_for_alert.discard(call.from_user.id)
     text = (
         f"{t('menu_title')}\n\n"
@@ -137,18 +149,16 @@ async def cb_alert_back(call: CallbackQuery, i18n: I18n, lang: str) -> None:
         f"<code>/alert USD EUR above 0.95</code>\n\n"
         f"{t('menu_buttons_hint')}"
     )
-    await call.message.edit_text(
-        text, reply_markup=_alert_menu_kb(i18n, lang), parse_mode="HTML"
-    )
+    await call.message.edit_text(text, reply_markup=_alert_menu_kb(i18n, lang), parse_mode="HTML")
 
 
 @router.callback_query(F.data == "alert_my")
 async def cb_alert_my(call: CallbackQuery, i18n: I18n, lang: str) -> None:
-    t = lambda k: str(i18n.get(f"alerts.{k}", lang))
+    def t(k):
+        return str(i18n.get(f"alerts.{k}", lang))
+
     db = get_db()
-    alerts = await db["Alerts"].find(
-        {"user_id": call.from_user.id, "triggered": False}
-    ).to_list(length=50)
+    alerts = await db["Alerts"].find({"user_id": call.from_user.id, "triggered": False}).to_list(length=50)
 
     if not alerts:
         await call.message.edit_text(
@@ -175,7 +185,9 @@ async def cb_alert_my(call: CallbackQuery, i18n: I18n, lang: str) -> None:
 
 @router.callback_query(F.data == "alert_new")
 async def cb_alert_new(call: CallbackQuery, i18n: I18n, lang: str) -> None:
-    t = lambda k: str(i18n.get(f"alerts.{k}", lang))
+    def t(k):
+        return str(i18n.get(f"alerts.{k}", lang))
+
     _waiting_for_alert.add(call.from_user.id)
     await call.message.edit_text(
         t("callback_new_prompt"),
@@ -186,21 +198,21 @@ async def cb_alert_new(call: CallbackQuery, i18n: I18n, lang: str) -> None:
 
 @router.callback_query(F.data == "alert_clear")
 async def cb_alert_clear(call: CallbackQuery, i18n: I18n, lang: str) -> None:
-    t = lambda k: str(i18n.get(f"alerts.{k}", lang))
+    def t(k):
+        return str(i18n.get(f"alerts.{k}", lang))
+
     db = get_db()
     result = await db["Alerts"].delete_many({"user_id": call.from_user.id})
     text = t("callback_cleared")
-    await call.message.edit_text(
-        text, reply_markup=_alert_back_kb(i18n, lang), parse_mode="HTML"
-    )
-    await call.answer(
-        t("callback_deleted").replace("{count}", str(result.deleted_count))
-    )
+    await call.message.edit_text(text, reply_markup=_alert_back_kb(i18n, lang), parse_mode="HTML")
+    await call.answer(t("callback_deleted").replace("{count}", str(result.deleted_count)))
 
 
 @router.callback_query(F.data.startswith("alert_del:"))
 async def cb_alert_delete(call: CallbackQuery, i18n: I18n, lang: str) -> None:
-    t = lambda k: str(i18n.get(f"alerts.{k}", lang))
+    def t(k):
+        return str(i18n.get(f"alerts.{k}", lang))
+
     alert_id = call.data.split(":")[1]
     db = get_db()
     from bson import ObjectId
@@ -216,13 +228,12 @@ async def cb_alert_delete(call: CallbackQuery, i18n: I18n, lang: str) -> None:
 
 # ── Text message handler (for FSM: waiting_for_alert) ──────────────
 
+
 @router.message(F.text & ~F.text.startswith("/"), lambda msg: msg.from_user.id in _waiting_for_alert)
 async def msg_alert_input(message: Message, i18n: I18n, lang: str) -> None:
     """Catch free-text alert creation when user is in 'new alert' flow."""
     _waiting_for_alert.discard(message.from_user.id)
-    await _create_alert_from_text(
-        message.text.strip(), message.from_user.id, message, i18n, lang
-    )
+    await _create_alert_from_text(message.text.strip(), message.from_user.id, message, i18n, lang)
 
 
 # ── Shared alert creation logic ────────────────────────────────────
@@ -233,10 +244,9 @@ _CONDITION_RE = re.compile(
 )
 
 
-async def _create_alert_from_text(
-    text: str, user_id: int, message: Message, i18n: I18n, lang: str
-) -> None:
-    t = lambda k: str(i18n.get(f"alerts.{k}", lang))
+async def _create_alert_from_text(text: str, user_id: int, message: Message, i18n: I18n, lang: str) -> None:
+    def t(k):
+        return str(i18n.get(f"alerts.{k}", lang))
 
     m = _CONDITION_RE.match(text)
     if not m:
@@ -288,5 +298,9 @@ async def _create_alert_from_text(
     await message.answer(result_text, parse_mode="HTML")
     log.info(
         "Alert created: user=%d %s/%s %s %s",
-        user_id, currency_from, currency_to, condition, target_price,
+        user_id,
+        currency_from,
+        currency_to,
+        condition,
+        target_price,
     )

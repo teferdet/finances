@@ -4,7 +4,6 @@ Stocks handler — /stocks command.
 
 from __future__ import annotations
 
-from time import strftime
 
 from aiogram import Router
 from aiogram.filters import Command
@@ -19,9 +18,7 @@ router = Router(name="stocks")
 @router.message(Command("stocks"))
 async def cmd_stocks(message: Message, i18n: I18n, lang: str) -> None:
     db = get_db()
-    user_doc = await db["Users"].find_one(
-        {"_id": message.from_user.id}, {"Stocks": 1}
-    )
+    user_doc = await db["Users"].find_one({"_id": message.from_user.id}, {"Stocks": 1})
     user_stocks = (user_doc or {}).get("Stocks", [])
 
     stocks_doc = await db["Crypto&Stocks"].find_one({"_id": "stocks"})

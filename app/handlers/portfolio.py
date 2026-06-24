@@ -2,6 +2,7 @@
 Portfolio handler — allows users to track their assets (crypto, stocks, fiat)
 with cost-basis tracking and P&L calculation.
 """
+
 from __future__ import annotations
 
 import re
@@ -9,7 +10,12 @@ import math
 import html
 from aiogram import Router, F
 from aiogram.filters import Command, CommandObject
-from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import (
+    Message,
+    CallbackQuery,
+    InlineKeyboardMarkup,
+    InlineKeyboardButton,
+)
 
 from app.db import get_db
 from app.i18n import I18n
@@ -27,27 +33,40 @@ router = Router(name="portfolio")
 
 def portfolio_keyboard(i18n: I18n, lang: str) -> InlineKeyboardMarkup:
     """Generate inline keyboard for portfolio."""
-    t_port = lambda k: str(i18n.get(f"portfolio.{k}", lang))
-    t_exch = lambda k: str(i18n.get(f"exchange.{k}", lang))
-    return InlineKeyboardMarkup(inline_keyboard=[
-        [
-            InlineKeyboardButton(text=t_port("refresh"), callback_data="portfolio_refresh"),
-            InlineKeyboardButton(text=t_port("clear"), callback_data="portfolio_clear")
-        ],
-        [
-            InlineKeyboardButton(text=t_port("btn_change_base"), callback_data="portfolio_change_base")
-        ],
-        [
-            InlineKeyboardButton(text=t_exch("btn_bind"), callback_data="exchange_bind"),
-            InlineKeyboardButton(text=t_exch("btn_sync"), callback_data="exchange_sync")
+
+    def t_port(k):
+        return str(i18n.get(f"portfolio.{k}", lang))
+
+    def t_exch(k):
+        return str(i18n.get(f"exchange.{k}", lang))
+
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(text=t_port("refresh"), callback_data="portfolio_refresh"),
+                InlineKeyboardButton(text=t_port("clear"), callback_data="portfolio_clear"),
+            ],
+            [
+                InlineKeyboardButton(
+                    text=t_port("btn_change_base"),
+                    callback_data="portfolio_change_base",
+                )
+            ],
+            [
+                InlineKeyboardButton(text=t_exch("btn_bind"), callback_data="exchange_bind"),
+                InlineKeyboardButton(text=t_exch("btn_sync"), callback_data="exchange_sync"),
+            ],
         ]
-    ])
+    )
 
 
 @router.message(Command("portfolio"))
 async def cmd_portfolio(message: Message, command: CommandObject, i18n: I18n, lang: str) -> None:
     """Manage and view portfolio. Usage: /portfolio [currency | add ... | remove ...]"""
-    t = lambda k: str(i18n.get(f"portfolio.{k}", lang))
+
+    def t(k):
+        return str(i18n.get(f"portfolio.{k}", lang))
+
     args = command.args
 
     if not args:
@@ -106,10 +125,20 @@ async def cmd_portfolio(message: Message, command: CommandObject, i18n: I18n, la
 
         if buy_price is not None:
             # User explicitly provided the price
-            text = t("added_with_price").replace("{amount}", safe_amount).replace("{symbol}", safe_symbol).replace("{price}", f"{buy_price:,.2f}")
+            text = (
+                t("added_with_price")
+                .replace("{amount}", safe_amount)
+                .replace("{symbol}", safe_symbol)
+                .replace("{price}", f"{buy_price:,.2f}")
+            )
         elif used_price is not None:
             # Auto-detected price
-            text = t("added_with_price").replace("{amount}", safe_amount).replace("{symbol}", safe_symbol).replace("{price}", f"{used_price:,.2f}")
+            text = (
+                t("added_with_price")
+                .replace("{amount}", safe_amount)
+                .replace("{symbol}", safe_symbol)
+                .replace("{price}", f"{used_price:,.2f}")
+            )
             text += "\n" + t("auto_price_used").replace("{price}", f"{used_price:,.2f}")
         else:
             # No price available at all
@@ -126,7 +155,7 @@ async def cmd_portfolio(message: Message, command: CommandObject, i18n: I18n, la
         removed = await remove_asset(message.from_user.id, symbol)
 
         safe_symbol = html.escape(symbol)
-        
+
         if not removed:
             await message.answer(t("not_found").replace("{symbol}", safe_symbol), parse_mode="HTML")
             return
@@ -142,6 +171,7 @@ async def cmd_portfolio(message: Message, command: CommandObject, i18n: I18n, la
 
 # ── Portfolio display with P&L ─────────────────────────────────────
 
+
 def _format_number(value: float, decimals: int = 2) -> str:
     """Format a number with thousands separators."""
     if abs(value) >= 1:
@@ -154,7 +184,9 @@ def _format_number(value: float, decimals: int = 2) -> str:
 
 def _format_pnl(pnl_abs: float | None, pnl_pct: float | None, i18n: I18n, lang: str) -> str:
     """Format P&L line with emoji indicator."""
-    t = lambda k: str(i18n.get(f"portfolio.{k}", lang))
+
+    def t(k):
+        return str(i18n.get(f"portfolio.{k}", lang))
 
     if pnl_abs is None or pnl_pct is None:
         return f"  <i>{t('no_buy_price')}</i>"
@@ -175,7 +207,8 @@ async def _show_portfolio(
     lang: str,
     is_edit: bool = False,
 ) -> None:
-    t = lambda k: str(i18n.get(f"portfolio.{k}", lang))
+    def t(k):
+        return str(i18n.get(f"portfolio.{k}", lang))
 
     pnl_data = await get_portfolio_with_pnl(user_id, base_currency)
     sections = pnl_data["sections"]
@@ -256,6 +289,7 @@ async def _show_portfolio(
 
 # ── Callbacks ──────────────────────────────────────────────────────
 
+
 @router.callback_query(F.data.startswith("portfolio_refresh"))
 async def cb_portfolio_refresh(call: CallbackQuery, i18n: I18n, lang: str) -> None:
     await call.answer()
@@ -280,7 +314,7 @@ async def cb_portfolio_refresh(call: CallbackQuery, i18n: I18n, lang: str) -> No
 @router.callback_query(F.data == "portfolio_change_base")
 async def cb_portfolio_change_base(call: CallbackQuery, i18n: I18n, lang: str) -> None:
     await call.answer()
-    
+
     db = get_db()
     user = await db["Users"].find_one({"_id": call.from_user.id}, {"BaseCurrency": 1})
     bc_data = (user or {}).get("BaseCurrency", ["USD"])
@@ -290,10 +324,10 @@ async def cb_portfolio_change_base(call: CallbackQuery, i18n: I18n, lang: str) -
         match = re.search(r"\(([A-Z]{3})\)", call.message.text)
         if match:
             base_currency = match.group(1)
-            
+
     currencies = get_currencies_data()
     title = str(i18n.get("portfolio.select_base_title", lang))
-    
+
     kb = paginated_currency_keyboard(currencies, 0, "PortfolioBase", i18n, lang, selected=[base_currency])
     await call.message.edit_text(title, reply_markup=kb, parse_mode="HTML")
 
@@ -302,13 +336,13 @@ async def cb_portfolio_change_base(call: CallbackQuery, i18n: I18n, lang: str) -
 async def cb_portfolio_base_action(call: CallbackQuery, i18n: I18n, lang: str) -> None:
     parts = call.data.split()
     command = parts[1] if len(parts) > 1 else ""
-    
+
     if command == "cancel":
         await cb_portfolio_refresh(call, i18n, lang)
         return
-        
+
     if command == "save":
-        # The user's selection is in parts[2] if it was a toggle, but actually paginated_currency_keyboard 
+        # The user's selection is in parts[2] if it was a toggle, but actually paginated_currency_keyboard
         # doesn't pass the selected state back in "save" directly, it expects us to read from cache.
         # But we can just avoid using "save" and directly trigger portfolio_refresh:CURRENCY when toggling.
         pass
@@ -316,7 +350,7 @@ async def cb_portfolio_base_action(call: CallbackQuery, i18n: I18n, lang: str) -
     if command == "position":
         page = int(parts[2]) if len(parts) > 2 else 0
         currencies = get_currencies_data()
-        
+
         # We need to know current selected from message text maybe? Or default USD.
         # Let's extract from DB.
         db = get_db()
@@ -327,7 +361,7 @@ async def cb_portfolio_base_action(call: CallbackQuery, i18n: I18n, lang: str) -
         kb = paginated_currency_keyboard(currencies, page, "PortfolioBase", i18n, lang, selected=[base_currency])
         await call.message.edit_reply_markup(reply_markup=kb)
         return
-        
+
     # If it's a currency toggle (e.g. PortfolioBase USD)
     currency = " ".join(parts[1:])
     if currency and currency not in ["save", "cancel", "position"]:
@@ -339,6 +373,9 @@ async def cb_portfolio_base_action(call: CallbackQuery, i18n: I18n, lang: str) -
 @router.callback_query(F.data == "portfolio_clear")
 async def cb_portfolio_clear(call: CallbackQuery, i18n: I18n, lang: str) -> None:
     await clear_portfolio(call.from_user.id)
-    t = lambda k: str(i18n.get(f"portfolio.{k}", lang))
+
+    def t(k):
+        return str(i18n.get(f"portfolio.{k}", lang))
+
     await call.message.edit_text(t("portfolio_cleared"), parse_mode="HTML")
     await call.answer(t("cleared"))

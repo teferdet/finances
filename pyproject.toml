@@ -1,0 +1,14 @@
+[tool.ruff]
+target-version = "py312"
+line-length = 120
+
+[tool.ruff.lint]
+select = ["F", "E", "W"]
+ignore = [
+    "E501",   # line too long — common in telegram bot message templates
+    "E731",   # lambda assignments — standard pattern in aiogram filters
+    "E402",   # module-level imports — needed for conditional imports
+]
+
+[tool.ruff.lint.per-file-ignores]
+"app/handlers/*" = ["F841"]  # unused variables in handlers (often used for side effects)

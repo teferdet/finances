@@ -12,7 +12,6 @@ from __future__ import annotations
 import logging
 import sys
 from logging.handlers import RotatingFileHandler
-from pathlib import Path
 
 from app.config import LOGS_DIR
 
@@ -35,15 +34,15 @@ def setup_logging(level: int = logging.INFO) -> None:
 
     # ── Console handler ─────────────────────────────────────────────
     console = logging.StreamHandler(sys.stdout)
-    if sys.stdout.encoding.lower() != 'utf-8':
-        console.stream = open(sys.stdout.fileno(), mode='w', encoding='utf-8', buffering=1)
+    if sys.stdout.encoding.lower() != "utf-8":
+        console.stream = open(sys.stdout.fileno(), mode="w", encoding="utf-8", buffering=1)
     console.setLevel(level)
     console.setFormatter(formatter)
 
     # ── File handler (all messages) ─────────────────────────────────
     all_file = RotatingFileHandler(
         LOGS_DIR / "bot.log",
-        maxBytes=10 * 1024 * 1024,   # 10 MB
+        maxBytes=10 * 1024 * 1024,  # 10 MB
         backupCount=5,
         encoding="utf-8",
     )
@@ -53,7 +52,7 @@ def setup_logging(level: int = logging.INFO) -> None:
     # ── Error file handler ──────────────────────────────────────────
     error_file = RotatingFileHandler(
         LOGS_DIR / "errors.log",
-        maxBytes=5 * 1024 * 1024,    # 5 MB
+        maxBytes=5 * 1024 * 1024,  # 5 MB
         backupCount=3,
         encoding="utf-8",
     )

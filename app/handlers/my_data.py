@@ -1,11 +1,17 @@
 """
 My Data handler — /my_data command to view user settings and reset them.
 """
+
 from __future__ import annotations
 
 from aiogram import Router, F
 from aiogram.filters import Command
-from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import (
+    Message,
+    CallbackQuery,
+    InlineKeyboardMarkup,
+    InlineKeyboardButton,
+)
 
 from app.config import get_settings
 from app.db import get_db
@@ -85,12 +91,16 @@ async def cmd_my_data(message: Message, i18n: I18n, lang: str) -> None:
         f"{md.get('portfolio_count', '💼 Portfolio')}: <b>{portfolio_count}</b>",
     ]
 
-    kb = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(
-            text=md.get("btn_reset", "🔄 Reset Settings"),
-            callback_data="my_data_reset",
-        )],
-    ])
+    kb = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text=md.get("btn_reset", "🔄 Reset Settings"),
+                    callback_data="my_data_reset",
+                )
+            ],
+        ]
+    )
 
     await message.answer("\n".join(lines), reply_markup=kb)
 

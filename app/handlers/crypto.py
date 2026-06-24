@@ -46,13 +46,13 @@ async def _get_crypto_data(currency: str, amount: float, user_id: int) -> str:
 @router.message(Command("crypto"))
 async def cmd_crypto(message: Message, i18n: I18n, lang: str) -> None:
     from app.utils.text_processing import TextProcessing
-    
+
     text = message.text or ""
     parsed = TextProcessing(text)
-    
+
     amount = 1.0
     currency = "USD"
-    
+
     if parsed.results:
         # Avoid picking up the command itself as a code if it wasn't valid, but TextProcessing handles that.
         # However, TextProcessing might not detect USD if they just type `/crypto 100`

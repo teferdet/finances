@@ -30,12 +30,11 @@ log = get_logger("parser.service")
 
 # ── Staleness check ────────────────────────────────────────────────
 
+
 async def is_currency_stale(code: str, ttl_hours: int = 5) -> bool:
     """Check if a currency's data in MongoDB is older than ttl_hours."""
     db = get_db()
-    doc = await db["fiat_rates"].find_one(
-        {"currency": code.upper()}, {"updated_at": 1}
-    )
+    doc = await db["fiat_rates"].find_one({"currency": code.upper()}, {"updated_at": 1})
     if not doc or "updated_at" not in doc:
         return True
     updated = doc["updated_at"]
@@ -77,6 +76,7 @@ async def ensure_currency(code: str, force: bool = False) -> bool:
 
 # ── Query helpers (used by handlers) ───────────────────────────────
 
+
 async def get_fiat_rate(base: str, target: str) -> Optional[dict]:
     """Get exchange rate dict from MongoDB."""
     base = base.upper()
@@ -85,9 +85,7 @@ async def get_fiat_rate(base: str, target: str) -> Optional[dict]:
     asyncio.create_task(_bg_ensure(base))
 
     db = get_db()
-    doc = await db["fiat_rates"].find_one(
-        {"currency": base}, {"rates": 1}
-    )
+    doc = await db["fiat_rates"].find_one({"currency": base}, {"rates": 1})
     if doc and "rates" in doc:
         return doc["rates"].get(target)
     return None
@@ -131,12 +129,14 @@ async def get_currencies_info() -> list[dict]:
     for doc in docs:
         bc = doc.get("currency")
         meta = metadata.get(bc)
-        result.append({
-            "code": bc,
-            "name": meta["name"] if meta else bc,
-            "emoji": meta["emoji"] if meta else "",
-            "symbol": meta["symbol"] if meta else "",
-        })
+        result.append(
+            {
+                "code": bc,
+                "name": meta["name"] if meta else bc,
+                "emoji": meta["emoji"] if meta else "",
+                "symbol": meta["symbol"] if meta else "",
+            }
+        )
 
     for code, meta in metadata.items():
         if code not in base_set:
@@ -183,7 +183,10 @@ async def convert_currencies(
     for entry in get_currencies_data():
         c = entry.get("code", "")
         if c:
-            _cd_map[c] = {"emoji": entry.get("emoji", ""), "symbol": entry.get("symbol", "")}
+            _cd_map[c] = {
+                "emoji": entry.get("emoji", ""),
+                "symbol": entry.get("symbol", ""),
+            }
 
     results: list[str] = []
 
@@ -232,9 +235,9 @@ async def convert_currencies(
         if not base_codes:
             return "bad request"
 
-        base_docs = await collection.find(
-            {"currency": {"$in": base_codes}}, {"currency": 1, "rates": 1}
-        ).to_list(length=100)
+        base_docs = await collection.find({"currency": {"$in": base_codes}}, {"currency": 1, "rates": 1}).to_list(
+            length=100
+        )
         base_map = {d["currency"]: d for d in base_docs}
 
         # Fetch missing
@@ -244,7 +247,7 @@ async def convert_currencies(
         if any(c not in base_map for c in base_codes):
             new_docs = await collection.find(
                 {"currency": {"$in": [c for c in base_codes if c not in base_map]}},
-                {"currency": 1, "rates": 1}
+                {"currency": 1, "rates": 1},
             ).to_list(length=100)
             for d in new_docs:
                 base_map[d["currency"]] = d
@@ -292,6 +295,7 @@ async def convert_currencies(
 
 
 # ── Background scheduler ───────────────────────────────────────────
+
 
 async def run_parser_loop() -> None:
     """Main parser loop — runs as background asyncio task."""
@@ -375,9 +379,7 @@ async def _maybe_update_markets() -> None:
     cfg = get_settings().parser
 
     try:
-        doc = await db["Status"].find_one(
-            {"_id": "parser_status"}, {"last_crypto_stocks_update": 1}
-        )
+        doc = await db["Status"].find_one({"_id": "parser_status"}, {"last_crypto_stocks_update": 1})
         last_update = doc.get("last_crypto_stocks_update", 0) if doc else 0
         if time.time() - last_update < cfg.crypto_stocks_interval_sec:
             return
@@ -401,6 +403,7 @@ async def _maybe_update_markets() -> None:
         # Save price snapshot for volatility tracking
         try:
             from app.services.alert_service import save_price_snapshot
+
             await save_price_snapshot()
         except Exception as exc:
             log.warning("Failed to save price snapshot: %s", exc)

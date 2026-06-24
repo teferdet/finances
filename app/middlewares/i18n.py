@@ -9,7 +9,7 @@ from __future__ import annotations
 from typing import Any, Awaitable, Callable, Dict
 
 from aiogram import BaseMiddleware
-from aiogram.types import TelegramObject, Update, Message, CallbackQuery
+from aiogram.types import TelegramObject, Message, CallbackQuery
 
 from app.db import get_db
 from app.i18n import get_i18n
@@ -39,9 +39,7 @@ class I18nMiddleware(BaseMiddleware):
             # 1) Check DB for saved preference
             db = get_db()
             try:
-                doc = await db["Users"].find_one(
-                    {"_id": user.id}, {"Language": 1}
-                )
+                doc = await db["Users"].find_one({"_id": user.id}, {"Language": 1})
                 if doc and doc.get("Language") in i18n.supported:
                     lang = doc["Language"]
                 elif user.language_code and user.language_code in i18n.supported:

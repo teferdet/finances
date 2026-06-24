@@ -39,6 +39,7 @@ def get_bot() -> Optional[Bot]:
 
 # ── i18n + user language helpers ───────────────────────────────────
 
+
 async def _get_user_lang(user_id: int) -> str:
     """Fetch user's language from DB, fallback to 'en'."""
     db = get_db()
@@ -51,9 +52,7 @@ async def _get_user_lang(user_id: int) -> str:
 async def _get_users_langs(user_ids: list[int]) -> dict[int, str]:
     """Batch-fetch languages for multiple users."""
     db = get_db()
-    cursor = db["Users"].find(
-        {"_id": {"$in": user_ids}}, {"Language": 1}
-    )
+    cursor = db["Users"].find({"_id": {"$in": user_ids}}, {"Language": 1})
     result: dict[int, str] = {}
     async for doc in cursor:
         result[doc["_id"]] = doc.get("Language") or "en"
@@ -65,6 +64,7 @@ async def _get_users_langs(user_ids: list[int]) -> dict[int, str]:
 
 
 # ── Batched message sender ─────────────────────────────────────────
+
 
 async def _send_batched(
     messages: list[tuple[int, str]],
@@ -106,6 +106,7 @@ async def _send_batched(
 
 
 # ── Price fetching helpers ─────────────────────────────────────────
+
 
 async def _get_pair_price(currency_from: str, currency_to: str) -> Optional[float]:
     """
@@ -154,6 +155,7 @@ async def _get_fiat_rate(base: str, target: str) -> Optional[float]:
 
 
 # ── Alert Checker Loop ─────────────────────────────────────────────
+
 
 async def run_alert_checker(check_interval: int = 60) -> None:
     """
@@ -232,7 +234,9 @@ async def _check_alerts() -> int:
 
             # Build notification via i18n
             lang = user_langs.get(a["user_id"], "en")
-            t = lambda k: str(i18n.get(f"alerts.{k}", lang))
+
+            def t(k):
+                return str(i18n.get(f"alerts.{k}", lang))
 
             cond_emoji = "📈" if condition == "above" else "📉"
             text = (
@@ -265,6 +269,7 @@ async def _check_alerts() -> int:
 
 
 # ── Price History & Volatility Monitor ─────────────────────────────
+
 
 async def save_price_snapshot() -> None:
     """
@@ -383,15 +388,19 @@ async def _check_volatility() -> None:
     # Find users who hold these tickers
     ticker_list = list(volatile_tickers.keys())
 
-    users = await db["Users"].find(
-        {
-            "$or": [
-                {"portfolio.crypto.ticker": {"$in": ticker_list}},
-                {"portfolio.stock.ticker": {"$in": ticker_list}},
-            ]
-        },
-        {"_id": 1, "portfolio": 1, "volatility_threshold_pct": 1, "Language": 1},
-    ).to_list(length=5000)
+    users = (
+        await db["Users"]
+        .find(
+            {
+                "$or": [
+                    {"portfolio.crypto.ticker": {"$in": ticker_list}},
+                    {"portfolio.stock.ticker": {"$in": ticker_list}},
+                ]
+            },
+            {"_id": 1, "portfolio": 1, "volatility_threshold_pct": 1, "Language": 1},
+        )
+        .to_list(length=5000)
+    )
 
     if not users:
         return
@@ -402,7 +411,9 @@ async def _check_volatility() -> None:
     for user in users:
         threshold = user.get("volatility_threshold_pct", 5.0)
         lang = user.get("Language") or "en"
-        t = lambda k, _lang=lang: str(i18n.get(f"alerts.{k}", _lang))
+
+        def t(k, _lang=lang):
+            return str(i18n.get(f"alerts.{k}", _lang))
 
         user_tickers: list[str] = []
 
@@ -427,17 +438,19 @@ async def _check_volatility() -> None:
             if abs(data["pct"]) >= threshold:
                 emoji = "📈" if data["pct"] > 0 else "📉"
                 lines.append(
-                    f"• <b>{ticker}</b>: ${data['old']:.2f} → ${data['new']:.2f} "
-                    f"({data['pct']:+.1f}%) {emoji}"
+                    f"• <b>{ticker}</b>: ${data['old']:.2f} → ${data['new']:.2f} ({data['pct']:+.1f}%) {emoji}"
                 )
 
         if not lines:
             continue
 
         text = (
-            t("volatility_title") + "\n\n"
-            + t("volatility_message") + "\n\n"
-            + "\n".join(lines) + "\n\n"
+            t("volatility_title")
+            + "\n\n"
+            + t("volatility_message")
+            + "\n\n"
+            + "\n".join(lines)
+            + "\n\n"
             + t("volatility_threshold_info").replace("{pct}", str(threshold))
         )
         notifications.append((user["_id"], text))
@@ -446,6 +459,7 @@ async def _check_volatility() -> None:
         sent, failed = await _send_batched(notifications)
         log.info(
             "Volatility notifications: %d sent, %d failed (volatile: %s)",
-            sent, failed, list(volatile_tickers.keys()),
+            sent,
+            failed,
+            list(volatile_tickers.keys()),
         )
-

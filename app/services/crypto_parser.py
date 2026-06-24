@@ -62,7 +62,11 @@ async def fetch_crypto() -> Optional[dict]:
                         name = coin.get("symbol")
                         price = coin.get("quote", {}).get(currency, {}).get("price")
                         if name and price is not None:
-                            currency_entries[name] = [name, round(float(price), 4), target_symbol]
+                            currency_entries[name] = [
+                                name,
+                                round(float(price), 4),
+                                target_symbol,
+                            ]
 
                     crypto_data[currency] = currency_entries
                     log.info("[Crypto] %s: %d coins fetched", currency, len(currency_entries))
@@ -82,6 +86,7 @@ async def fetch_crypto() -> Optional[dict]:
         # Sync flat price cache for portfolio P&L
         try:
             from app.services.portfolio_service import update_current_prices
+
             await update_current_prices()
         except Exception as exc:
             log.warning("[Crypto] Failed to sync current_prices: %s", exc)
