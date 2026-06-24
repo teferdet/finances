@@ -4,7 +4,6 @@ Service for synchronizing crypto portfolio with exchanges (Binance, Bybit).
 from __future__ import annotations
 
 import hmac
-import hashlib
 import time
 import urllib.parse
 from typing import Dict, Any
@@ -36,7 +35,7 @@ async def fetch_binance_balances(api_key: str, api_secret: str) -> Dict[str, flo
     signature = hmac.new(
         api_secret.encode("utf-8"),
         query_string.encode("utf-8"),
-        hashlib.sha256
+        "sha256"  # HMAC-SHA256 required by Binance API
     ).hexdigest()
     
     url = f"{base_url}{endpoint}?{query_string}&signature={signature}"
@@ -74,7 +73,7 @@ async def fetch_bybit_balances(api_key: str, api_secret: str) -> Dict[str, float
     signature = hmac.new(
         api_secret.encode("utf-8"),
         sign_str.encode("utf-8"),
-        hashlib.sha256
+        "sha256"  # HMAC-SHA256 required by Bybit API
     ).hexdigest()
     
     url = f"{base_url}{endpoint}?{query_string}"
