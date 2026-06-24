@@ -12,8 +12,12 @@ from app.cache import cache
 from app.config import get_settings, get_currencies_data
 from app.i18n import I18n
 from app.keyboards.inline import (
+<<<<<<< HEAD
     settings_menu,
     about_keyboard,
+=======
+    settings_menu, about_keyboard,
+>>>>>>> 6233cd8c1c0c25e0cc1ce26e6f7b0051542ecf79
     paginated_currency_keyboard,
 )
 from app.keyboards.main import get_main_keyboard

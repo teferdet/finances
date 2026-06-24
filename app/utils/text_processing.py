@@ -188,6 +188,10 @@ class TextProcessing:
         "ZLOTY": "PLN",
         "ZLOTYS": "PLN",
         "LARI": "GEL",
+<<<<<<< HEAD
+=======
+
+>>>>>>> 6233cd8c1c0c25e0cc1ce26e6f7b0051542ecf79
         # Ukrainian
         "ДОЛАР": "USD",
         "ДОЛАРИ": "USD",
@@ -205,6 +209,10 @@ class TextProcessing:
         "ЗЛОТИХ": "PLN",
         "ЗЛ": "PLN",
         "ЛАРІ": "GEL",
+<<<<<<< HEAD
+=======
+
+>>>>>>> 6233cd8c1c0c25e0cc1ce26e6f7b0051542ecf79
         # Russian
         "ДОЛЛАР": "USD",
         "ДОЛЛАРОВ": "USD",
@@ -217,6 +225,7 @@ class TextProcessing:
     # Conversion keywords (triggers conversion detection)
     CONVERSION_KEYWORDS = {
         # Ukrainian
+<<<<<<< HEAD
         "В",
         "НА",
         "ДО",
@@ -224,6 +233,11 @@ class TextProcessing:
         "TO",
         "INTO",
         "IN",
+=======
+        "В", "НА", "ДО",
+        # English
+        "TO", "INTO", "IN",
+>>>>>>> 6233cd8c1c0c25e0cc1ce26e6f7b0051542ecf79
         # Symbols
         "→",
         "->",
@@ -355,10 +369,20 @@ class TextProcessing:
             # Amount + Currency + keyword + Target Currency
             # "100 USD to UAH", "100 долларів в гривні"
             r"(\d+(?:[,.\s]\d+)?)\s*([A-ZА-ЯІЇЄҐ$€£₴¥₿]+)\s*(?:В|НА|ДО|TO|INTO|IN|→|->|=>)\s*([A-ZА-ЯІЇЄҐ$€£₴¥₿]+)",
+<<<<<<< HEAD
             # "скільки буде 100 USD в UAH" / "сколько будет 100 долларов в гривнах"
             r"(?:СКІЛЬКИ|СКОЛЬКО|HOW\s+MUCH)(?:\s+БУДЕ|\s+БУДЕТ|\s+IS)?\s*(\d+(?:[,.\s]\d+)?)\s*([A-ZА-ЯІЇЄҐ$€£₴¥₿]+)\s*(?:В|НА|ДО|TO|INTO|IN)\s*([A-ZА-ЯІЇЄҐ$€£₴¥₿]+)",
             # "конвертувати 100 USD в UAH" / "обменять 100 долларов на гривны"
             r"(?:КОНВЕРТ|CONVERT|ОБМІН|ОБМЕН|CHANGE)(?:\w*)\s*(\d+(?:[,.\s]\d+)?)\s*([A-ZА-ЯІЇЄҐ$€£₴¥₿]+)\s*(?:В|НА|ДО|TO|INTO|IN)\s*([A-ZА-ЯІЇЄҐ$€£₴¥₿]+)",
+=======
+
+            # "скільки буде 100 USD в UAH" / "сколько будет 100 долларов в гривнах"
+            r"(?:СКІЛЬКИ|СКОЛЬКО|HOW\s+MUCH)(?:\s+БУДЕ|\s+БУДЕТ|\s+IS)?\s*(\d+(?:[,.\s]\d+)?)\s*([A-ZА-ЯІЇЄҐ$€£₴¥₿]+)\s*(?:В|НА|ДО|TO|INTO|IN)\s*([A-ZА-ЯІЇЄҐ$€£₴¥₿]+)",
+
+            # "конвертувати 100 USD в UAH" / "обменять 100 долларов на гривны"
+            r"(?:КОНВЕРТ|CONVERT|ОБМІН|ОБМЕН|CHANGE)(?:\w*)\s*(\d+(?:[,.\s]\d+)?)\s*([A-ZА-ЯІЇЄҐ$€£₴¥₿]+)\s*(?:В|НА|ДО|TO|INTO|IN)\s*([A-ZА-ЯІЇЄҐ$€£₴¥₿]+)",
+
+>>>>>>> 6233cd8c1c0c25e0cc1ce26e6f7b0051542ecf79
             # Symbol before amount: "$100 to UAH"
             r"([$€£₴¥₿])\s*(\d+(?:[,.\s]\d+)?)\s*(?:В|НА|ДО|TO|INTO|IN|→|->|=>)\s*([A-ZА-ЯІЇЄҐ$€£₴¥₿]+)",
         ]
@@ -501,6 +525,7 @@ class TextProcessing:
             if self._is_valid_currency(code):
                 amount = self._parse_number(amount_str)
                 if amount is not None:
+<<<<<<< HEAD
                     self.results.append(
                         ParsedCurrency(
                             code=code,
@@ -510,6 +535,15 @@ class TextProcessing:
                             span=match.span(),
                         )
                     )
+=======
+                    self.results.append(ParsedCurrency(
+                        code=code,
+                        amount=amount,
+                        is_crypto=code in self.CRYPTO_CODES,
+                        original_text=match.group(0),
+                        span=match.span()
+                    ))
+>>>>>>> 6233cd8c1c0c25e0cc1ce26e6f7b0051542ecf79
 
     def _parse_amount_code(self) -> None:
         """Parse patterns like '100 USD' or '100USD'."""
@@ -522,6 +556,7 @@ class TextProcessing:
             if self._is_valid_currency(code):
                 amount = self._parse_number(amount_str)
                 if amount is not None:
+<<<<<<< HEAD
                     self.results.append(
                         ParsedCurrency(
                             code=code,
@@ -531,6 +566,15 @@ class TextProcessing:
                             span=match.span(),
                         )
                     )
+=======
+                    self.results.append(ParsedCurrency(
+                        code=code,
+                        amount=amount,
+                        is_crypto=code in self.CRYPTO_CODES,
+                        original_text=match.group(0),
+                        span=match.span()
+                    ))
+>>>>>>> 6233cd8c1c0c25e0cc1ce26e6f7b0051542ecf79
 
     def _parse_symbol_amount(self) -> None:
         """Parse patterns like '$100' or '€50'."""
@@ -540,6 +584,7 @@ class TextProcessing:
             for match in re.finditer(pattern1, self.original_text):
                 amount = self._parse_number(match.group(1))
                 if amount is not None:
+<<<<<<< HEAD
                     self.results.append(
                         ParsedCurrency(
                             code=code,
@@ -550,6 +595,16 @@ class TextProcessing:
                             span=match.span(),
                         )
                     )
+=======
+                    self.results.append(ParsedCurrency(
+                        code=code,
+                        amount=amount,
+                        symbol=symbol,
+                        is_crypto=code in self.CRYPTO_CODES,
+                        original_text=match.group(0),
+                        span=match.span()
+                    ))
+>>>>>>> 6233cd8c1c0c25e0cc1ce26e6f7b0051542ecf79
 
             # Symbol after amount: 100$
             pattern2 = r"(\d[\d,.\s]*)\s*" + re.escape(symbol)
@@ -638,7 +693,14 @@ class TextProcessing:
                 span = match.span()
 
                 # Check overlap
+<<<<<<< HEAD
                 is_overlap = any(max(span[0], s[0]) < min(span[1], s[1]) for s in existing_spans)
+=======
+                is_overlap = any(
+                    max(span[0], s[0]) < min(span[1], s[1])
+                    for s in existing_spans
+                )
+>>>>>>> 6233cd8c1c0c25e0cc1ce26e6f7b0051542ecf79
 
                 if not is_overlap:
                     self.results.append(
@@ -665,6 +727,7 @@ class TextProcessing:
             span = match.span()
 
             # Check overlap
+<<<<<<< HEAD
             is_overlap = any(max(span[0], s[0]) < min(span[1], s[1]) for s in existing_spans)
 
             if not is_overlap and self._is_valid_currency(code):
@@ -677,6 +740,21 @@ class TextProcessing:
                         span=span,
                     )
                 )
+=======
+            is_overlap = any(
+                max(span[0], s[0]) < min(span[1], s[1])
+                for s in existing_spans
+            )
+
+            if not is_overlap and self._is_valid_currency(code):
+                self.results.append(ParsedCurrency(
+                    code=code,
+                    amount=1.0,
+                    is_crypto=code in self.CRYPTO_CODES,
+                    original_text=match.group(0),
+                    span=span
+                ))
+>>>>>>> 6233cd8c1c0c25e0cc1ce26e6f7b0051542ecf79
 
     def _is_valid_currency(self, code: str) -> bool:
         """Check if code is a valid currency."""

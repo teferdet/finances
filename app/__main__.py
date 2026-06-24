@@ -57,6 +57,7 @@ async def on_startup(bot) -> None:
             i18n = get_i18n()
             lang = settings.i18n.default_language
 
+<<<<<<< HEAD
             kb = InlineKeyboardMarkup(
                 inline_keyboard=[
                     [
@@ -67,6 +68,11 @@ async def on_startup(bot) -> None:
                     ]
                 ]
             )
+=======
+            kb = InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text=str(i18n.get("admin.main_menu", lang)), callback_data="admin_back")]
+            ])
+>>>>>>> 6233cd8c1c0c25e0cc1ce26e6f7b0051542ecf79
             text = str(i18n.get("admin.restart_success", lang))
 
             try:

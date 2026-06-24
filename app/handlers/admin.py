@@ -196,7 +196,10 @@ async def cb_admin(call: CallbackQuery, i18n: I18n, lang: str, state: FSMContext
 
         errors_today = 0
         from app.config import LOGS_DIR
+<<<<<<< HEAD
 
+=======
+>>>>>>> 6233cd8c1c0c25e0cc1ce26e6f7b0051542ecf79
         error_log_path = LOGS_DIR / "errors.log"
         if error_log_path.exists():
             today_str = datetime.now().strftime("%Y-%m-%d")
@@ -219,6 +222,7 @@ async def cb_admin(call: CallbackQuery, i18n: I18n, lang: str, state: FSMContext
             except Exception:
                 pass
 
+<<<<<<< HEAD
         text = (
             f"{t('dashboard_title')}\n\n"
             f"👥 Users Total: <code>{total_users}</code>\n"
@@ -240,6 +244,20 @@ async def cb_admin(call: CallbackQuery, i18n: I18n, lang: str, state: FSMContext
                 [InlineKeyboardButton(text=t("back"), callback_data="admin_back")],
             ]
         )
+=======
+        text = (f"{t('dashboard_title')}\n\n"
+                f"👥 Users Total: <code>{total_users}</code>\n"
+                f"🔥 Active Today (DAU): <code>{dau}</code>\n"
+                f"🔄 Parser Cycles Today: <code>{cycles_today}</code>\n"
+                f"❌ Errors Today: <code>{errors_today}</code>\n")
+
+        kb = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text=t("dashboard_requests"), callback_data="admin_dash_reqs"),
+             InlineKeyboardButton(text=t("dashboard_db"), callback_data="admin_dash_db")],
+            [InlineKeyboardButton(text=t("dashboard_problems"), callback_data="admin_dash_probs"),
+             InlineKeyboardButton(text=t("dashboard_export"), callback_data="admin_dash_export")],
+            [InlineKeyboardButton(text=t("back"), callback_data="admin_back")]])
+>>>>>>> 6233cd8c1c0c25e0cc1ce26e6f7b0051542ecf79
         try:
             await call.message.edit_text(text, reply_markup=kb, parse_mode="HTML")
         except Exception:
@@ -255,6 +273,7 @@ async def cb_admin(call: CallbackQuery, i18n: I18n, lang: str, state: FSMContext
         users_list = await db["Users"].find().to_list(length=None)
         total_reqs = sum(u.get("stats", {}).get("total_requests", 0) for u in users_list)
 
+<<<<<<< HEAD
         text = (
             f"📅 <b>Requests & Activity</b>\n\n"
             f"Weekly Active (WAU): <code>{wau}</code>\n"
@@ -265,6 +284,15 @@ async def cb_admin(call: CallbackQuery, i18n: I18n, lang: str, state: FSMContext
         kb = InlineKeyboardMarkup(
             inline_keyboard=[[InlineKeyboardButton(text=t("back"), callback_data="admin_dashboard")]]
         )
+=======
+        text = (f"📅 <b>Requests & Activity</b>\n\n"
+                f"Weekly Active (WAU): <code>{wau}</code>\n"
+                f"Monthly Active (MAU): <code>{mau}</code>\n"
+                f"Total Lifetime Requests: <code>{total_reqs}</code>\n\n"
+                f"<i>TODO: Daily/Weekly requests aggregation</i>")
+        kb = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text=t("back"), callback_data="admin_dashboard")]])
+>>>>>>> 6233cd8c1c0c25e0cc1ce26e6f7b0051542ecf79
         await call.message.edit_text(text, reply_markup=kb, parse_mode="HTML")
         return
 
@@ -278,16 +306,25 @@ async def cb_admin(call: CallbackQuery, i18n: I18n, lang: str, state: FSMContext
             cnt = await db[c].count_documents({})
             col_text += f" - {c}: <code>{cnt}</code>\n"
 
+<<<<<<< HEAD
         text = (
             f"🗄️ <b>Database Statistics</b>\n\nTotal Data Size: <code>{size_mb:.2f} MB</code>\nCollections:\n{col_text}"
         )
         kb = InlineKeyboardMarkup(
             inline_keyboard=[[InlineKeyboardButton(text=t("back"), callback_data="admin_dashboard")]]
         )
+=======
+        text = (f"🗄️ <b>Database Statistics</b>\n\n"
+                f"Total Data Size: <code>{size_mb:.2f} MB</code>\n"
+                f"Collections:\n{col_text}")
+        kb = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text=t("back"), callback_data="admin_dashboard")]])
+>>>>>>> 6233cd8c1c0c25e0cc1ce26e6f7b0051542ecf79
         await call.message.edit_text(text, reply_markup=kb, parse_mode="HTML")
         return
 
     if action == "dash_probs":
+<<<<<<< HEAD
         text = (
             "⚠️ <b>Problematic Data Sources</b>\n\n"
             "<i>TODO: Tracking for specific sources (e.g. failed exchange endpoints) to be implemented in DB.</i>"
@@ -295,6 +332,12 @@ async def cb_admin(call: CallbackQuery, i18n: I18n, lang: str, state: FSMContext
         kb = InlineKeyboardMarkup(
             inline_keyboard=[[InlineKeyboardButton(text=t("back"), callback_data="admin_dashboard")]]
         )
+=======
+        text = ("⚠️ <b>Problematic Data Sources</b>\n\n"
+                "<i>TODO: Tracking for specific sources (e.g. failed exchange endpoints) to be implemented in DB.</i>")
+        kb = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text=t("back"), callback_data="admin_dashboard")]])
+>>>>>>> 6233cd8c1c0c25e0cc1ce26e6f7b0051542ecf79
         await call.message.edit_text(text, reply_markup=kb, parse_mode="HTML")
         return
 
@@ -327,7 +370,10 @@ async def cb_admin(call: CallbackQuery, i18n: I18n, lang: str, state: FSMContext
         cfg = get_settings()
         if action == "toggle_parser":
             import dataclasses
+<<<<<<< HEAD
 
+=======
+>>>>>>> 6233cd8c1c0c25e0cc1ce26e6f7b0051542ecf79
             # need to mutate nested dataclass properly.
             new_parser = dataclasses.replace(cfg.parser, auto_update=not cfg.parser.auto_update)
             cfg = dataclasses.replace(cfg, parser=new_parser)
@@ -336,6 +382,7 @@ async def cb_admin(call: CallbackQuery, i18n: I18n, lang: str, state: FSMContext
 
         parser_status = t("parser_toggle_on") if cfg.parser.auto_update else t("parser_toggle_off")
 
+<<<<<<< HEAD
         text = (
             f"{t('config_title')}\n\n"
             f"Auto update: {'✅' if cfg.parser.auto_update else '❌'}\n"
@@ -354,6 +401,16 @@ async def cb_admin(call: CallbackQuery, i18n: I18n, lang: str, state: FSMContext
                 [InlineKeyboardButton(text=t("back"), callback_data="admin_back")],
             ]
         )
+=======
+        text = (f"{t('config_title')}\n\n"
+                f"Auto update: {'✅' if cfg.parser.auto_update else '❌'}\n"
+                f"Interval: {cfg.parser.update_interval_sec}s\n"
+                f"Critical: {len(cfg.parser.critical_currencies)}")
+        kb = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text=parser_status, callback_data="admin_toggle_parser")],
+            [InlineKeyboardButton(text=t("parser_change_interval"), callback_data="admin_change_interval")],
+            [InlineKeyboardButton(text=t("back"), callback_data="admin_back")]])
+>>>>>>> 6233cd8c1c0c25e0cc1ce26e6f7b0051542ecf79
         try:
             await call.message.edit_text(text, reply_markup=kb, parse_mode="HTML")
         except Exception:
@@ -390,6 +447,7 @@ async def cb_admin(call: CallbackQuery, i18n: I18n, lang: str, state: FSMContext
             res_text = "psutil not installed\n\n"
 
         recent_errs = _get_recent_errors(3)
+<<<<<<< HEAD
         err_text = t("diagnostics_recent_errors") + (recent_errs if recent_errs else t("error_none"))
 
         elapsed_ms = int((time.time() - callback_start_time) * 1000)
@@ -398,6 +456,17 @@ async def cb_admin(call: CallbackQuery, i18n: I18n, lang: str, state: FSMContext
         text = f"{t('diagnostics_title')}\n\n{res_text}\n{err_text}\n\n{time_text}"
 
         kb = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text=t("back"), callback_data="admin_back")]])
+=======
+        err_text = t('diagnostics_recent_errors') + (recent_errs if recent_errs else t('error_none'))
+
+        elapsed_ms = int((time.time() - callback_start_time) * 1000)
+        time_text = t('diagnostics_response_time').format(ms=elapsed_ms)
+
+        text = f"{t('diagnostics_title')}\n\n{res_text}\n{err_text}\n\n{time_text}"
+
+        kb = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text=t("back"), callback_data="admin_back")]])
+>>>>>>> 6233cd8c1c0c25e0cc1ce26e6f7b0051542ecf79
         await call.message.edit_text(text, reply_markup=kb, parse_mode="HTML")
         return
 
@@ -463,6 +532,7 @@ async def process_parser_interval(message: Message, state: FSMContext, i18n: I18
 
     await state.clear()
 
+<<<<<<< HEAD
     text = (
         f"{t('config_title')}\n\n"
         f"Auto update: {'✅' if cfg.parser.auto_update else '❌'}\n"
@@ -483,5 +553,17 @@ async def process_parser_interval(message: Message, state: FSMContext, i18n: I18
             [InlineKeyboardButton(text=t("back"), callback_data="admin_back")],
         ]
     )
+=======
+    text = (f"{t('config_title')}\n\n"
+            f"Auto update: {'✅' if cfg.parser.auto_update else '❌'}\n"
+            f"Interval: {cfg.parser.update_interval_sec}s\n"
+            f"Critical: {len(cfg.parser.critical_currencies)}")
+
+    parser_status = t("parser_toggle_on") if cfg.parser.auto_update else t("parser_toggle_off")
+    kb = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text=parser_status, callback_data="admin_toggle_parser")],
+        [InlineKeyboardButton(text=t("parser_change_interval"), callback_data="admin_change_interval")],
+        [InlineKeyboardButton(text=t("back"), callback_data="admin_back")]])
+>>>>>>> 6233cd8c1c0c25e0cc1ce26e6f7b0051542ecf79
 
     await message.answer(text, reply_markup=kb, parse_mode="HTML")

@@ -58,7 +58,11 @@ async def inline_calculator(inline_query: InlineQuery, i18n: I18n, lang: str) ->
     for code, amount in data:
         ci = info_map.get(code, {})
         emoji = ci.get("emoji", "")
+<<<<<<< HEAD
         ci.get("symbol", "")
+=======
+        symbol = ci.get("symbol", "")
+>>>>>>> 6233cd8c1c0c25e0cc1ce26e6f7b0051542ecf79
 
         title = f"{emoji} {amount} {code}".strip()
 
