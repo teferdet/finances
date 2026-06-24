@@ -39,7 +39,7 @@ class I18nMiddleware(BaseMiddleware):
             # Add activity tracking in the background
             import asyncio
             from datetime import datetime
-            
+
             async def _track_activity(uid: int) -> None:
                 now = datetime.now()
                 today_str = now.strftime("%Y-%m-%d")
@@ -56,7 +56,7 @@ class I18nMiddleware(BaseMiddleware):
                     )
                 except Exception:
                     pass
-                    
+
             asyncio.create_task(_track_activity(user.id))
 
             # 1) Check DB for saved preference

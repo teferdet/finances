@@ -5,9 +5,7 @@ My Data handler — /my_data command to view user settings and reset them.
 from __future__ import annotations
 
 from aiogram import Router, F
-from aiogram.filters import Command
 from aiogram.types import (
-    Message,
     CallbackQuery,
     InlineKeyboardMarkup,
     InlineKeyboardButton,
@@ -16,7 +14,6 @@ from aiogram.types import (
 from app.config import get_settings
 from app.db import get_db
 from app.i18n import I18n
-from app.keyboards.main import get_main_keyboard
 
 router = Router(name="my_data")
 

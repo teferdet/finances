@@ -8,7 +8,7 @@ from collections import defaultdict, deque
 from typing import Any, Awaitable, Callable
 
 from aiogram import BaseMiddleware
-from aiogram.types import TelegramObject, Update, Message, CallbackQuery
+from aiogram.types import TelegramObject, Message, CallbackQuery
 
 logger = logging.getLogger(__name__)
 
@@ -83,7 +83,7 @@ class RateLimitMiddleware(BaseMiddleware):
                     chat_id = event.chat.id
                 elif isinstance(event, CallbackQuery) and event.message:
                     chat_id = event.message.chat.id
-                    
+
                 if chat_id:
                     try:
                         i18n = data.get("i18n")
@@ -91,12 +91,12 @@ class RateLimitMiddleware(BaseMiddleware):
                         text = "⚠️ Too many requests. Please slow down."
                         if i18n:
                             text = str(i18n.get("rate_limit.exceeded", lang))
-                            
+
                         await bot.send_message(
                             chat_id,
                             text,
                         )
                     except Exception as e:
                         logger.error(f"Failed to send rate limit warning: {e}")
-                        
+
         return None  # Drop the update

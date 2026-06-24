@@ -1,7 +1,6 @@
 """
 Error tracking for data sources.
 """
-import asyncio
 from datetime import datetime, timezone
 from app.db import get_db
 
@@ -10,7 +9,7 @@ async def report_source_error(source_name: str, error_msg: str) -> None:
     # Truncate error message to prevent huge logs in DB
     if len(error_msg) > 500:
         error_msg = error_msg[:497] + "..."
-        
+
     await db["ProblematicSources"].update_one(
         {"_id": source_name},
         {

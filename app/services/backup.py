@@ -23,7 +23,7 @@ async def daily_backup(mongo_uri: str) -> None:
     Runs mongodump, compresses it to .gz, and saves it to the backups folder.
     """
     BACKUPS_DIR.mkdir(parents=True, exist_ok=True)
-    
+
     timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
     dump_dir = BACKUPS_DIR / f"dump_{timestamp}"
     archive_path = BACKUPS_DIR / f"backup_{timestamp}.gz"
@@ -85,9 +85,9 @@ async def run_daily_backup_loop(mongo_uri: str) -> None:
         next_run = now.replace(hour=3, minute=0, second=0, microsecond=0)
         if now >= next_run:
             next_run = next_run + timedelta(days=1)
-            
+
         sleep_seconds = (next_run - now).total_seconds()
         logger.info(f"Next local MongoDB backup scheduled in {sleep_seconds:.0f} seconds (at {next_run} UTC).")
-        
+
         await asyncio.sleep(sleep_seconds)
         await daily_backup(mongo_uri)

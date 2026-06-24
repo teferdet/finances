@@ -48,7 +48,7 @@ def create_dispatcher() -> Dispatcher:
     dp.message.outer_middleware(ErrorMiddleware())
     dp.callback_query.outer_middleware(ErrorMiddleware())
     dp.inline_query.outer_middleware(ErrorMiddleware())
-    
+
     dp.message.outer_middleware(I18nMiddleware())
     dp.callback_query.outer_middleware(I18nMiddleware())
     dp.inline_query.outer_middleware(I18nMiddleware())

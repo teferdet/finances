@@ -76,7 +76,7 @@ async def close_db() -> None:
 async def get_broadcast_audience_stats(db: AsyncIOMotorDatabase) -> dict:
     """
     Returns audience breakdown by language and premium status.
-    
+
     Returns:
     {
         "total": 1234,
@@ -86,10 +86,10 @@ async def get_broadcast_audience_stats(db: AsyncIOMotorDatabase) -> dict:
     }
     """
     users_collection = db["Users"]
-    
+
     total = await users_collection.count_documents({})
     premium = await users_collection.count_documents({"Premium": True})
-    
+
     pipeline = [
         {"$group": {"_id": "$Language", "count": {"$sum": 1}}},
         {"$sort": {"count": -1}},
@@ -98,7 +98,7 @@ async def get_broadcast_audience_stats(db: AsyncIOMotorDatabase) -> dict:
     async for doc in users_collection.aggregate(pipeline):
         lang_code = doc["_id"] or "unknown"
         by_language[lang_code] = doc["count"]
-    
+
     return {
         "total": total,
         "by_language": by_language,
