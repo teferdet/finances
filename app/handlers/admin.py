@@ -12,7 +12,13 @@ from datetime import datetime, timedelta
 
 from aiogram import Router, F
 from aiogram.filters import Command
-from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton, BufferedInputFile
+from aiogram.types import (
+    Message,
+    CallbackQuery,
+    InlineKeyboardMarkup,
+    InlineKeyboardButton,
+    BufferedInputFile,
+)
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 
@@ -102,7 +108,11 @@ async def cmd_ping(message: Message, i18n: I18n, lang: str) -> None:
     msg = await message.answer(str(i18n.get("admin.pong", lang)))
     end_time = time.time()
     ping_ms = round((end_time - start_time) * 1000, 2)
-    await msg.edit_text(str(i18n.get("admin.pong_details", lang)).format(ping_ms=ping_ms), parse_mode="HTML")
+    await msg.edit_text(
+        str(i18n.get("admin.pong_details", lang)).format(ping_ms=ping_ms),
+        parse_mode="HTML",
+    )
+
 
 
 @router.callback_query(F.data.startswith("admin_"))
@@ -114,7 +124,10 @@ async def cb_admin(call: CallbackQuery, i18n: I18n, lang: str, state: FSMContext
         return
 
     action = call.data.replace("admin_", "")
-    t = lambda k: str(i18n.get(f"admin.{k}", lang))
+
+    def t(k):
+        return str(i18n.get(f"admin.{k}", lang))
+
     db = get_db()
 
     # Restart logic
@@ -137,7 +150,13 @@ async def cb_admin(call: CallbackQuery, i18n: I18n, lang: str, state: FSMContext
         state_path = CONFIG_DIR / ".restart_state.json"
         try:
             with open(state_path, "w", encoding="utf-8") as f:
-                json.dump({"chat_id": call.message.chat.id, "message_id": call.message.message_id}, f)
+                json.dump(
+                    {
+                        "chat_id": call.message.chat.id,
+                        "message_id": call.message.message_id,
+                    },
+                    f,
+                )
         except Exception as e:
             log.error("Failed to save restart state: %s", e)
 
@@ -411,7 +430,9 @@ async def cb_admin(call: CallbackQuery, i18n: I18n, lang: str, state: FSMContext
 
 @router.message(AdminStates.waiting_for_parser_interval)
 async def process_parser_interval(message: Message, state: FSMContext, i18n: I18n, lang: str) -> None:
-    t = lambda k: str(i18n.get(f"admin.{k}", lang))
+    def t(k):
+        return str(i18n.get(f"admin.{k}", lang))
+
     try:
         val = int(message.text)
         if val < 10 or val > 86400:  # reasonable limits

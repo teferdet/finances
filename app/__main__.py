@@ -89,7 +89,10 @@ async def on_startup(bot) -> None:
                 BotCommand(command="start", description=i18n.get("commands.start", lang)),
                 BotCommand(command="crypto", description=i18n.get("commands.crypto", lang)),
                 BotCommand(command="stocks", description=i18n.get("commands.stocks", lang)),
-                BotCommand(command="portfolio", description=i18n.get("commands.portfolio", lang)),
+                BotCommand(
+                    command="portfolio",
+                    description=i18n.get("commands.portfolio", lang),
+                ),
                 BotCommand(command="export", description=i18n.get("commands.export", lang)),
                 BotCommand(command="import", description=i18n.get("commands.import", lang)),
                 BotCommand(command="alert", description=i18n.get("commands.alert", lang)),

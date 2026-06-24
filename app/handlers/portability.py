@@ -27,7 +27,11 @@ from aiogram.types import Message, BufferedInputFile
 
 from app.db import get_db
 from app.i18n import I18n
-from app.services.portfolio_service import _get_current_usd_price, _get_fiat_usd_price, add_asset
+from app.services.portfolio_service import (
+    _get_current_usd_price,
+    _get_fiat_usd_price,
+    add_asset,
+)
 
 router = Router(name="portability")
 
@@ -185,5 +189,6 @@ async def handle_document_import(message: Message, i18n: I18n, lang: str) -> Non
         await loading_message.edit_text(text)
 
     except Exception as e:
+>>>>>>> 6233cd8c1c0c25e0cc1ce26e6f7b0051542ecf79
         text_err = str(i18n.get("portability.parse_error", lang))
         await loading_message.edit_text(text_err)

@@ -5,7 +5,12 @@ Exchange API handler — binds Binance/Bybit API keys and syncs portfolio.
 from __future__ import annotations
 
 from aiogram import Router, F
-from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import (
+    Message,
+    CallbackQuery,
+    InlineKeyboardMarkup,
+    InlineKeyboardButton,
+)
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 
@@ -38,7 +43,9 @@ def select_exchange_keyboard() -> InlineKeyboardMarkup:
 
 @router.callback_query(F.data == "exchange_bind")
 async def cb_exchange_bind(call: CallbackQuery, state: FSMContext, i18n: I18n, lang: str) -> None:
-    t = lambda k: str(i18n.get(f"exchange.{k}", lang))
+    def t(k):
+        return str(i18n.get(f"exchange.{k}", lang))
+
     await call.answer()
 
     text = f"{t('menu_title')}\n\n{t('menu_desc')}"
@@ -48,7 +55,9 @@ async def cb_exchange_bind(call: CallbackQuery, state: FSMContext, i18n: I18n, l
 
 @router.callback_query(ExchangeStates.waiting_for_exchange, F.data.startswith("exchange_select:"))
 async def cb_exchange_select(call: CallbackQuery, state: FSMContext, i18n: I18n, lang: str) -> None:
-    t = lambda k: str(i18n.get(f"exchange.{k}", lang))
+    def t(k):
+        return str(i18n.get(f"exchange.{k}", lang))
+
     await call.answer()
 
     exchange_name = call.data.split(":")[1]
@@ -64,7 +73,9 @@ async def cb_exchange_select(call: CallbackQuery, state: FSMContext, i18n: I18n,
 
 @router.message(ExchangeStates.waiting_for_api_key)
 async def process_api_key(message: Message, state: FSMContext, i18n: I18n, lang: str) -> None:
-    t = lambda k: str(i18n.get(f"exchange.{k}", lang))
+    def t(k):
+        return str(i18n.get(f"exchange.{k}", lang))
+
     api_key = message.text.strip()
 
     # Delete the user's message with the API key for security
@@ -88,7 +99,9 @@ async def process_api_key(message: Message, state: FSMContext, i18n: I18n, lang:
 
 @router.message(ExchangeStates.waiting_for_api_secret)
 async def process_api_secret(message: Message, state: FSMContext, i18n: I18n, lang: str) -> None:
-    t = lambda k: str(i18n.get(f"exchange.{k}", lang))
+    def t(k):
+        return str(i18n.get(f"exchange.{k}", lang))
+
     api_secret = message.text.strip()
 
     # Delete the user's message with the secret key for security
@@ -123,7 +136,9 @@ async def process_api_secret(message: Message, state: FSMContext, i18n: I18n, la
 
 @router.callback_query(F.data == "exchange_cancel")
 async def cb_exchange_cancel(call: CallbackQuery, state: FSMContext, i18n: I18n, lang: str) -> None:
-    t = lambda k: str(i18n.get(f"exchange.{k}", lang))
+    def t(k):
+        return str(i18n.get(f"exchange.{k}", lang))
+
     await call.answer()
     await state.clear()
     text = t("cancel_msg")
@@ -132,7 +147,9 @@ async def cb_exchange_cancel(call: CallbackQuery, state: FSMContext, i18n: I18n,
 
 @router.callback_query(F.data == "exchange_sync")
 async def cb_exchange_sync(call: CallbackQuery, i18n: I18n, lang: str) -> None:
-    t = lambda k: str(i18n.get(f"exchange.{k}", lang))
+    def t(k):
+        return str(i18n.get(f"exchange.{k}", lang))
+
     await call.answer()
 
     db = get_db()

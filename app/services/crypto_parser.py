@@ -62,7 +62,11 @@ async def fetch_crypto() -> Optional[dict]:
                         name = coin.get("symbol")
                         price = coin.get("quote", {}).get(currency, {}).get("price")
                         if name and price is not None:
-                            currency_entries[name] = [name, round(float(price), 4), target_symbol]
+                            currency_entries[name] = [
+                                name,
+                                round(float(price), 4),
+                                target_symbol,
+                            ]
 
                     crypto_data[currency] = currency_entries
                     log.info("[Crypto] %s: %d coins fetched", currency, len(currency_entries))

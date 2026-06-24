@@ -62,7 +62,10 @@ def _alert_back_kb(i18n: I18n, lang: str) -> InlineKeyboardMarkup:
 
 def _alert_list_kb(alerts: list[dict], i18n: I18n, lang: str) -> InlineKeyboardMarkup:
     """Build keyboard with a delete button per alert + back button."""
-    t = lambda k: str(i18n.get(f"alerts.{k}", lang))
+
+    def t(k):
+        return str(i18n.get(f"alerts.{k}", lang))
+
     rows = []
     for a in alerts[:10]:  # Max 10 shown
         aid = str(a["_id"])
@@ -79,7 +82,9 @@ def _alert_list_kb(alerts: list[dict], i18n: I18n, lang: str) -> InlineKeyboardM
 
 @router.message(Command("alert"))
 async def cmd_alert(message: Message, command: CommandObject, i18n: I18n, lang: str) -> None:
-    t = lambda k: str(i18n.get(f"alerts.{k}", lang))
+    def t(k):
+        return str(i18n.get(f"alerts.{k}", lang))
+
     args = command.args
 
     if not args:
@@ -128,7 +133,9 @@ async def cmd_alert(message: Message, command: CommandObject, i18n: I18n, lang: 
 
 @router.callback_query(F.data == "alert_back")
 async def cb_alert_back(call: CallbackQuery, i18n: I18n, lang: str) -> None:
-    t = lambda k: str(i18n.get(f"alerts.{k}", lang))
+    def t(k):
+        return str(i18n.get(f"alerts.{k}", lang))
+
     _waiting_for_alert.discard(call.from_user.id)
     text = (
         f"{t('menu_title')}\n\n"
@@ -143,7 +150,9 @@ async def cb_alert_back(call: CallbackQuery, i18n: I18n, lang: str) -> None:
 
 @router.callback_query(F.data == "alert_my")
 async def cb_alert_my(call: CallbackQuery, i18n: I18n, lang: str) -> None:
-    t = lambda k: str(i18n.get(f"alerts.{k}", lang))
+    def t(k):
+        return str(i18n.get(f"alerts.{k}", lang))
+
     db = get_db()
     alerts = await db["Alerts"].find({"user_id": call.from_user.id, "triggered": False}).to_list(length=50)
 
@@ -172,7 +181,9 @@ async def cb_alert_my(call: CallbackQuery, i18n: I18n, lang: str) -> None:
 
 @router.callback_query(F.data == "alert_new")
 async def cb_alert_new(call: CallbackQuery, i18n: I18n, lang: str) -> None:
-    t = lambda k: str(i18n.get(f"alerts.{k}", lang))
+    def t(k):
+        return str(i18n.get(f"alerts.{k}", lang))
+
     _waiting_for_alert.add(call.from_user.id)
     await call.message.edit_text(
         t("callback_new_prompt"),
@@ -183,7 +194,9 @@ async def cb_alert_new(call: CallbackQuery, i18n: I18n, lang: str) -> None:
 
 @router.callback_query(F.data == "alert_clear")
 async def cb_alert_clear(call: CallbackQuery, i18n: I18n, lang: str) -> None:
-    t = lambda k: str(i18n.get(f"alerts.{k}", lang))
+    def t(k):
+        return str(i18n.get(f"alerts.{k}", lang))
+
     db = get_db()
     result = await db["Alerts"].delete_many({"user_id": call.from_user.id})
     text = t("callback_cleared")
@@ -193,7 +206,9 @@ async def cb_alert_clear(call: CallbackQuery, i18n: I18n, lang: str) -> None:
 
 @router.callback_query(F.data.startswith("alert_del:"))
 async def cb_alert_delete(call: CallbackQuery, i18n: I18n, lang: str) -> None:
-    t = lambda k: str(i18n.get(f"alerts.{k}", lang))
+    def t(k):
+        return str(i18n.get(f"alerts.{k}", lang))
+
     alert_id = call.data.split(":")[1]
     db = get_db()
     from bson import ObjectId

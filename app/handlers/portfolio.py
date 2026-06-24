@@ -10,7 +10,12 @@ import math
 import html
 from aiogram import Router, F
 from aiogram.filters import Command, CommandObject
-from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import (
+    Message,
+    CallbackQuery,
+    InlineKeyboardMarkup,
+    InlineKeyboardButton,
+)
 
 from app.db import get_db
 from app.i18n import I18n
@@ -48,7 +53,10 @@ def portfolio_keyboard(i18n: I18n, lang: str) -> InlineKeyboardMarkup:
 @router.message(Command("portfolio"))
 async def cmd_portfolio(message: Message, command: CommandObject, i18n: I18n, lang: str) -> None:
     """Manage and view portfolio. Usage: /portfolio [currency | add ... | remove ...]"""
-    t = lambda k: str(i18n.get(f"portfolio.{k}", lang))
+
+    def t(k):
+        return str(i18n.get(f"portfolio.{k}", lang))
+
     args = command.args
 
     if not args:
@@ -166,7 +174,9 @@ def _format_number(value: float, decimals: int = 2) -> str:
 
 def _format_pnl(pnl_abs: float | None, pnl_pct: float | None, i18n: I18n, lang: str) -> str:
     """Format P&L line with emoji indicator."""
-    t = lambda k: str(i18n.get(f"portfolio.{k}", lang))
+
+    def t(k):
+        return str(i18n.get(f"portfolio.{k}", lang))
 
     if pnl_abs is None or pnl_pct is None:
         return f"  <i>{t('no_buy_price')}</i>"
@@ -187,7 +197,8 @@ async def _show_portfolio(
     lang: str,
     is_edit: bool = False,
 ) -> None:
-    t = lambda k: str(i18n.get(f"portfolio.{k}", lang))
+    def t(k):
+        return str(i18n.get(f"portfolio.{k}", lang))
 
     pnl_data = await get_portfolio_with_pnl(user_id, base_currency)
     sections = pnl_data["sections"]
@@ -352,6 +363,9 @@ async def cb_portfolio_base_action(call: CallbackQuery, i18n: I18n, lang: str) -
 @router.callback_query(F.data == "portfolio_clear")
 async def cb_portfolio_clear(call: CallbackQuery, i18n: I18n, lang: str) -> None:
     await clear_portfolio(call.from_user.id)
-    t = lambda k: str(i18n.get(f"portfolio.{k}", lang))
+
+    def t(k):
+        return str(i18n.get(f"portfolio.{k}", lang))
+
     await call.message.edit_text(t("portfolio_cleared"), parse_mode="HTML")
     await call.answer(t("cleared"))

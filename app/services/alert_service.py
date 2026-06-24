@@ -234,7 +234,9 @@ async def _check_alerts() -> int:
 
             # Build notification via i18n
             lang = user_langs.get(a["user_id"], "en")
-            t = lambda k: str(i18n.get(f"alerts.{k}", lang))
+
+            def t(k):
+                return str(i18n.get(f"alerts.{k}", lang))
 
             cond_emoji = "📈" if condition == "above" else "📉"
             text = (
@@ -409,7 +411,9 @@ async def _check_volatility() -> None:
     for user in users:
         threshold = user.get("volatility_threshold_pct", 5.0)
         lang = user.get("Language") or "en"
-        t = lambda k, _lang=lang: str(i18n.get(f"alerts.{k}", _lang))
+
+        def t(k, _lang=lang):
+            return str(i18n.get(f"alerts.{k}", _lang))
 
         user_tickers: list[str] = []
 

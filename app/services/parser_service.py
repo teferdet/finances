@@ -183,7 +183,10 @@ async def convert_currencies(
     for entry in get_currencies_data():
         c = entry.get("code", "")
         if c:
-            _cd_map[c] = {"emoji": entry.get("emoji", ""), "symbol": entry.get("symbol", "")}
+            _cd_map[c] = {
+                "emoji": entry.get("emoji", ""),
+                "symbol": entry.get("symbol", ""),
+            }
 
     results: list[str] = []
 
