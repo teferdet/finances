@@ -18,7 +18,7 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       # ── 1. Clone or Pull ─────────────────────────────────────────
       - name: 📦 Pull Latest Code
