@@ -74,7 +74,7 @@ async def inline_calculator(inline_query: InlineQuery, i18n: I18n, lang: str) ->
         
         articles.append(
             InlineQueryResultArticle(
-                id=hashlib.md5(f"{code}_{amount}_ALL".encode()).hexdigest(),
+                id=hashlib.sha256(f"{code}_{amount}_ALL".encode()).hexdigest()[:32],
                 title=f"🌐 {t_all} ({len(output)})",
                 description=desc_all,
                 input_message_content=InputTextMessageContent(
@@ -104,7 +104,7 @@ async def inline_calculator(inline_query: InlineQuery, i18n: I18n, lang: str) ->
             
             articles.append(
                 InlineQueryResultArticle(
-                    id=hashlib.md5(f"{code}_{amount}_{target_code}".encode()).hexdigest(),
+                    id=hashlib.sha256(f"{code}_{amount}_{target_code}".encode()).hexdigest()[:32],
                     title=item_title,
                     description=item_desc,
                     input_message_content=InputTextMessageContent(

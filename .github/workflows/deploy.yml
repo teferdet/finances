@@ -8,6 +8,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: deploy-production
+  cancel-in-progress: true
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -16,42 +20,58 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v5
 
-      - name: Deploy to Oracle VPS via SSH
+      # ── 1. Clone or Pull ─────────────────────────────────────────
+      - name: 📦 Pull Latest Code
         uses: appleboy/ssh-action@v1.0.3
+        timeout-minutes: 3
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SERVER_PORT }}
-          envs: GH_TOKEN,BOT_TOKEN,MONGO_URI,CRYPTO_API_KEY,STOCKS_API_KEY,FERNET_KEY,BOT_ADMIN_IDS,URL_COMMUNICATION,URL_INVITE,URL_BUYMEACOFFEE,URL_DONATELLO,URL_BANK,URL_MINI_APP
+          envs: GH_TOKEN
           script: |
             set -e
-
             APP_DIR="/home/ubuntu/finances"
-            VENV_DIR="$APP_DIR/venv"
-            SERVICE_NAME="finances-bot"
-
-            # ── 1. Clone or pull ──────────────────────────────────────
             REPO_URL="https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
+
             if [ ! -d "$APP_DIR" ]; then
               echo "📦 First deploy — cloning repository..."
               git clone "$REPO_URL" "$APP_DIR"
+              echo "" > /tmp/.finances_prev_commit
             else
               echo "🔄 Pulling latest changes..."
               cd "$APP_DIR"
+              git rev-parse HEAD > /tmp/.finances_prev_commit
               git remote set-url origin "$REPO_URL"
               git fetch origin main
               git reset --hard origin/main
             fi
 
             cd "$APP_DIR"
+            echo "✅ Code is at commit: $(git rev-parse --short HEAD)"
+            echo "📝 Latest: $(git log -1 --pretty=format:'%s')"
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
 
-            # ── 2. Generate settings.json from GitHub Secrets ─────────
+      # ── 2. Generate Configuration ────────────────────────────────
+      - name: 🔐 Generate Settings
+        uses: appleboy/ssh-action@v1.0.3
+        timeout-minutes: 2
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SERVER_PORT }}
+          envs: BOT_TOKEN,MONGO_URI,CRYPTO_API_KEY,STOCKS_API_KEY,FERNET_KEY,BOT_ADMIN_IDS,URL_COMMUNICATION,URL_INVITE,URL_BUYMEACOFFEE,URL_DONATELLO,URL_BANK,URL_MINI_APP
+          script: |
+            set -e
+            APP_DIR="/home/ubuntu/finances"
+
             echo "🔐 Generating settings.json from secrets..."
             cat > "$APP_DIR/config/settings.json" << 'SETTINGS_EOF'
             SETTINGS_EOF
 
-            # Use python to generate valid JSON with injected secrets
             python3 -c "
             import json, os
             settings = {
@@ -113,52 +133,7 @@ jobs:
                 json.dump(settings, f, indent=2, ensure_ascii=False)
             print('✅ settings.json generated successfully')
             "
-
-            # ── 3. Virtual environment ────────────────────────────────
-            if [ ! -d "$VENV_DIR" ]; then
-              echo "🐍 Creating virtual environment..."
-              python3 -m venv "$VENV_DIR"
-            fi
-
-            echo "🔍 APP_DIR is: $APP_DIR"
-            echo "🔍 VENV_DIR is: $VENV_DIR"
-            echo "🔍 whoami: $(whoami)"
-            echo "🔍 HOME: $HOME"
-            ls "$VENV_DIR/lib/" 2>/dev/null || echo "VENV does not exist at $VENV_DIR"
-
-            echo "📥 Installing / updating dependencies..."
-            "$VENV_DIR/bin/pip" install --upgrade pip -q
-            "$VENV_DIR/bin/pip" install -r requirements.txt -q
-
-            echo "🔍 Verifying motor installation..."
-            "$VENV_DIR/bin/python" -c "import motor; print('motor OK:', motor.version)"
-            echo "🔍 Pip list motor:"
-            "$VENV_DIR/bin/pip" show motor
-
-
-
-            # ── 4. Install systemd service ────────────────────────────
-            echo "⚙️  Setting up systemd service..."
-            sudo cp "$APP_DIR/deploy/finances-bot.service" /etc/systemd/system/finances-bot.service
-            sudo systemctl daemon-reload
-            sudo systemctl enable finances-bot.service
-
-            # ── 5. Restart the bot ────────────────────────────────────
-            echo "🚀 Restarting finances-bot..."
-            sudo systemctl restart finances-bot.service
-
-            # Wait a moment and verify the service started
-            sleep 3
-            if sudo systemctl is-active --quiet finances-bot.service; then
-              echo "✅ finances-bot is running!"
-              ps aux | grep finances.bot | grep -v grep || true
-            else
-              echo "❌ finances-bot failed to start. Logs:"
-              sudo journalctl -u finances-bot.service -n 30 --no-pager
-              exit 1
-            fi
         env:
-          GH_TOKEN: ${{ secrets.GH_PAT }}
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           MONGO_URI: ${{ secrets.MONGO_URI }}
           CRYPTO_API_KEY: ${{ secrets.CRYPTO_API_KEY }}
@@ -171,3 +146,113 @@ jobs:
           URL_DONATELLO: ${{ vars.URL_DONATELLO }}
           URL_BANK: ${{ vars.URL_BANK }}
           URL_MINI_APP: ${{ vars.URL_MINI_APP }}
+
+      # ── 3. Install Dependencies ──────────────────────────────────
+      - name: 🐍 Install Dependencies
+        uses: appleboy/ssh-action@v1.0.3
+        timeout-minutes: 5
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SERVER_PORT }}
+          script: |
+            set -e
+            APP_DIR="/home/ubuntu/finances"
+            VENV_DIR="$APP_DIR/venv"
+
+            if [ ! -d "$VENV_DIR" ]; then
+              echo "🐍 Creating virtual environment..."
+              python3 -m venv "$VENV_DIR"
+            fi
+
+            echo "📥 Installing / updating dependencies..."
+            "$VENV_DIR/bin/pip" install --upgrade pip -q
+            "$VENV_DIR/bin/pip" install -r "$APP_DIR/requirements.txt" -q
+            echo "✅ Dependencies installed"
+
+      # ── 4. Configure Systemd ─────────────────────────────────────
+      - name: ⚙️ Configure Systemd Service
+        uses: appleboy/ssh-action@v1.0.3
+        timeout-minutes: 2
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SERVER_PORT }}
+          script: |
+            set -e
+            APP_DIR="/home/ubuntu/finances"
+
+            echo "⚙️  Setting up systemd service..."
+            sudo cp "$APP_DIR/deploy/finances-bot.service" /etc/systemd/system/finances-bot.service
+            sudo systemctl daemon-reload
+            sudo systemctl enable finances-bot.service
+            echo "✅ Systemd service configured"
+
+      # ── 5. Restart Bot ───────────────────────────────────────────
+      - name: 🚀 Restart Bot
+        uses: appleboy/ssh-action@v1.0.3
+        timeout-minutes: 2
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SERVER_PORT }}
+          script: |
+            set -e
+
+            echo "🚀 Restarting finances-bot..."
+            sudo systemctl restart finances-bot.service
+            echo "✅ Restart command sent"
+
+      # ── 6. Health Check ──────────────────────────────────────────
+      - name: ✅ Health Check
+        uses: appleboy/ssh-action@v1.0.3
+        timeout-minutes: 2
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SERVER_PORT }}
+          script: |
+            set -e
+            APP_DIR="/home/ubuntu/finances"
+            VENV_DIR="$APP_DIR/venv"
+
+            BOT_STARTED=false
+            for i in $(seq 1 10); do
+              if sudo systemctl is-active --quiet finances-bot.service; then
+                echo "✅ finances-bot is running! (attempt $i/10)"
+                BOT_STARTED=true
+                break
+              fi
+              echo "⏳ Waiting for service to start... ($i/10)"
+              sleep 2
+            done
+
+            if [ "$BOT_STARTED" = false ]; then
+              echo "❌ finances-bot failed to start. Logs:"
+              sudo journalctl -u finances-bot.service -n 50 --no-pager
+
+              # Rollback on failure
+              PREV_COMMIT=$(cat /tmp/.finances_prev_commit 2>/dev/null || echo "")
+              if [ -n "$PREV_COMMIT" ]; then
+                echo "⏪ Rolling back to commit $PREV_COMMIT..."
+                cd "$APP_DIR"
+                git reset --hard "$PREV_COMMIT"
+                "$VENV_DIR/bin/pip" install -r requirements.txt -q
+                sudo systemctl restart finances-bot.service
+                sleep 3
+                if sudo systemctl is-active --quiet finances-bot.service; then
+                  echo "⚠️  Rollback successful, but deploy FAILED"
+                else
+                  echo "💀 Rollback also failed!"
+                fi
+              fi
+              exit 1
+            fi
+
+            # Cleanup
+            rm -f /tmp/.finances_prev_commit
+            echo "🎉 Deploy completed successfully!"
