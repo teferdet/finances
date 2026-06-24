@@ -19,7 +19,7 @@ log = get_logger("digest.service")
 
 # ── Weekly Digest Scheduler ────────────────────────────────────────
 
-DIGEST_DAY = 6   # Sunday (0=Monday, 6=Sunday)
+DIGEST_DAY = 6  # Sunday (0=Monday, 6=Sunday)
 DIGEST_HOUR = 10  # 10:00 UTC
 
 
@@ -58,15 +58,14 @@ async def run_digest_scheduler() -> None:
 async def _already_sent_today() -> bool:
     """Check if the weekly digest was already sent today."""
     db = get_db()
-    doc = await db["Status"].find_one(
-        {"_id": "digest_status"}, {"last_digest_sent": 1}
-    )
+    doc = await db["Status"].find_one({"_id": "digest_status"}, {"last_digest_sent": 1})
     if not doc or "last_digest_sent" not in doc:
         return False
 
     last_sent = doc["last_digest_sent"]
     if isinstance(last_sent, (int, float)):
         from datetime import datetime as dt
+
         last_dt = dt.fromtimestamp(last_sent, tz=timezone.utc)
     else:
         last_dt = last_sent
@@ -94,10 +93,14 @@ async def _send_weekly_digest() -> None:
     db = get_db()
 
     # Find users with portfolios
-    users = await db["Users"].find(
-        {"portfolio": {"$exists": True, "$ne": {}}},
-        {"_id": 1, "portfolio": 1, "BaseCurrency": 1, "Name": 1},
-    ).to_list(length=10000)
+    users = (
+        await db["Users"]
+        .find(
+            {"portfolio": {"$exists": True, "$ne": {}}},
+            {"_id": 1, "portfolio": 1, "BaseCurrency": 1, "Name": 1},
+        )
+        .to_list(length=10000)
+    )
 
     if not users:
         log.info("No users with portfolios — skipping digest")
@@ -123,9 +126,7 @@ async def _send_weekly_digest() -> None:
     notifications: list[tuple[int, str]] = []
 
     for user in users:
-        text = _build_user_digest(
-            user, current_prices, old_prices
-        )
+        text = _build_user_digest(user, current_prices, old_prices)
         if text:
             notifications.append((user["_id"], text))
 
@@ -175,13 +176,15 @@ def _build_user_digest(
             if old_price and cur_price:
                 pct = ((cur_price - old_price) / old_price) * 100
 
-            holdings.append({
-                "ticker": ticker,
-                "amount": amount,
-                "value": value,
-                "pct": pct,
-                "has_history": old_price > 0,
-            })
+            holdings.append(
+                {
+                    "ticker": ticker,
+                    "amount": amount,
+                    "value": value,
+                    "pct": pct,
+                    "has_history": old_price > 0,
+                }
+            )
 
     if not holdings:
         return None
@@ -190,7 +193,7 @@ def _build_user_digest(
     holdings.sort(key=lambda x: x["value"], reverse=True)
 
     lines = [
-        f"📊 <b>Weekly Portfolio Digest</b>",
+        "📊 <b>Weekly Portfolio Digest</b>",
         f"Hello, {name}! Here's your weekly summary:\n",
     ]
 
@@ -199,9 +202,7 @@ def _build_user_digest(
     for h in holdings[:8]:
         emoji = "📈" if h["pct"] > 0 else ("📉" if h["pct"] < 0 else "➖")
         pct_str = f" ({h['pct']:+.1f}%)" if h["has_history"] else ""
-        lines.append(
-            f"• <b>{h['ticker']}</b>: ${h['value']:,.2f}{pct_str} {emoji}"
-        )
+        lines.append(f"• <b>{h['ticker']}</b>: ${h['value']:,.2f}{pct_str} {emoji}")
 
     # Total
     lines.append(f"\n💰 <b>Total Value: ${total_value:,.2f}</b>")

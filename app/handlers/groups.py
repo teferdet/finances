@@ -1,6 +1,7 @@
 """
 Group message handler — auto-converts currencies mentioned in group chats.
 """
+
 from __future__ import annotations
 from time import strftime
 from aiogram import Router, F
@@ -14,6 +15,7 @@ from app.utils.text_processing import TextProcessing
 
 router = Router(name="groups")
 
+
 @router.message(F.chat.type.in_({"group", "supergroup"}))
 async def handle_group_message(message: Message, i18n: I18n, lang: str) -> None:
     """Process currency mentions in group messages."""
@@ -23,8 +25,7 @@ async def handle_group_message(message: Message, i18n: I18n, lang: str) -> None:
     if not data:
         return
     db = get_db()
-    group = await db["Groups"].find_one(
-        {"_id": message.chat.id}, {"Input": 1, "Output": 1, "Status": 1})
+    group = await db["Groups"].find_one({"_id": message.chat.id}, {"Input": 1, "Output": 1, "Status": 1})
     if not group or group.get("Status") != "Active":
         return
     allowed_input = group.get("Input", [])

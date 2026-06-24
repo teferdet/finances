@@ -21,6 +21,7 @@ router = Router(name="start")
 
 # ── /start ──────────────────────────────────────────────────────────
 
+
 @router.message(Command("start"))
 async def cmd_start(message: Message, i18n: I18n, lang: str) -> None:
     user = message.from_user
@@ -61,21 +62,24 @@ async def cmd_start(message: Message, i18n: I18n, lang: str) -> None:
     exists = await db["Users"].find_one({"_id": user.id}, {"_id": 1})
     if not exists:
         settings = get_settings()
-        await db["Users"].insert_one({
-            "_id": user.id,
-            "Name": name,
-            "Username": user.username,
-            "Language": user.language_code,
-            "Premium": user.is_premium,
-            "Sign up": strftime("%d.%m.%y %H:%M:%S"),
-            "Fiat currency": settings.small_convert_currencies,
-            "Crypto currency": settings.default_crypto,
-            "Stocks": settings.default_stocks,
-            "Groups": [],
-        })
+        await db["Users"].insert_one(
+            {
+                "_id": user.id,
+                "Name": name,
+                "Username": user.username,
+                "Language": user.language_code,
+                "Premium": user.is_premium,
+                "Sign up": strftime("%d.%m.%y %H:%M:%S"),
+                "Fiat currency": settings.small_convert_currencies,
+                "Crypto currency": settings.default_crypto,
+                "Stocks": settings.default_stocks,
+                "Groups": [],
+            }
+        )
 
 
 # ── /help ───────────────────────────────────────────────────────────
+
 
 @router.message(Command("help"))
 async def cmd_help(message: Message, i18n: I18n, lang: str) -> None:
@@ -87,6 +91,7 @@ async def cmd_help(message: Message, i18n: I18n, lang: str) -> None:
 
 # ── /donate ─────────────────────────────────────────────────────────
 
+
 @router.message(Command("donate"))
 async def cmd_donate(message: Message, i18n: I18n, lang: str) -> None:
     text = i18n.get("other.donate", lang)
@@ -95,6 +100,7 @@ async def cmd_donate(message: Message, i18n: I18n, lang: str) -> None:
 
 
 # ── /privacy ────────────────────────────────────────────────────────
+
 
 @router.message(Command("privacy"))
 async def cmd_privacy(message: Message, i18n: I18n, lang: str) -> None:
@@ -108,14 +114,14 @@ async def cmd_privacy(message: Message, i18n: I18n, lang: str) -> None:
 
 # ── /expense_manager ────────────────────────────────────────────────
 
+
 @router.message(Command("expense_manager"))
 async def cmd_expense_manager(message: Message, i18n: I18n, lang: str) -> None:
     settings = get_settings()
     if message.from_user.id in settings.bot.admin_ids or settings.features.mini_app_enabled:
         from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+
         text = i18n.get("other.mini app", lang)
         text = "".join(text) if isinstance(text, list) else str(text)
-        kb = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="🌐 Open", url=settings.urls.mini_app)]
-        ])
+        kb = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🌐 Open", url=settings.urls.mini_app)]])
         await message.answer(text, reply_markup=kb)

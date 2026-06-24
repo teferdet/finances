@@ -11,7 +11,7 @@ Responsibilities:
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Any, Optional
+from typing import Any
 
 from app.db import get_db
 from app.logger import get_logger
@@ -20,6 +20,7 @@ log = get_logger("portfolio.service")
 
 
 # ── Lazy migration ─────────────────────────────────────────────────
+
 
 async def migrate_user_portfolio(user_id: int) -> bool:
     """
@@ -54,12 +55,14 @@ async def migrate_user_portfolio(user_id: int) -> bool:
             lots = []
             for ticker, amount in data.items():
                 if isinstance(amount, (int, float)) and amount > 0:
-                    lots.append({
-                        "ticker": ticker,
-                        "amount": float(amount),
-                        "buy_price_usd": None,
-                        "buy_date": None,
-                    })
+                    lots.append(
+                        {
+                            "ticker": ticker,
+                            "amount": float(amount),
+                            "buy_price_usd": None,
+                            "buy_date": None,
+                        }
+                    )
             new_portfolio[section] = lots
         elif isinstance(data, list):
             # Already migrated
@@ -82,6 +85,7 @@ async def _ensure_migrated(user_id: int) -> None:
 
 # ── Add asset ──────────────────────────────────────────────────────
 
+
 async def add_asset(
     user_id: int,
     asset_type: str,
@@ -101,10 +105,8 @@ async def add_asset(
     db = get_db()
 
     # Auto-detect price if not provided
-    auto_price = False
     if buy_price_usd is None:
         buy_price_usd = await _get_current_usd_price(ticker)
-        auto_price = True
 
     lot = {
         "ticker": ticker,
@@ -121,7 +123,10 @@ async def add_asset(
 
     log.info(
         "Added %s %s (@ %s USD) for user %d",
-        amount, ticker, buy_price_usd, user_id,
+        amount,
+        ticker,
+        buy_price_usd,
+        user_id,
     )
     return buy_price_usd
 
@@ -151,6 +156,7 @@ async def _get_current_usd_price(ticker: str) -> float | None:
 
 
 # ── Remove asset ───────────────────────────────────────────────────
+
 
 async def remove_asset(
     user_id: int,
@@ -184,6 +190,7 @@ async def remove_asset(
 
 # ── Clear portfolio ────────────────────────────────────────────────
 
+
 async def clear_portfolio(user_id: int) -> None:
     """Clear entire portfolio for a user."""
     db = get_db()
@@ -194,6 +201,7 @@ async def clear_portfolio(user_id: int) -> None:
 
 
 # ── Current prices sync ───────────────────────────────────────────
+
 
 async def update_current_prices() -> int:
     """
@@ -219,45 +227,50 @@ async def update_current_prices() -> int:
     if isinstance(usd_data, dict) and usd_data:
         for symbol, data in usd_data.items():
             if isinstance(data, list) and len(data) >= 3 and symbol != "_id":
-                ops.append({
-                    "_id": symbol,
-                    "price_usd": float(data[1]),
-                    "updated_at": now,
-                    "source": "crypto",
-                })
+                ops.append(
+                    {
+                        "_id": symbol,
+                        "price_usd": float(data[1]),
+                        "updated_at": now,
+                        "source": "crypto",
+                    }
+                )
     else:
         # Top-level structure
         for symbol, data in cs_doc.items():
             if isinstance(data, list) and len(data) >= 3 and symbol not in ("_id", "update"):
-                ops.append({
-                    "_id": symbol,
-                    "price_usd": float(data[1]),
-                    "updated_at": now,
-                    "source": "crypto",
-                })
+                ops.append(
+                    {
+                        "_id": symbol,
+                        "price_usd": float(data[1]),
+                        "updated_at": now,
+                        "source": "crypto",
+                    }
+                )
 
     # Stocks
     stocks_doc = await db["Crypto&Stocks"].find_one({"_id": "stocks"}) or {}
     for symbol, data in stocks_doc.items():
         if isinstance(data, (list, tuple)) and len(data) >= 4 and symbol not in ("_id", "update"):
-            ops.append({
-                "_id": symbol,
-                "price_usd": float(data[2]),
-                "updated_at": now,
-                "source": "stock",
-            })
+            ops.append(
+                {
+                    "_id": symbol,
+                    "price_usd": float(data[2]),
+                    "updated_at": now,
+                    "source": "stock",
+                }
+            )
 
     # Bulk upsert
     if ops:
         from pymongo import ReplaceOne
-        bulk = [
-            ReplaceOne({"_id": doc["_id"]}, doc, upsert=True)
-            for doc in ops
-        ]
+
+        bulk = [ReplaceOne({"_id": doc["_id"]}, doc, upsert=True) for doc in ops]
         result = await db["current_prices"].bulk_write(bulk, ordered=False)
         log.info(
             "Updated current_prices: %d upserted, %d modified",
-            result.upserted_count, result.modified_count,
+            result.upserted_count,
+            result.modified_count,
         )
     else:
         log.warning("No prices to update in current_prices")
@@ -266,6 +279,7 @@ async def update_current_prices() -> int:
 
 
 # ── P&L Aggregation Pipeline ──────────────────────────────────────
+
 
 async def get_portfolio_with_pnl(
     user_id: int,
@@ -381,17 +395,19 @@ async def get_portfolio_with_pnl(
             if cost_usd is not None:
                 total_cost_usd += cost_usd
 
-            section_lots.append({
-                "ticker": ticker,
-                "amount": amount,
-                "buy_price_usd": buy_price,
-                "buy_date": buy_date,
-                "current_price_usd": current_price,
-                "value_usd": value_usd,
-                "cost_usd": cost_usd,
-                "pnl_abs_usd": pnl_abs,
-                "pnl_pct": pnl_pct,
-            })
+            section_lots.append(
+                {
+                    "ticker": ticker,
+                    "amount": amount,
+                    "buy_price_usd": buy_price,
+                    "buy_date": buy_date,
+                    "current_price_usd": current_price,
+                    "value_usd": value_usd,
+                    "cost_usd": cost_usd,
+                    "pnl_abs_usd": pnl_abs,
+                    "pnl_pct": pnl_pct,
+                }
+            )
 
         if section_lots:
             sections_result[section] = section_lots

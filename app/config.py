@@ -10,9 +10,7 @@ Usage:
 from __future__ import annotations
 
 import json
-import os
 from dataclasses import dataclass, field
-from functools import lru_cache
 from pathlib import Path
 from typing import List
 
@@ -25,6 +23,7 @@ LOGS_DIR = PROJECT_ROOT / "logs"
 
 
 # ── Dataclasses ─────────────────────────────────────────────────────────
+
 
 @dataclass(frozen=True)
 class BotSettings:
@@ -73,11 +72,35 @@ class ParserSettings:
     retry_delay_sec: int = 5
     request_delay_min_sec: int = 3
     request_delay_max_sec: int = 7
-    critical_currencies: List[str] = field(default_factory=lambda: [
-        "USD", "EUR", "GBP", "UAH", "PLN", "CZK", "CHF", "CNY", "JPY",
-        "CAD", "AUD", "SEK", "NOK", "DKK", "SGD", "INR", "ILS", "KRW",
-        "TRY", "RON", "BGN", "ISK", "EGP", "ARS", "RUB",
-    ])
+    critical_currencies: List[str] = field(
+        default_factory=lambda: [
+            "USD",
+            "EUR",
+            "GBP",
+            "UAH",
+            "PLN",
+            "CZK",
+            "CHF",
+            "CNY",
+            "JPY",
+            "CAD",
+            "AUD",
+            "SEK",
+            "NOK",
+            "DKK",
+            "SGD",
+            "INR",
+            "ILS",
+            "KRW",
+            "TRY",
+            "RON",
+            "BGN",
+            "ISK",
+            "EGP",
+            "ARS",
+            "RUB",
+        ]
+    )
     on_demand_cache_ttl_hours: int = 5
     crypto_stocks_interval_sec: int = 10800
 
@@ -135,10 +158,7 @@ class Settings:
 
     @property
     def small_convert_currencies(self) -> list:
-        return self._data_json.get(
-            "small_convert_currencies",
-            ["USD", "EUR", "GBP", "PLN", "CZK", "UAH"]
-        )
+        return self._data_json.get("small_convert_currencies", ["USD", "EUR", "GBP", "PLN", "CZK", "UAH"])
 
     @property
     def default_crypto(self) -> list:
@@ -150,6 +170,7 @@ class Settings:
 
 
 # ── Loader ──────────────────────────────────────────────────────────────
+
 
 def _load_json(path: Path) -> dict:
     with open(path, "r", encoding="utf-8") as f:
@@ -213,6 +234,7 @@ def get_currencies_data() -> list:
 def save_settings(settings: Settings) -> None:
     """Save the settings object back to settings.json."""
     import dataclasses
+
     path = CONFIG_DIR / "settings.json"
     raw = dataclasses.asdict(settings)
     # _data_json is not stored in settings.json

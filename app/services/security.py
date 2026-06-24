@@ -1,6 +1,7 @@
 """
 Security service for handling encryption and decryption of sensitive data (like API secrets).
 """
+
 from __future__ import annotations
 
 from cryptography.fernet import Fernet
@@ -10,6 +11,7 @@ from app.logger import get_logger
 log = get_logger("security")
 
 _fernet: Fernet | None = None
+
 
 def get_fernet() -> Fernet:
     global _fernet
@@ -21,6 +23,7 @@ def get_fernet() -> Fernet:
         _fernet = Fernet(key.encode("utf-8"))
     return _fernet
 
+
 def encrypt_data(raw_data: str) -> str:
     """Encrypts string data using Fernet symmetric encryption."""
     if not raw_data:
@@ -28,6 +31,7 @@ def encrypt_data(raw_data: str) -> str:
     f = get_fernet()
     encrypted = f.encrypt(raw_data.encode("utf-8"))
     return encrypted.decode("utf-8")
+
 
 def decrypt_data(encrypted_data: str) -> str:
     """Decrypts string data using Fernet symmetric encryption."""

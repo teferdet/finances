@@ -54,9 +54,7 @@ async def ensure_indexes() -> None:
         await db["current_prices"].create_index("source")
         await db["current_prices"].create_index("updated_at")
         # Price history for volatility tracking
-        await db["price_history"].create_index(
-            [("timestamp", -1)], expireAfterSeconds=7 * 24 * 3600
-        )
+        await db["price_history"].create_index([("timestamp", -1)], expireAfterSeconds=7 * 24 * 3600)
         # Portfolio ticker indexes for volatility user lookups
         await db["Users"].create_index("portfolio.crypto.ticker")
         await db["Users"].create_index("portfolio.stock.ticker")

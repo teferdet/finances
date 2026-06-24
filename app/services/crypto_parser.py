@@ -82,6 +82,7 @@ async def fetch_crypto() -> Optional[dict]:
         # Sync flat price cache for portfolio P&L
         try:
             from app.services.portfolio_service import update_current_prices
+
             await update_current_prices()
         except Exception as exc:
             log.warning("[Crypto] Failed to sync current_prices: %s", exc)

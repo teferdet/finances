@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import asyncio
 import datetime
-from typing import Dict, Optional
+from typing import Optional
 
 from app.config import get_settings
 from app.db import get_db
@@ -41,6 +41,7 @@ def _fetch_stocks_sync() -> Optional[dict]:
     try:
         # Suppress noisy yfinance internal ERROR logs (e.g. "possibly delisted")
         import logging as _logging
+
         yf_logger = _logging.getLogger("yfinance")
         prev_level = yf_logger.level
         yf_logger.setLevel(_logging.CRITICAL)
@@ -81,8 +82,7 @@ def _fetch_stocks_sync() -> Optional[dict]:
         ok_count = len(stocks_data) - 1
         log.info("[Stocks] Fetched %d stocks", ok_count)
         if failed_tickers:
-            log.warning("[Stocks] No price data for %d tickers: %s",
-                        len(failed_tickers), ", ".join(failed_tickers))
+            log.warning("[Stocks] No price data for %d tickers: %s", len(failed_tickers), ", ".join(failed_tickers))
     except Exception as exc:
         log.error("[Stocks] yfinance error: %s", exc)
         return None
@@ -109,6 +109,7 @@ async def fetch_stocks() -> Optional[dict]:
         # Sync flat price cache for portfolio P&L
         try:
             from app.services.portfolio_service import update_current_prices
+
             await update_current_prices()
         except Exception as exc:
             log.warning("[Stocks] Failed to sync current_prices: %s", exc)

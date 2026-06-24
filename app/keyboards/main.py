@@ -42,9 +42,7 @@ async def get_main_keyboard(user_id: int | None = None) -> ReplyKeyboardMarkup:
     if user_id:
         try:
             db = get_db()
-            doc = await db["Users"].find_one(
-                {"_id": user_id}, {"MainMenu": 1, "BigButtons": 1}
-            )
+            doc = await db["Users"].find_one({"_id": user_id}, {"MainMenu": 1, "BigButtons": 1})
             if doc:
                 if doc.get("MainMenu"):
                     custom_codes: list[str] = doc["MainMenu"]

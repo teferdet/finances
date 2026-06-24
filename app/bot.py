@@ -1,15 +1,31 @@
 """
 Bot + Dispatcher factory — creates and wires everything together.
 """
+
 from __future__ import annotations
-from aiogram import Bot, Dispatcher, F
+from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from app.config import get_settings
 from app.middlewares.i18n import I18nMiddleware
 from app.middlewares.throttle import ThrottleMiddleware
 from app.middlewares.error import ErrorMiddleware
-from app.handlers import start, exchange, exchange_api, crypto, stocks, settings, language, admin, groups, portfolio, inline_query, portability, alerts, my_data
+from app.handlers import (
+    start,
+    exchange,
+    exchange_api,
+    crypto,
+    stocks,
+    settings,
+    language,
+    admin,
+    groups,
+    portfolio,
+    inline_query,
+    portability,
+    alerts,
+    my_data,
+)
 from app.logger import get_logger
 
 log = get_logger("bot")

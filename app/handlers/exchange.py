@@ -87,6 +87,7 @@ async def handle_exchange(message: Message, i18n: I18n, lang: str) -> None:
 
 # ── Callback for alternative conversion ─────────────────────────────
 
+
 @router.callback_query(F.data.startswith("er "))
 async def cb_alternative_convert(call: CallbackQuery, i18n: I18n, lang: str) -> None:
     await call.answer()
@@ -132,4 +133,3 @@ async def cb_alternative_convert(call: CallbackQuery, i18n: I18n, lang: str) -> 
 @router.message(F.chat.type == "private")
 async def private_fallback(message: Message, i18n: I18n, lang: str) -> None:
     await handle_exchange(message, i18n, lang)
-

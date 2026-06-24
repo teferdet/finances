@@ -12,31 +12,30 @@ from app.i18n import I18n
 
 # ── Exchange Rate ───────────────────────────────────────────────────
 
+
 def er_keypad(
-    i18n: I18n, lang: str,
-    currency: str, amount: float, index: int,
+    i18n: I18n,
+    lang: str,
+    currency: str,
+    amount: float,
+    index: int,
 ) -> InlineKeyboardMarkup:
     if index == 0:
         text = i18n.get("keyboard.direct_rate", lang) or "🔄 Прямий курс"
     else:
         text = i18n.get("keyboard.reverse_rate", lang) or "🔄 Зворотній курс"
     cb = f"er {currency} {amount} {index}"
-    return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text=text, callback_data=cb)]
-    ])
+    return InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text=text, callback_data=cb)]])
 
 
 def crypto_keypad(amount: float, active_currency: str = "USD") -> InlineKeyboardMarkup:
-    currencies = [
-        ("USD", "$"), ("GBP", "£"), ("EUR", "€"),
-        ("UAH", "₴"), ("PLN", "zł"), ("CZK", "Kč")
-    ]
-    
+    currencies = [("USD", "$"), ("GBP", "£"), ("EUR", "€"), ("UAH", "₴"), ("PLN", "zł"), ("CZK", "Kč")]
+
     buttons = []
     for code, symbol in currencies:
         if code != active_currency:
             buttons.append(InlineKeyboardButton(text=symbol, callback_data=f"crypto {code} {amount}"))
-            
+
     # We expect 5 buttons. Let's group them 3 in first row, 2 in second
     inline_keyboard = []
     if len(buttons) >= 3:
@@ -44,53 +43,59 @@ def crypto_keypad(amount: float, active_currency: str = "USD") -> InlineKeyboard
         inline_keyboard.append(buttons[3:])
     else:
         inline_keyboard.append(buttons)
-        
+
     return InlineKeyboardMarkup(inline_keyboard=inline_keyboard)
 
 
 # ── Settings ────────────────────────────────────────────────────────
 
+
 def settings_menu(i18n: I18n, lang: str) -> InlineKeyboardMarkup:
     s = i18n.get_section("keyboard.settings", lang)
-    return InlineKeyboardMarkup(inline_keyboard=[
-        [
-            InlineKeyboardButton(text=s.get("fiat", "💶 Fiat"), callback_data="fiat"),
-            InlineKeyboardButton(text=s.get("crypto", "💵 Crypto"), callback_data="settings_crypto"),
-        ],
-        [
-            InlineKeyboardButton(text=s.get("stocks", "📑 Stocks"), callback_data="stocks"),
-            InlineKeyboardButton(text=s.get("main_menu", "📱 Main Menu"), callback_data="settings_main_menu"),
-        ],
-        [
-            InlineKeyboardButton(text=s.get("base_currency", "💱 Default Currency"), callback_data="settings_base_currency"),
-            InlineKeyboardButton(text=s.get("big_buttons", "📏 Big Buttons"), callback_data="toggle_big_buttons"),
-        ],
-        [
-            InlineKeyboardButton(text=s.get("groups", "👥 Groups"), callback_data="groups"),
-            InlineKeyboardButton(text=s.get("language", "🌐 Language"), callback_data="settings_language"),
-        ],
-        [
-            InlineKeyboardButton(text=s.get("about", "ℹ️ About"), callback_data="about"),
-        ],
-    ])
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(text=s.get("fiat", "💶 Fiat"), callback_data="fiat"),
+                InlineKeyboardButton(text=s.get("crypto", "💵 Crypto"), callback_data="settings_crypto"),
+            ],
+            [
+                InlineKeyboardButton(text=s.get("stocks", "📑 Stocks"), callback_data="stocks"),
+                InlineKeyboardButton(text=s.get("main_menu", "📱 Main Menu"), callback_data="settings_main_menu"),
+            ],
+            [
+                InlineKeyboardButton(
+                    text=s.get("base_currency", "💱 Default Currency"), callback_data="settings_base_currency"
+                ),
+                InlineKeyboardButton(text=s.get("big_buttons", "📏 Big Buttons"), callback_data="toggle_big_buttons"),
+            ],
+            [
+                InlineKeyboardButton(text=s.get("groups", "👥 Groups"), callback_data="groups"),
+                InlineKeyboardButton(text=s.get("language", "🌐 Language"), callback_data="settings_language"),
+            ],
+            [
+                InlineKeyboardButton(text=s.get("about", "ℹ️ About"), callback_data="about"),
+            ],
+        ]
+    )
 
 
 def back_button(i18n: I18n, lang: str, callback: str = "menu") -> InlineKeyboardMarkup:
     text = i18n.get("keyboard.settings.back", lang) or "◀️ Back"
-    return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text=text, callback_data=callback)]
-    ])
+    return InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text=text, callback_data=callback)]])
 
 
 def about_keyboard(i18n: I18n, lang: str) -> InlineKeyboardMarkup:
     text_back = i18n.get("keyboard.settings.back", lang) or "◀️ Back"
-    return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="GitHub Repository", url="https://github.com/teferdet/finances")],
-        [InlineKeyboardButton(text=text_back, callback_data="menu")]
-    ])
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="GitHub Repository", url="https://github.com/teferdet/finances")],
+            [InlineKeyboardButton(text=text_back, callback_data="menu")],
+        ]
+    )
 
 
 # ── Donate ──────────────────────────────────────────────────────────
+
 
 def donate_keyboard() -> InlineKeyboardMarkup:
     s = get_settings().urls
@@ -108,6 +113,7 @@ def donate_keyboard() -> InlineKeyboardMarkup:
 
 
 # ── Help ────────────────────────────────────────────────────────────
+
 
 def help_keyboard(i18n: I18n, lang: str, show_qa: bool = True) -> InlineKeyboardMarkup:
     h = i18n.get_section("keyboard.help", lang)
@@ -138,10 +144,12 @@ def language_keyboard(supported: list[str], back_cb: str = "lang_cancel") -> Inl
     row: list[InlineKeyboardButton] = []
     for code in supported:
         info = LANGUAGE_INFO.get(code, {"flag": "", "native": code})
-        row.append(InlineKeyboardButton(
-            text=f"{info['flag']} {info['native']}",
-            callback_data=f"lang_set_{code}",
-        ))
+        row.append(
+            InlineKeyboardButton(
+                text=f"{info['flag']} {info['native']}",
+                callback_data=f"lang_set_{code}",
+            )
+        )
         if len(row) >= 2:
             buttons.append(row)
             row = []
@@ -153,19 +161,19 @@ def language_keyboard(supported: list[str], back_cb: str = "lang_cancel") -> Inl
 
 # ── Groups ──────────────────────────────────────────────────────────
 
+
 def group_delete_kb(i18n: I18n, lang: str) -> InlineKeyboardMarkup:
     text = i18n.get("keyboard.delete", lang) or "🗑 Delete"
-    return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text=text, callback_data="delete")]
-    ])
+    return InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text=text, callback_data="delete")]])
 
 
 # ── Paginated Currency Selector ─────────────────────────────────────
 
+
 def paginated_currency_keyboard(
     currencies_data: list[dict],
     page: int,
-    prefix: str,           # "Output", "Input", "MainMenu", etc.
+    prefix: str,  # "Output", "Input", "MainMenu", etc.
     i18n: I18n,
     lang: str,
     page_size: int = 15,
@@ -185,10 +193,12 @@ def paginated_currency_keyboard(
         code = item.get("code", "")
         emoji = item.get("emoji", "")
         mark = "✅ " if code in selected else ""
-        row.append(InlineKeyboardButton(
-            text=f"{mark}{emoji} {code}".strip(),
-            callback_data=f"{prefix} {code}",
-        ))
+        row.append(
+            InlineKeyboardButton(
+                text=f"{mark}{emoji} {code}".strip(),
+                callback_data=f"{prefix} {code}",
+            )
+        )
         if len(row) >= 5:
             rows.append(row)
             row = []
@@ -200,21 +210,30 @@ def paginated_currency_keyboard(
         InlineKeyboardButton(text=s.get("save", "💾 Save"), callback_data=f"{prefix} save")
     ]
     if page > 0:
-        nav.insert(0, InlineKeyboardButton(
-            text=s.get("back list", "◀️"),
-            callback_data=f"{prefix} position {page - 1}",
-        ))
+        nav.insert(
+            0,
+            InlineKeyboardButton(
+                text=s.get("back list", "◀️"),
+                callback_data=f"{prefix} position {page - 1}",
+            ),
+        )
     if end < len(currencies_data):
-        nav.append(InlineKeyboardButton(
-            text=s.get("next list", "▶️"),
-            callback_data=f"{prefix} position {page + 1}",
-        ))
+        nav.append(
+            InlineKeyboardButton(
+                text=s.get("next list", "▶️"),
+                callback_data=f"{prefix} position {page + 1}",
+            )
+        )
     rows.append(nav)
 
     # Back
-    rows.append([InlineKeyboardButton(
-        text=s.get("back", "◀️ Back"),
-        callback_data=f"{prefix} cancel",
-    )])
+    rows.append(
+        [
+            InlineKeyboardButton(
+                text=s.get("back", "◀️ Back"),
+                callback_data=f"{prefix} cancel",
+            )
+        ]
+    )
 
     return InlineKeyboardMarkup(inline_keyboard=rows)

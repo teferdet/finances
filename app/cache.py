@@ -24,7 +24,7 @@ class MemoryCache:
     __slots__ = ("_store", "_lock")
 
     def __init__(self) -> None:
-        self._store: dict[str, tuple[Any, float]] = {}   # key → (value, expires_at)
+        self._store: dict[str, tuple[Any, float]] = {}  # key → (value, expires_at)
         self._lock = asyncio.Lock()
 
     # ── Public API ──────────────────────────────────────────────────
@@ -65,10 +65,7 @@ class MemoryCache:
         now = time.monotonic()
         removed = 0
         async with self._lock:
-            expired_keys = [
-                k for k, (_, exp) in self._store.items()
-                if exp and now > exp
-            ]
+            expired_keys = [k for k, (_, exp) in self._store.items() if exp and now > exp]
             for k in expired_keys:
                 del self._store[k]
                 removed += 1
