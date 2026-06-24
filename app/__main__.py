@@ -27,6 +27,7 @@ from app.services.alert_service import (
     set_bot as set_alert_bot,
 )
 from app.services.digest_service import run_digest_scheduler
+from app.services.backup import run_daily_backup_loop
 
 log = get_logger("main")
 
@@ -78,6 +79,17 @@ async def on_startup(bot) -> None:
     # Ensure DB indexes
     await ensure_indexes()
 
+    # Load dynamic admins
+    try:
+        from app.state import dynamic_admin_ids
+        db = get_db()
+        doc = await db["Settings"].find_one({"_id": "dynamic_admins"})
+        if doc and "admin_ids" in doc:
+            dynamic_admin_ids.update(doc["admin_ids"])
+            log.info("Loaded %d dynamic admins", len(dynamic_admin_ids))
+    except Exception as e:
+        log.error("Failed to load dynamic admins: %s", e)
+
     # Set bot commands
     try:
         from aiogram.types import BotCommand
@@ -100,7 +112,7 @@ async def on_startup(bot) -> None:
                 BotCommand(command="settings", description=i18n.get("commands.settings", lang)),
                 BotCommand(command="privacy", description=i18n.get("commands.privacy", lang)),
                 BotCommand(command="help", description=i18n.get("commands.help", lang)),
-                BotCommand(command="my_data", description=i18n.get("commands.my_data", lang)),
+
             ]
             await bot.set_my_commands(commands_list, language_code=lang)
 
@@ -117,7 +129,7 @@ async def on_startup(bot) -> None:
             BotCommand(command="settings", description=i18n.get("commands.settings", "en")),
             BotCommand(command="privacy", description=i18n.get("commands.privacy", "en")),
             BotCommand(command="help", description=i18n.get("commands.help", "en")),
-            BotCommand(command="my_data", description=i18n.get("commands.my_data", "en")),
+
         ]
         await bot.set_my_commands(commands_list_default)
         log.info("Bot commands set successfully")
@@ -159,6 +171,10 @@ async def main() -> None:
 
     digest_task = asyncio.create_task(run_digest_scheduler())
     background_tasks.append(("digest_scheduler", digest_task))
+
+    if settings.bot.backup_enabled:
+        backup_task = asyncio.create_task(run_daily_backup_loop(settings.database.mongo_uri))
+        background_tasks.append(("backup_scheduler", backup_task))
 
     log.info("Started %d background tasks", len(background_tasks))
 

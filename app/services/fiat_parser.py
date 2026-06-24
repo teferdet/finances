@@ -97,14 +97,22 @@ class FiatParser:
                 if rates:
                     await self._save_to_db(code, rates)
                     log.info("[%s] ✓ %d rates parsed and saved", code, len(rates))
+                    from app.services.error_tracking import clear_source_error
+                    await clear_source_error(f"fiat_{code}")
                     return True
                 else:
                     log.warning("[%s] No rates parsed from HTML", code)
+                    from app.services.error_tracking import report_source_error
+                    await report_source_error(f"fiat_{code}", "No rates parsed from HTML")
 
             except Exception as exc:
                 log.error("[%s] Error (attempt %d): %s", code, attempt, exc)
+                from app.services.error_tracking import report_source_error
+                await report_source_error(f"fiat_{code}", f"Exception: {exc}")
                 await asyncio.sleep(self._parser_cfg.retry_delay_sec)
 
+        from app.services.error_tracking import report_source_error
+        await report_source_error(f"fiat_{code}", "Max retries exceeded")
         return False
 
     # ── HTML parsing ────────────────────────────────────────────────

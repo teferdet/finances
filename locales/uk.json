@@ -62,7 +62,8 @@
         "bad request": "😖 Я не зміг знайти курс для цієї валюти. Перевірте правильність написання та спробуйте ще раз.",
         "main rate": "📈 <b>Курс валют станом на {}</b>\n{}\n\n{}",
         "sub rate": "📈 <b>Курс валют станом на {}</b>\n{}",
-        "currency_not_found": "😢 На жаль, валюту <b>{}</b> не знайдено або вона більше не підтримується."
+        "currency_not_found": "😢 На жаль, валюту <b>{}</b> не знайдено або вона більше не підтримується.",
+        "unknown command": "😖 Unknown command! To convert currency, use the format: <b>100 USD</b>"
     },
     "inline mode": {
         "server error": "😖 Сервер тимчасово ліг. Спробуйте трішки пізніше.",
@@ -79,8 +80,16 @@
         "menu": [
             "⚙️ <b>Панель налаштувань</b>\n\n",
             "Оберіть розділ, який бажаєте налаштувати:\n\n",
-            "🤖 <b>Бот</b> — Налаштуйте ваші персональні вподобання для конвертації звичайних валют, крипти та акцій.\n",
-            "👥 <b>Групи</b> — Керуйте налаштуваннями конвертації для груп, де ви є адміністратором."
+            "💶 <b>Звичайні валюти</b> — Оберіть валюти для конвертації.\n",
+            "💵 <b>Криптовалюти</b> — Оберіть цифрові валюти.\n",
+            "📑 <b>Акції компаній</b> — Оберіть акції для відстеження.\n",
+            "📱 <b>Головне меню</b> — Налаштуйте кнопки швидкого доступу.\n",
+            "💱 <b>Базова валюта</b> — Оберіть вашу основну валюту.\n",
+            "📏 <b>Великі кнопки</b> — Змініть розмір кнопок клавіатури.\n",
+            "👥 <b>Налаштування Груп</b> — Керуйте ботом у ваших чатах.\n",
+            "🌐 <b>Змінити мову</b> — Змініть мову інтерфейсу.\n",
+            "📋 <b>Мої дані</b> — Перегляньте або скиньте власні налаштування.\n",
+            "ℹ️ <b>Про бота</b> — Додаткова інформація та зв'язок."
         ],
         "choose group": "👥 Будь ласка, оберіть групу для налаштування:",
         "input": "✍️ Оберіть валюти, які я повинен <b>відслідковувати</b> в чаті:",
@@ -167,7 +176,8 @@
             "Плануйте, зберігайте та інвестуйте — усе в одному місці! 🚀"
         ],
         "error": "Помилка",
-        "greeting": "{hello} {name} 👋"
+        "greeting": "{hello} {name} 👋",
+        "mini_app_open": "🌐 Відкрити"
     },
     "alerts": {
         "menu_title": "🔔 <b>Сповіщення про ціни</b>",
@@ -200,7 +210,26 @@
         "callback_deleted": "🗑 Успішно видалено {count} сповіщень.",
         "callback_cleared": "🧹 <b>Усі сповіщення успішно очищено!</b>",
         "process_created": "✅ <b>Відслідковую:</b> Я повідомлю вас, коли {currency_from}/{currency_to} {condition} {target_price}",
-        "process_error": "❌ Мені не вдалося створити сповіщення: {error}\n\nБудь ласка, спробуйте ще раз у правильному форматі, напр.: <code>USD EUR above 0.95</code>"
+        "process_error": "❌ Мені не вдалося створити сповіщення: {error}\n\nБудь ласка, спробуйте ще раз у правильному форматі, напр.: <code>USD EUR above 0.95</code>",
+        "btn_back": "◀️ Back to Alerts",
+        "max_alerts_reached": "⚠️ You have reached the maximum of 20 active alerts. Please delete some before creating new ones.",
+        "notification_condition_met": "Condition Met",
+        "notification_body": "🚨 <b>PRICE ALERT TRIGGERED!</b> 🚨\n\n💱 {pair}\n🎯 {target_label}: <code>{target_price}</code>\n💰 {current_label}: <code>{current_price}</code>\n{cond_emoji} {condition_label}: {condition}\n🕐 {time}",
+        "volatility_title": "⚡ <b>Volatility Alert</b> ⚡",
+        "volatility_message": "Significant price movement detected in your holdings (last 1h):",
+        "volatility_threshold_info": "<i>Threshold: {pct}%  •  Change via /alert volatility</i>",
+        "volatility_set": "✅ Volatility threshold set to <b>{pct}%</b>. You will be notified when any of your portfolio assets moves by this much within 1 hour.",
+        "volatility_format_hint": "Set your volatility threshold:\n<code>/alert volatility 5</code>\n(alerts you when price changes by 5% in 1 hour)",
+        "volatility_invalid_pct": "❌ Please enter a valid percentage between 0 and 100.",
+        "digest_title": "📊 <b>Weekly Portfolio Digest</b>",
+        "digest_greeting": "Hello, {name}! Here's your weekly summary:",
+        "digest_holdings_title": "<b>Your Holdings:</b>",
+        "digest_total_value": "💰 <b>Total Value: ${value}</b>",
+        "digest_weekly_change": "📊 Weekly Change: {pct}% {emoji}",
+        "digest_no_history": "<i>Weekly comparison will be available next week.</i>",
+        "digest_top_gainer": "🏆 Top Gainer: <b>{ticker}</b> ({pct}%)",
+        "digest_top_decliner": "🏆 Top Decliner: <b>{ticker}</b> ({pct}%)",
+        "digest_next": "<i>Next digest: next Sunday at {hour}:00 UTC</i>"
     },
     "admin": {
         "panel": "🔐 <b>Панель Адміністратора</b>\n\nОберіть модуль для налаштування:",
@@ -288,7 +317,42 @@
         "restart_no": "❌ Скасувати",
         "restart_prompt": "⚠️ <b>Ви впевнені, що хочете перезавантажити бота?</b>\n\nЦе тимчасово перерве роботу для всіх користувачів.",
         "restarting": "🔄 <b>Перезавантаження бота...</b>",
-        "restart_bot": "🔄 Перезавантажити бота"
+        "restart_bot": "🔄 Перезавантажити бота",
+        "shutdown_prompt": "⚠️ <b>Ви впевнені, що хочете вимкнути бота?</b>\n\nЙого доведеться запускати вручну.",
+        "shutting_down": "🛑 <b>Вимикаюсь...</b>",
+        "shutdown_bot": "🛑 Вимкнути",
+        "manage_admins_btn": "👥 Адміністратори",
+        "manage_admins_title": "📋 Додаткові Адміністратори",
+        "add_admin_btn": "➕ Додати",
+        "remove_admin_btn": "➖ Видалити",
+        "add_admin_prompt": "Відправте Telegram ID нового адміністратора.",
+        "remove_admin_prompt": "Відправте Telegram ID адміністратора для видалення.",
+        "admin_added": "✅ Адміністратора успішно додано.",
+        "admin_removed": "✅ Адміністратора успішно видалено.",
+        "invalid_user_id": "❌ Невірний ID користувача. Відправте тільки цифри.",
+        "parser_toggle_on": "🟢 Parser: Enabled",
+        "parser_toggle_off": "🔴 Parser: Disabled",
+        "parser_change_interval": "⏱ Change Interval",
+        "parser_enter_interval": "✍️ Please enter the new parser update interval in seconds (e.g. 3600):",
+        "parser_invalid_interval": "❌ Invalid interval. Please enter a positive integer.",
+        "export_csv": "📄 Export CSV",
+        "export_markdown": "📝 Export Markdown",
+        "diagnostics_title": "🩺 <b>Server Diagnostics</b>",
+        "diagnostics_btn": "🩺 Server Diagnostics",
+        "dashboard_btn": "📊 Analytics & Statistics",
+        "dashboard_title": "📊 <b>Analytics & Statistics Dashboard</b>",
+        "dashboard_requests": "📅 Requests (Period)",
+        "dashboard_db": "🗄️ Database",
+        "dashboard_problems": "⚠️ Problematic Data",
+        "dashboard_export": "📤 Export Data",
+        "diagnostics_recent_errors": "📝 <b>Recent Errors (Last 3h):</b>\n",
+        "diagnostics_response_time": "⏱ Click Response: <code>{ms} ms</code>",
+        "errors_download": "📥 Download Logs",
+        "errors_last_24h": "📝 <b>Errors (Last 24h):</b>\n",
+        "errors_auth_failed": "⛔ Double authorization failed.",
+        "restart_success": "✅ <b>Bot successfully restarted!</b>",
+        "main_menu": "⬅️ Main Menu",
+        "broadcast_not_found": "Розсилка вже відправлена або не знайдена."
     },
     "portfolio": {
         "title": "💼 <b>Ваше Портфоліо Інвестицій</b>",
@@ -409,5 +473,27 @@
         "btn_reset": "🔄 Скинути налаштування",
         "reset_success": "✅ Всі налаштування успішно скинуто до стандартних!",
         "private_only": "⚠️ Ця команда доступна лише в особистих повідомленнях!"
+    },
+    "rate_limit": {
+        "exceeded": "⚠️ Забагато запитів. Будь ласка, зачекайте."
+    },
+    "broadcast": {
+        "cancelled": "❌ Розсилку скасовано.",
+        "choose_target": "Оберіть аудиторію для розсилки:",
+        "preview_title": "📋 Попередній перегляд",
+        "confirm_button": "✅ Підтвердити (надіслати через 5 хв)",
+        "cancel_button": "❌ Скасувати",
+        "scheduled": "⏳ Розсилку заплановано!",
+        "abort_button": "🚫 Скасувати розсилку",
+        "complete": "📊 Розсилку завершено",
+        "sent": "✅ Надіслано: {count}",
+        "failed": "❌ Не вдалося: {count}",
+        "stats_title": "📊 Статистика аудиторії",
+        "total_users": "👥 Всього користувачів",
+        "premium_users": "💎 Преміум",
+        "regular_users": "👤 Звичайні",
+        "by_language": "🌐 За мовою:",
+        "target_all": "📢 Всі користувачі",
+        "target_lang": "🌐 Тільки {lang} ({count})"
     }
 }

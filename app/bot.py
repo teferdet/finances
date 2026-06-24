@@ -8,7 +8,7 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from app.config import get_settings
 from app.middlewares.i18n import I18nMiddleware
-from app.middlewares.throttle import ThrottleMiddleware
+from app.middlewares.rate_limit import RateLimitMiddleware
 from app.middlewares.error import ErrorMiddleware
 from app.handlers import (
     start,
@@ -43,13 +43,23 @@ def create_dispatcher() -> Dispatcher:
     dp = Dispatcher()
 
     # Register middlewares (outer → runs for every update type)
+    s = get_settings()
+
     dp.message.outer_middleware(ErrorMiddleware())
     dp.callback_query.outer_middleware(ErrorMiddleware())
     dp.inline_query.outer_middleware(ErrorMiddleware())
-    dp.message.outer_middleware(ThrottleMiddleware())
+    
     dp.message.outer_middleware(I18nMiddleware())
     dp.callback_query.outer_middleware(I18nMiddleware())
     dp.inline_query.outer_middleware(I18nMiddleware())
+
+    rate_limit = RateLimitMiddleware(
+        limit=s.security.rate_limit_requests,
+        window=s.security.rate_limit_window_sec,
+        admin_ids=s.bot.admin_ids,
+    )
+    dp.message.outer_middleware(rate_limit)
+    dp.callback_query.outer_middleware(rate_limit)
 
     # Register routers (order matters — first match wins)
     dp.include_router(start.router)

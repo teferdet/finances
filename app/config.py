@@ -29,6 +29,7 @@ LOGS_DIR = PROJECT_ROOT / "logs"
 class BotSettings:
     token: str
     admin_ids: List[int]
+    backup_enabled: bool = True  # Enable local daily backups
     version: str = "finances 6.0"
 
 

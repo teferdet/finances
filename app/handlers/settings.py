@@ -59,7 +59,9 @@ async def cb_about(call: CallbackQuery, i18n: I18n, lang: str) -> None:
 def _selected_text(stx: dict, data: list) -> str:
     """Build a dynamic 'currently selected' line for currency editors."""
     if data:
-        return stx.get("current_selected", "<b>Selected:</b> {items}").format(items=", ".join(data))
+        # Make sure we only join strings, handle nested lists gracefully
+        clean_data = [str(x[0]) if isinstance(x, list) and x else str(x) for x in data]
+        return stx.get("current_selected", "<b>Selected:</b> {items}").format(items=", ".join(clean_data))
     return stx.get("current_selected_none", "<b>Selected:</b> <i>none</i>")
 
 
@@ -89,7 +91,10 @@ async def cb_base_currency(call: CallbackQuery, i18n: I18n, lang: str) -> None:
     cd = (await cache.json_get(await _cache_key(uid))) or {}
     db = get_db()
     user = await db["Users"].find_one({"_id": uid}, {"BaseCurrency": 1})
-    cd["update data"] = [(user or {}).get("BaseCurrency", "USD")]
+    base_val = (user or {}).get("BaseCurrency") or "USD"
+    if isinstance(base_val, list):
+        base_val = base_val[0] if base_val else "USD"
+    cd["update data"] = [str(base_val)]
     cd["update type"] = "BaseCurrency"
     cd["page"] = 0
     await cache.json_set(await _cache_key(uid), cd)

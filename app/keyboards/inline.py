@@ -73,6 +73,7 @@ def settings_menu(i18n: I18n, lang: str) -> InlineKeyboardMarkup:
                 InlineKeyboardButton(text=s.get("language", "🌐 Language"), callback_data="settings_language"),
             ],
             [
+                InlineKeyboardButton(text=s.get("my_data", "📋 My Data"), callback_data="my_data_view"),
                 InlineKeyboardButton(text=s.get("about", "ℹ️ About"), callback_data="about"),
             ],
         ]

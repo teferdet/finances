@@ -28,14 +28,14 @@ def _format_list(items: list | None, fallback: str = "—") -> str:
     return ", ".join(str(i) for i in items)
 
 
-@router.message(Command("my_data"))
-async def cmd_my_data(message: Message, i18n: I18n, lang: str) -> None:
-    if message.chat.type != "private":
+@router.callback_query(F.data == "my_data_view")
+async def cb_my_data_view(call: CallbackQuery, i18n: I18n, lang: str) -> None:
+    if call.message.chat.type != "private":
         md = i18n.get_section("my_data", lang)
-        await message.answer(md.get("private_only", "⚠️ Private only!"))
+        await call.message.answer(md.get("private_only", "⚠️ Private only!"))
         return
 
-    uid = message.from_user.id
+    uid = call.from_user.id
     db = get_db()
     md = i18n.get_section("my_data", lang)
 
@@ -99,10 +99,16 @@ async def cmd_my_data(message: Message, i18n: I18n, lang: str) -> None:
                     callback_data="my_data_reset",
                 )
             ],
+            [
+                InlineKeyboardButton(
+                    text=i18n.get("keyboard.settings.back", lang) or "◀️ Back",
+                    callback_data="menu",
+                )
+            ],
         ]
     )
 
-    await message.answer("\n".join(lines), reply_markup=kb)
+    await call.message.edit_text("\n".join(lines), reply_markup=kb)
 
 
 @router.callback_query(F.data == "my_data_reset")
@@ -131,15 +137,7 @@ async def cb_reset_settings(call: CallbackQuery, i18n: I18n, lang: str) -> None:
 
     await call.answer(md.get("reset_success", "✅ Reset!"), show_alert=True)
 
-    # Refresh the reply keyboard
-    kb = await get_main_keyboard(uid)
-    await call.message.answer(
-        md.get("reset_success", "✅ Settings reset!"),
-        reply_markup=kb,
-    )
-
-    # Remove inline keyboard from the old message
-    try:
-        await call.message.edit_reply_markup(reply_markup=None)
-    except Exception:
-        pass
+    from app.keyboards.inline import settings_menu
+    text = i18n.get("settings.menu", lang)
+    text = "".join(text) if isinstance(text, list) else str(text)
+    await call.message.edit_text(text, reply_markup=settings_menu(i18n, lang))

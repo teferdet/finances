@@ -79,8 +79,16 @@
         "menu": [
             "⚙️ <b>Settings Dashboard</b>\n\n",
             "Please select the section you want to configure:\n\n",
-            "🤖 <b>Bot</b> — Customize your personal conversion preferences for fiat, crypto, and stocks.\n",
-            "👥 <b>Groups</b> — Manage the conversion settings for the groups you administer."
+            "💶 <b>Fiat Currencies</b> — Select standard currencies for conversion.\n",
+            "💵 <b>Cryptocurrencies</b> — Select digital currencies.\n",
+            "📑 <b>Company Stocks</b> — Select stocks to track.\n",
+            "📱 <b>Main Menu</b> — Configure your quick access buttons.\n",
+            "💱 <b>Default Currency</b> — Set your primary currency for portfolio.\n",
+            "📏 <b>Big Buttons</b> — Toggle keyboard button size.\n",
+            "👥 <b>Group Settings</b> — Manage bot behavior in your chats.\n",
+            "🌐 <b>Language Settings</b> — Change the interface language.\n",
+            "📋 <b>My Data</b> — View or reset your personal settings.\n",
+            "ℹ️ <b>About the Bot</b> — Additional info and contact details."
         ],
         "choose group": "👥 Please select the group you wish to edit:",
         "input": "✍️ Select the currencies you want me to <b>listen for</b> in the chat:",
@@ -167,7 +175,8 @@
             "Plan, save, and invest — all in one place! 🚀"
         ],
         "error": "Error",
-        "greeting": "{hello} {name} 👋"
+        "greeting": "{hello} {name} 👋",
+        "mini_app_open": "🌐 Open"
     },
     "alerts": {
         "menu_title": "🔔 <b>Price Alerts</b>",
@@ -307,6 +316,9 @@
         "restart_prompt": "⚠️ <b>Are you sure you want to restart the bot?</b>\n\nThis will temporarily interrupt service for all users.",
         "restarting": "🔄 <b>Restarting bot...</b>",
         "restart_bot": "🔄 Restart Bot",
+        "shutdown_prompt": "⚠️ <b>Are you sure you want to turn off the bot?</b>\n\nIt will need to be started manually.",
+        "shutting_down": "🛑 <b>Shutting down...</b>",
+        "shutdown_bot": "🛑 Shutdown Bot",
         "parser_toggle_on": "🟢 Parser: Enabled",
         "parser_toggle_off": "🔴 Parser: Disabled",
         "parser_change_interval": "⏱ Change Interval",
@@ -328,7 +340,17 @@
         "errors_last_24h": "📝 <b>Errors (Last 24h):</b>\n",
         "errors_auth_failed": "⛔ Double authorization failed.",
         "restart_success": "✅ <b>Bot successfully restarted!</b>",
-        "main_menu": "⬅️ Main Menu"
+        "manage_admins_btn": "👥 Manage Admins",
+        "manage_admins_title": "📋 Dynamic Administrators",
+        "add_admin_btn": "➕ Add Admin",
+        "remove_admin_btn": "➖ Remove Admin",
+        "add_admin_prompt": "Send the Telegram User ID of the new administrator.",
+        "remove_admin_prompt": "Send the Telegram User ID of the administrator to remove.",
+        "admin_added": "✅ Administrator added successfully.",
+        "admin_removed": "✅ Administrator removed successfully.",
+        "invalid_user_id": "❌ Invalid User ID. Please send numbers only.",
+        "main_menu": "⬅️ Main Menu",
+        "broadcast_not_found": "Broadcast already sent or not found."
     },
     "portfolio": {
         "title": "💼 <b>Your Investment Portfolio</b>",
@@ -449,5 +471,27 @@
         "btn_reset": "🔄 Reset Settings to Default",
         "reset_success": "✅ All your settings have been reset to defaults!",
         "private_only": "⚠️ This command is available only in private messages!"
+    },
+    "rate_limit": {
+        "exceeded": "⚠️ Too many requests. Please slow down."
+    },
+    "broadcast": {
+        "cancelled": "❌ Broadcast cancelled.",
+        "choose_target": "Select broadcast audience:",
+        "preview_title": "📋 Broadcast Preview",
+        "confirm_button": "✅ Confirm (send in 5 min)",
+        "cancel_button": "❌ Cancel",
+        "scheduled": "⏳ Broadcast scheduled!",
+        "abort_button": "🚫 Cancel broadcast",
+        "complete": "📊 Broadcast Complete",
+        "sent": "✅ Sent: {count}",
+        "failed": "❌ Failed: {count}",
+        "stats_title": "📊 Audience Statistics",
+        "total_users": "👥 Total users",
+        "premium_users": "💎 Premium",
+        "regular_users": "👤 Regular",
+        "by_language": "🌐 By language:",
+        "target_all": "📢 All users",
+        "target_lang": "🌐 {lang} only ({count})"
     }
 }

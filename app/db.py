@@ -71,3 +71,37 @@ async def close_db() -> None:
         _client = None
         _db = None
         log.info("MongoDB connection closed")
+
+
+async def get_broadcast_audience_stats(db: AsyncIOMotorDatabase) -> dict:
+    """
+    Returns audience breakdown by language and premium status.
+    
+    Returns:
+    {
+        "total": 1234,
+        "by_language": {"en": 800, "uk": 400},
+        "premium": 156,
+        "non_premium": 1078,
+    }
+    """
+    users_collection = db["Users"]
+    
+    total = await users_collection.count_documents({})
+    premium = await users_collection.count_documents({"Premium": True})
+    
+    pipeline = [
+        {"$group": {"_id": "$Language", "count": {"$sum": 1}}},
+        {"$sort": {"count": -1}},
+    ]
+    by_language = {}
+    async for doc in users_collection.aggregate(pipeline):
+        lang_code = doc["_id"] or "unknown"
+        by_language[lang_code] = doc["count"]
+    
+    return {
+        "total": total,
+        "by_language": by_language,
+        "premium": premium,
+        "non_premium": total - premium,
+    }

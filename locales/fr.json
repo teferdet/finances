@@ -19,7 +19,8 @@
             "language": "🌐 Langue",
             "about": "ℹ️ À propos",
             "main_menu": "📱 Menu principal",
-            "base_currency": "💱 Devise par défaut"
+            "base_currency": "💱 Devise par défaut",
+            "big_buttons": "📏 Big Buttons"
         },
         "help": {
             "q&a": "💬 Questions\\Réponses",
@@ -28,7 +29,9 @@
         "news": "📰 Actualités",
         "other": "Autres",
         "delete": "🗑 Supprimer",
-        "error": "Impossible de supprimer le message"
+        "error": "Impossible de supprimer le message",
+        "reverse_rate": "🔄 Reverse rate",
+        "direct_rate": "🔄 Direct rate"
     },
     "time": {
         "morning": "Bonjour",
@@ -59,7 +62,8 @@
         "bad request": "😖 Taux de change introuvable. Vérifiez l'orthographe ou réessayez plus tard",
         "main rate": "Taux au {}\\n{}\\n\\n{}",
         "sub rate": "Taux au {}\\n{}",
-        "currency_not_found": "😢 La devise <b>{}</b> n'a pas été trouvée ou n'est plus prise en charge."
+        "currency_not_found": "😢 La devise <b>{}</b> n'a pas été trouvée ou n'est plus prise en charge.",
+        "unknown command": "😖 Unknown command! To convert currency, use the format: <b>100 USD</b>"
     },
     "inline mode": {
         "server error": "😖 Le serveur est indisponible, réessayez plus tard",
@@ -98,7 +102,11 @@
         "main_menu_invalid": "❌ Devise inconnue: <b>{}</b>",
         "main_menu_empty": "⚠️ Entrez au moins une devise!",
         "main_menu_cancel": "Vous pouvez taper /cancel pour annuler.",
-        "base_currency_desc": "💱 <b>Devise de base par défaut</b>\n\nSélectionnez la devise que vous souhaitez utiliser par défaut pour le /portfolio et d'autres calculs totaux :"
+        "base_currency_desc": "💱 <b>Devise de base par défaut</b>\n\nSélectionnez la devise que vous souhaitez utiliser par défaut pour le /portfolio et d'autres calculs totaux :",
+        "big_buttons_on": "📏 Big buttons are now <b>enabled</b>! Your keyboard buttons will appear larger.",
+        "big_buttons_off": "📏 Big buttons are now <b>disabled</b>. Keyboard buttons will appear in standard size.",
+        "current_selected": "<b>Currently selected:</b> {items}",
+        "current_selected_none": "<b>Currently selected:</b> <i>none</i>"
     },
     "language": {
         "select": "🌐 Choisissez votre langue préférée:",
@@ -162,7 +170,8 @@
             "Planifiez, économisez et investissez — tout au même endroit ! 🚀"
         ],
         "error": "Error",
-        "greeting": "{hello} {name} 👋"
+        "greeting": "{hello} {name} 👋",
+        "mini_app_open": "🌐 Open"
     },
     "alerts": {
         "menu_title": "🔔 <b>Alertes de prix</b>",
@@ -195,7 +204,26 @@
         "callback_deleted": "✅ {count} alertes supprimées",
         "callback_cleared": "📋 <b>Vos alertes</b>\n\nToutes les alertes effacées.",
         "process_created": "✅ Alerte créée: {currency_from}/{currency_to} {condition} {target_price}",
-        "process_error": "❌ Échec de création de l'alerte: {error}\n\nFormat: <code>USD EUR above 0.95</code>"
+        "process_error": "❌ Échec de création de l'alerte: {error}\n\nFormat: <code>USD EUR above 0.95</code>",
+        "btn_back": "◀️ Back to Alerts",
+        "max_alerts_reached": "⚠️ You have reached the maximum of 20 active alerts. Please delete some before creating new ones.",
+        "notification_condition_met": "Condition Met",
+        "notification_body": "🚨 <b>PRICE ALERT TRIGGERED!</b> 🚨\n\n💱 {pair}\n🎯 {target_label}: <code>{target_price}</code>\n💰 {current_label}: <code>{current_price}</code>\n{cond_emoji} {condition_label}: {condition}\n🕐 {time}",
+        "volatility_title": "⚡ <b>Volatility Alert</b> ⚡",
+        "volatility_message": "Significant price movement detected in your holdings (last 1h):",
+        "volatility_threshold_info": "<i>Threshold: {pct}%  •  Change via /alert volatility</i>",
+        "volatility_set": "✅ Volatility threshold set to <b>{pct}%</b>. You will be notified when any of your portfolio assets moves by this much within 1 hour.",
+        "volatility_format_hint": "Set your volatility threshold:\n<code>/alert volatility 5</code>\n(alerts you when price changes by 5% in 1 hour)",
+        "volatility_invalid_pct": "❌ Please enter a valid percentage between 0 and 100.",
+        "digest_title": "📊 <b>Weekly Portfolio Digest</b>",
+        "digest_greeting": "Hello, {name}! Here's your weekly summary:",
+        "digest_holdings_title": "<b>Your Holdings:</b>",
+        "digest_total_value": "💰 <b>Total Value: ${value}</b>",
+        "digest_weekly_change": "📊 Weekly Change: {pct}% {emoji}",
+        "digest_no_history": "<i>Weekly comparison will be available next week.</i>",
+        "digest_top_gainer": "🏆 Top Gainer: <b>{ticker}</b> ({pct}%)",
+        "digest_top_decliner": "🏆 Top Decliner: <b>{ticker}</b> ({pct}%)",
+        "digest_next": "<i>Next digest: next Sunday at {hour}:00 UTC</i>"
     },
     "portfolio": {
         "title": "💼 <b>Votre portefeuille</b>",
@@ -238,7 +266,10 @@
         "pnl_neutral": "±0 (0%) ➖",
         "no_buy_price": "Pas de données de prix d'achat",
         "error": "❌ Erreur: {error}",
-        "error_loading": "❌ Erreur de chargement du portefeuille: {error}"
+        "error_loading": "❌ Erreur de chargement du portefeuille: {error}",
+        "btn_change_base": "💱 Change Currency",
+        "btn_back": "◀️ Back",
+        "select_base_title": "Select a base currency for your portfolio:"
     },
     "admin": {
         "panel": "🔐 <b>Panneau d'administration</b>\n\nSélectionnez une option:",
@@ -326,7 +357,42 @@
         "restart_no": "❌ Cancel",
         "restart_prompt": "⚠️ <b>Are you sure you want to restart the bot?</b>\n\nThis will temporarily interrupt service for all users.",
         "restarting": "🔄 <b>Restarting bot...</b>",
-        "restart_bot": "🔄 Restart Bot"
+        "restart_bot": "🔄 Restart Bot",
+        "shutdown_prompt": "⚠️ <b>Are you sure you want to turn off the bot?</b>\n\nIt will need to be started manually.",
+        "shutting_down": "🛑 <b>Shutting down...</b>",
+        "shutdown_bot": "🛑 Shutdown Bot",
+        "parser_toggle_on": "🟢 Parser: Enabled",
+        "parser_toggle_off": "🔴 Parser: Disabled",
+        "parser_change_interval": "⏱ Change Interval",
+        "parser_enter_interval": "✍️ Please enter the new parser update interval in seconds (e.g. 3600):",
+        "parser_invalid_interval": "❌ Invalid interval. Please enter a positive integer.",
+        "export_csv": "📄 Export CSV",
+        "export_markdown": "📝 Export Markdown",
+        "diagnostics_title": "🩺 <b>Server Diagnostics</b>",
+        "diagnostics_btn": "🩺 Server Diagnostics",
+        "dashboard_btn": "📊 Analytics & Statistics",
+        "dashboard_title": "📊 <b>Analytics & Statistics Dashboard</b>",
+        "dashboard_requests": "📅 Requests (Period)",
+        "dashboard_db": "🗄️ Database",
+        "dashboard_problems": "⚠️ Problematic Data",
+        "dashboard_export": "📤 Export Data",
+        "diagnostics_recent_errors": "📝 <b>Recent Errors (Last 3h):</b>\n",
+        "diagnostics_response_time": "⏱ Click Response: <code>{ms} ms</code>",
+        "errors_download": "📥 Download Logs",
+        "errors_last_24h": "📝 <b>Errors (Last 24h):</b>\n",
+        "errors_auth_failed": "⛔ Double authorization failed.",
+        "restart_success": "✅ <b>Bot successfully restarted!</b>",
+        "manage_admins_btn": "👥 Manage Admins",
+        "manage_admins_title": "📋 Dynamic Administrators",
+        "add_admin_btn": "➕ Add Admin",
+        "remove_admin_btn": "➖ Remove Admin",
+        "add_admin_prompt": "Send the Telegram User ID of the new administrator.",
+        "remove_admin_prompt": "Send the Telegram User ID of the administrator to remove.",
+        "admin_added": "✅ Administrator added successfully.",
+        "admin_removed": "✅ Administrator removed successfully.",
+        "invalid_user_id": "❌ Invalid User ID. Please send numbers only.",
+        "main_menu": "⬅️ Main Menu",
+        "broadcast_not_found": "Broadcast already sent or not found."
     },
     "comparison": {
         "title": "📊 Comparaison des devises",
@@ -345,7 +411,8 @@
         "expense_manager": "💰 Gestionnaire de dépenses",
         "help": "ℹ️ Cette aide",
         "export": "📤 Exporter le portefeuille",
-        "import": "📥 Importer le portefeuille"
+        "import": "📥 Importer le portefeuille",
+        "my_data": "📋 View My Data & Settings"
     },
     "portability": {
         "export_success": "✅ Successfully exported {count} assets.",
@@ -360,5 +427,67 @@
         "not_available": "📈 Stock data is not available yet. Try again later.",
         "empty_portfolio": "📈 No stocks in your portfolio. Configure them in /settings.",
         "header": "📈 <b>Stock Market</b>"
+    },
+    "exchange": {
+        "btn_bind": "💱 Bind Exchange",
+        "btn_sync": "🔄 Sync API",
+        "menu_title": "💱 <b>Exchange Integration</b>",
+        "menu_desc": "Select an exchange to bind your API keys (Read-Only):",
+        "prompt_api_key": "🔑 Please enter your <b>API Key</b> for {exchange}:",
+        "prompt_api_secret": "🔒 Now enter your <b>Secret Key</b> for {exchange}:",
+        "success_bind": "✅ <b>Success!</b> Keys for {exchange} have been saved. You can now sync your balances from the portfolio menu.",
+        "syncing": "🔄 Syncing with {exchange}... Please wait.",
+        "sync_success": "✅ <b>Sync Complete!</b>\nFound assets: {count}\nYour portfolio has been updated.",
+        "sync_error": "❌ An error occurred while syncing with {exchange}: {error}",
+        "sync_cooldown": "⏳ Please wait. You can sync balances once every 10 minutes. Remaining: {minutes} min.",
+        "no_keys": "❌ You haven't added any API keys yet. Please bind an exchange first.",
+        "btn_cancel": "❌ Cancel",
+        "cancel_msg": "🚫 Changes have been cancelled."
+    },
+    "my_data": {
+        "title": "📋 <b>Your Data & Settings</b>",
+        "name": "👤 Name",
+        "username": "🆔 Username",
+        "language": "🌐 Language",
+        "premium": "⭐ Premium",
+        "signed_up": "📅 Signed up",
+        "fiat": "💶 Fiat currencies",
+        "crypto": "💵 Crypto currencies",
+        "stocks_label": "📑 Stocks",
+        "main_menu": "📱 Main Menu",
+        "base_currency": "💱 Base Currency",
+        "big_buttons": "📏 Big Buttons",
+        "groups_count": "👥 Groups",
+        "alerts_count": "🔔 Alerts",
+        "portfolio_count": "💼 Portfolio assets",
+        "yes": "Yes",
+        "no": "No",
+        "none": "not set",
+        "default": "default",
+        "btn_reset": "🔄 Reset Settings to Default",
+        "reset_success": "✅ All your settings have been reset to defaults!",
+        "private_only": "⚠️ This command is available only in private messages!"
+    },
+    "rate_limit": {
+        "exceeded": "⚠️ Too many requests. Please slow down."
+    },
+    "broadcast": {
+        "cancelled": "❌ Broadcast cancelled.",
+        "choose_target": "Select broadcast audience:",
+        "preview_title": "📋 Broadcast Preview",
+        "confirm_button": "✅ Confirm (send in 5 min)",
+        "cancel_button": "❌ Cancel",
+        "scheduled": "⏳ Broadcast scheduled!",
+        "abort_button": "🚫 Cancel broadcast",
+        "complete": "📊 Broadcast Complete",
+        "sent": "✅ Sent: {count}",
+        "failed": "❌ Failed: {count}",
+        "stats_title": "📊 Audience Statistics",
+        "total_users": "👥 Total users",
+        "premium_users": "💎 Premium",
+        "regular_users": "👤 Regular",
+        "by_language": "🌐 By language:",
+        "target_all": "📢 All users",
+        "target_lang": "🌐 {lang} only ({count})"
     }
 }

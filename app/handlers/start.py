@@ -123,5 +123,5 @@ async def cmd_expense_manager(message: Message, i18n: I18n, lang: str) -> None:
 
         text = i18n.get("other.mini app", lang)
         text = "".join(text) if isinstance(text, list) else str(text)
-        kb = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🌐 Open", url=settings.urls.mini_app)]])
+        kb = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text=str(i18n.get("other.mini_app_open", lang, default="🌐 Open")), url=settings.urls.mini_app)]])
         await message.answer(text, reply_markup=kb)
