@@ -12,12 +12,8 @@ from app.cache import cache
 from app.config import get_settings, get_currencies_data
 from app.i18n import I18n
 from app.keyboards.inline import (
-<<<<<<< HEAD
     settings_menu,
     about_keyboard,
-=======
-    settings_menu, about_keyboard,
->>>>>>> 6233cd8c1c0c25e0cc1ce26e6f7b0051542ecf79
     paginated_currency_keyboard,
 )
 from app.keyboards.main import get_main_keyboard
@@ -83,8 +79,7 @@ async def cb_fiat(call: CallbackQuery, i18n: I18n, lang: str) -> None:
     selected_line = _selected_text(stx, cd["update data"])
     text = f"{desc}\n\n{selected_line}"
     await call.message.edit_text(
-        text,
-        reply_markup=paginated_currency_keyboard(currencies, 0, "Output", i18n, lang, selected=cd["update data"]),
+        text, reply_markup=paginated_currency_keyboard(currencies, 0, "Output", i18n, lang, selected=cd["update data"])
     )
 
 
@@ -131,8 +126,7 @@ async def cb_crypto_stocks(call: CallbackQuery, i18n: I18n, lang: str) -> None:
     selected_line = _selected_text(stx, cd["update data"])
     text = f"{desc}\n\n{selected_line}"
     await call.message.edit_text(
-        text,
-        reply_markup=paginated_currency_keyboard(items, 0, "CSK", i18n, lang, selected=cd["update data"]),
+        text, reply_markup=paginated_currency_keyboard(items, 0, "CSK", i18n, lang, selected=cd["update data"])
     )
 
 
@@ -226,8 +220,7 @@ async def cb_data_processing(call: CallbackQuery, i18n: I18n, lang: str) -> None
 
     try:
         await call.message.edit_text(
-            display_text,
-            reply_markup=paginated_currency_keyboard(items, page, prefix, i18n, lang, selected=data),
+            display_text, reply_markup=paginated_currency_keyboard(items, page, prefix, i18n, lang, selected=data)
         )
     except Exception:
         pass

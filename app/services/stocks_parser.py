@@ -82,11 +82,7 @@ def _fetch_stocks_sync() -> Optional[dict]:
         ok_count = len(stocks_data) - 1
         log.info("[Stocks] Fetched %d stocks", ok_count)
         if failed_tickers:
-            log.warning(
-                "[Stocks] No price data for %d tickers: %s",
-                len(failed_tickers),
-                ", ".join(failed_tickers),
-            )
+            log.warning("[Stocks] No price data for %d tickers: %s", len(failed_tickers), ", ".join(failed_tickers))
     except Exception as exc:
         log.error("[Stocks] yfinance error: %s", exc)
         return None

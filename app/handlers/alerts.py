@@ -37,9 +37,7 @@ _waiting_for_alert: set[int] = set()
 
 
 def _alert_menu_kb(i18n: I18n, lang: str) -> InlineKeyboardMarkup:
-    def t(k):
-        return str(i18n.get(f"alerts.{k}", lang))
-
+    t = lambda k: str(i18n.get(f"alerts.{k}", lang))
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
@@ -54,9 +52,7 @@ def _alert_menu_kb(i18n: I18n, lang: str) -> InlineKeyboardMarkup:
 
 
 def _alert_back_kb(i18n: I18n, lang: str) -> InlineKeyboardMarkup:
-    def t(k):
-        return str(i18n.get(f"alerts.{k}", lang))
-
+    t = lambda k: str(i18n.get(f"alerts.{k}", lang))
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(text=t("btn_back"), callback_data="alert_back")],
@@ -245,8 +241,7 @@ _CONDITION_RE = re.compile(
 
 
 async def _create_alert_from_text(text: str, user_id: int, message: Message, i18n: I18n, lang: str) -> None:
-    def t(k):
-        return str(i18n.get(f"alerts.{k}", lang))
+    t = lambda k: str(i18n.get(f"alerts.{k}", lang))
 
     m = _CONDITION_RE.match(text)
     if not m:

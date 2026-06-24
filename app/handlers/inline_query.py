@@ -58,11 +58,7 @@ async def inline_calculator(inline_query: InlineQuery, i18n: I18n, lang: str) ->
     for code, amount in data:
         ci = info_map.get(code, {})
         emoji = ci.get("emoji", "")
-<<<<<<< HEAD
-        ci.get("symbol", "")
-=======
         symbol = ci.get("symbol", "")
->>>>>>> 6233cd8c1c0c25e0cc1ce26e6f7b0051542ecf79
 
         title = f"{emoji} {amount} {code}".strip()
 
@@ -83,8 +79,7 @@ async def inline_calculator(inline_query: InlineQuery, i18n: I18n, lang: str) ->
                 title=f"🌐 {t_all} ({len(output)})",
                 description=desc_all,
                 input_message_content=InputTextMessageContent(
-                    message_text=f"💱 <b>{title}</b>\n\n{single_all_res}",
-                    parse_mode="HTML",
+                    message_text=f"💱 <b>{title}</b>\n\n{single_all_res}", parse_mode="HTML"
                 ),
             )
         )
@@ -113,8 +108,7 @@ async def inline_calculator(inline_query: InlineQuery, i18n: I18n, lang: str) ->
                     title=item_title,
                     description=item_desc,
                     input_message_content=InputTextMessageContent(
-                        message_text=f"💱 <b>{title}</b> ➡️ <b>{item_desc}</b>",
-                        parse_mode="HTML",
+                        message_text=f"💱 <b>{title}</b> ➡️ <b>{item_desc}</b>", parse_mode="HTML"
                     ),
                 )
             )

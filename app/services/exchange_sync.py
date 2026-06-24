@@ -36,21 +36,11 @@ async def fetch_binance_balances(api_key: str, api_secret: str) -> Dict[str, flo
     signature = hmac.new(
         api_secret.encode("utf-8"),
         query_string.encode("utf-8"),
-<<<<<<< HEAD
         "sha256",  # HMAC-SHA256 required by Binance API
     ).hexdigest()
 
     url = f"{base_url}{endpoint}?{query_string}&signature={signature}"
     headers = {"X-MBX-APIKEY": api_key}
-=======
-        "sha256"  # HMAC-SHA256 required by Binance API
-    ).hexdigest()
-
-    url = f"{base_url}{endpoint}?{query_string}&signature={signature}"
-    headers = {
-        "X-MBX-APIKEY": api_key
-    }
->>>>>>> 6233cd8c1c0c25e0cc1ce26e6f7b0051542ecf79
 
     async with aiohttp.ClientSession() as session:
         async with session.get(url, headers=headers) as response:
@@ -82,11 +72,7 @@ async def fetch_bybit_balances(api_key: str, api_secret: str) -> Dict[str, float
     signature = hmac.new(
         api_secret.encode("utf-8"),
         sign_str.encode("utf-8"),
-<<<<<<< HEAD
         "sha256",  # HMAC-SHA256 required by Bybit API
-=======
-        "sha256"  # HMAC-SHA256 required by Bybit API
->>>>>>> 6233cd8c1c0c25e0cc1ce26e6f7b0051542ecf79
     ).hexdigest()
 
     url = f"{base_url}{endpoint}?{query_string}"
@@ -177,27 +163,13 @@ async def sync_exchange_portfolio(user_id: int, exchange: str) -> dict:
         ticker = ticker.upper()
 
         # Remove any existing lots for this ticker to avoid duplicates and logic bugs with $ operator
-<<<<<<< HEAD
         await db["Users"].update_one({"_id": user_id}, {"$pull": {"portfolio.crypto": {"ticker": ticker}}})
-=======
-        await db["Users"].update_one(
-            {"_id": user_id},
-            {"$pull": {"portfolio.crypto": {"ticker": ticker}}}
-        )
->>>>>>> 6233cd8c1c0c25e0cc1ce26e6f7b0051542ecf79
 
         # Add new asset with the full synced amount
         await add_asset(user_id=user_id, asset_type="crypto", ticker=ticker, amount=amount)
         count += 1
 
     # Update last_sync
-<<<<<<< HEAD
     await db["ApiKeys"].update_one({"_id": api_key_doc["_id"]}, {"$set": {"last_sync": current_time}})
-=======
-    await db["ApiKeys"].update_one(
-        {"_id": api_key_doc["_id"]},
-        {"$set": {"last_sync": current_time}}
-    )
->>>>>>> 6233cd8c1c0c25e0cc1ce26e6f7b0051542ecf79
 
     return {"status": "success", "count": count}

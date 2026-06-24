@@ -246,8 +246,7 @@ async def convert_currencies(
                 await ensure_currency(code, force=True)
         if any(c not in base_map for c in base_codes):
             new_docs = await collection.find(
-                {"currency": {"$in": [c for c in base_codes if c not in base_map]}},
-                {"currency": 1, "rates": 1},
+                {"currency": {"$in": [c for c in base_codes if c not in base_map]}}, {"currency": 1, "rates": 1}
             ).to_list(length=100)
             for d in new_docs:
                 base_map[d["currency"]] = d

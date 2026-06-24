@@ -1,10 +1,7 @@
 import io
 from typing import Dict, Any
 from datetime import datetime
-<<<<<<< HEAD
 
-=======
->>>>>>> 6233cd8c1c0c25e0cc1ce26e6f7b0051542ecf79
 
 async def _get_extended_stats(db: Any) -> Dict[str, Any]:
     today_midnight = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
@@ -18,10 +15,7 @@ async def _get_extended_stats(db: Any) -> Dict[str, Any]:
 
     errors_today = 0
     from app.config import LOGS_DIR
-<<<<<<< HEAD
 
-=======
->>>>>>> 6233cd8c1c0c25e0cc1ce26e6f7b0051542ecf79
     error_log_path = LOGS_DIR / "errors.log"
     if error_log_path.exists():
         today_str = datetime.now().strftime("%Y-%m-%d")

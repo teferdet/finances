@@ -29,14 +29,7 @@ def er_keypad(
 
 
 def crypto_keypad(amount: float, active_currency: str = "USD") -> InlineKeyboardMarkup:
-    currencies = [
-        ("USD", "$"),
-        ("GBP", "£"),
-        ("EUR", "€"),
-        ("UAH", "₴"),
-        ("PLN", "zł"),
-        ("CZK", "Kč"),
-    ]
+    currencies = [("USD", "$"), ("GBP", "£"), ("EUR", "€"), ("UAH", "₴"), ("PLN", "zł"), ("CZK", "Kč")]
 
     buttons = []
     for code, symbol in currencies:
@@ -67,27 +60,17 @@ def settings_menu(i18n: I18n, lang: str) -> InlineKeyboardMarkup:
             ],
             [
                 InlineKeyboardButton(text=s.get("stocks", "📑 Stocks"), callback_data="stocks"),
-                InlineKeyboardButton(
-                    text=s.get("main_menu", "📱 Main Menu"),
-                    callback_data="settings_main_menu",
-                ),
+                InlineKeyboardButton(text=s.get("main_menu", "📱 Main Menu"), callback_data="settings_main_menu"),
             ],
             [
                 InlineKeyboardButton(
-                    text=s.get("base_currency", "💱 Default Currency"),
-                    callback_data="settings_base_currency",
+                    text=s.get("base_currency", "💱 Default Currency"), callback_data="settings_base_currency"
                 ),
-                InlineKeyboardButton(
-                    text=s.get("big_buttons", "📏 Big Buttons"),
-                    callback_data="toggle_big_buttons",
-                ),
+                InlineKeyboardButton(text=s.get("big_buttons", "📏 Big Buttons"), callback_data="toggle_big_buttons"),
             ],
             [
                 InlineKeyboardButton(text=s.get("groups", "👥 Groups"), callback_data="groups"),
-                InlineKeyboardButton(
-                    text=s.get("language", "🌐 Language"),
-                    callback_data="settings_language",
-                ),
+                InlineKeyboardButton(text=s.get("language", "🌐 Language"), callback_data="settings_language"),
             ],
             [
                 InlineKeyboardButton(text=s.get("about", "ℹ️ About"), callback_data="about"),

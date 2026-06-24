@@ -33,25 +33,15 @@ router = Router(name="portfolio")
 
 def portfolio_keyboard(i18n: I18n, lang: str) -> InlineKeyboardMarkup:
     """Generate inline keyboard for portfolio."""
-
-    def t_port(k):
-        return str(i18n.get(f"portfolio.{k}", lang))
-
-    def t_exch(k):
-        return str(i18n.get(f"exchange.{k}", lang))
-
+    t_port = lambda k: str(i18n.get(f"portfolio.{k}", lang))
+    t_exch = lambda k: str(i18n.get(f"exchange.{k}", lang))
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
                 InlineKeyboardButton(text=t_port("refresh"), callback_data="portfolio_refresh"),
                 InlineKeyboardButton(text=t_port("clear"), callback_data="portfolio_clear"),
             ],
-            [
-                InlineKeyboardButton(
-                    text=t_port("btn_change_base"),
-                    callback_data="portfolio_change_base",
-                )
-            ],
+            [InlineKeyboardButton(text=t_port("btn_change_base"), callback_data="portfolio_change_base")],
             [
                 InlineKeyboardButton(text=t_exch("btn_bind"), callback_data="exchange_bind"),
                 InlineKeyboardButton(text=t_exch("btn_sync"), callback_data="exchange_sync"),
