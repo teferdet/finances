@@ -189,6 +189,5 @@ async def handle_document_import(message: Message, i18n: I18n, lang: str) -> Non
         await loading_message.edit_text(text)
 
     except Exception as e:
->>>>>>> 6233cd8c1c0c25e0cc1ce26e6f7b0051542ecf79
         text_err = str(i18n.get("portability.parse_error", lang))
         await loading_message.edit_text(text_err)
