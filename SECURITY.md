@@ -4,11 +4,6 @@
 
 This project operates as a continuously deployed Telegram bot. Security updates are only provided for the latest version running on the `main` branch. 
 
-| Version | Supported          |
-| ------- | ------------------ |
-| `main`  | :white_check_mark: |
-| Older   | :x:                |
-
 ## Scope of Vulnerabilities
 
 Given the nature of this project (a financial Telegram bot with exchange integrations), we are particularly interested in the following **in-scope** vulnerabilities:
@@ -31,7 +26,7 @@ Instead, please report the vulnerability privately so we have time to fix it bef
 
 **How to report:**
 1. **GitHub Private Vulnerability Reporting:** If enabled, please use the "Security" tab in this repository to privately report a vulnerability.
-2. **Direct Contact:** Alternatively, you can reach out directly to the maintainer via Telegram: **[@teferdet]**.
+2. **Direct Contact:** Alternatively, you can reach out directly to the maintainer via Telegram: **@teferdet**.
 
 **Please include the following in your report:**
 * A clear description of the vulnerability and its potential impact.
