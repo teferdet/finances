@@ -2,7 +2,6 @@
 Settings handler — /settings, bot/group config, currency selection callbacks.
 """
 from __future__ import annotations
-import re
 from aiogram import Router, F
 from aiogram.filters import Command
 from aiogram.types import Message, CallbackQuery
@@ -12,7 +11,7 @@ from app.cache import cache
 from app.config import get_settings, get_currencies_data
 from app.i18n import I18n
 from app.keyboards.inline import (
-    settings_menu, back_button, about_keyboard,
+    settings_menu, about_keyboard,
     paginated_currency_keyboard,
 )
 from app.keyboards.main import get_main_keyboard
@@ -100,7 +99,7 @@ async def cb_crypto_stocks(call: CallbackQuery, i18n: I18n, lang: str) -> None:
     s = get_settings()
     db = get_db()
     user = await db["Users"].find_one({"_id": uid}, {"Crypto currency": 1, "Stocks": 1})
-    
+
     if call.data == "settings_crypto":
         cd["update data"] = (user or {}).get("Crypto currency", [])
         cd["update type"] = "Crypto currency"
@@ -185,10 +184,10 @@ async def cb_data_processing(call: CallbackQuery, i18n: I18n, lang: str) -> None
         else:
             data.append(item)
             await call.answer(stx.get("alert add", "Added"), show_alert=False)
-            
+
     cd["update data"] = data
     await cache.json_set(key, cd)
-    
+
     # Re-render keyboard with dynamic selected list
     page = cd.get("page", 0)
     if prefix == "CSK":
@@ -332,7 +331,7 @@ async def cb_main_menu_action(call: CallbackQuery, i18n: I18n, lang: str) -> Non
         await call.answer(stx.get("alert add", "Added"))
     cd["update data"] = data
     await cache.json_set(key, cd)
-    
+
     # Re-render keyboard with dynamic selected list
     page = cd.get("page", 0)
     currencies = get_currencies_data()

@@ -126,7 +126,7 @@ async def cmd_portfolio(message: Message, command: CommandObject, i18n: I18n, la
         removed = await remove_asset(message.from_user.id, symbol)
 
         safe_symbol = html.escape(symbol)
-        
+
         if not removed:
             await message.answer(t("not_found").replace("{symbol}", safe_symbol), parse_mode="HTML")
             return
@@ -280,7 +280,7 @@ async def cb_portfolio_refresh(call: CallbackQuery, i18n: I18n, lang: str) -> No
 @router.callback_query(F.data == "portfolio_change_base")
 async def cb_portfolio_change_base(call: CallbackQuery, i18n: I18n, lang: str) -> None:
     await call.answer()
-    
+
     db = get_db()
     user = await db["Users"].find_one({"_id": call.from_user.id}, {"BaseCurrency": 1})
     bc_data = (user or {}).get("BaseCurrency", ["USD"])
@@ -290,10 +290,10 @@ async def cb_portfolio_change_base(call: CallbackQuery, i18n: I18n, lang: str) -
         match = re.search(r"\(([A-Z]{3})\)", call.message.text)
         if match:
             base_currency = match.group(1)
-            
+
     currencies = get_currencies_data()
     title = str(i18n.get("portfolio.select_base_title", lang))
-    
+
     kb = paginated_currency_keyboard(currencies, 0, "PortfolioBase", i18n, lang, selected=[base_currency])
     await call.message.edit_text(title, reply_markup=kb, parse_mode="HTML")
 
@@ -302,13 +302,13 @@ async def cb_portfolio_change_base(call: CallbackQuery, i18n: I18n, lang: str) -
 async def cb_portfolio_base_action(call: CallbackQuery, i18n: I18n, lang: str) -> None:
     parts = call.data.split()
     command = parts[1] if len(parts) > 1 else ""
-    
+
     if command == "cancel":
         await cb_portfolio_refresh(call, i18n, lang)
         return
-        
+
     if command == "save":
-        # The user's selection is in parts[2] if it was a toggle, but actually paginated_currency_keyboard 
+        # The user's selection is in parts[2] if it was a toggle, but actually paginated_currency_keyboard
         # doesn't pass the selected state back in "save" directly, it expects us to read from cache.
         # But we can just avoid using "save" and directly trigger portfolio_refresh:CURRENCY when toggling.
         pass
@@ -316,7 +316,7 @@ async def cb_portfolio_base_action(call: CallbackQuery, i18n: I18n, lang: str) -
     if command == "position":
         page = int(parts[2]) if len(parts) > 2 else 0
         currencies = get_currencies_data()
-        
+
         # We need to know current selected from message text maybe? Or default USD.
         # Let's extract from DB.
         db = get_db()
@@ -327,7 +327,7 @@ async def cb_portfolio_base_action(call: CallbackQuery, i18n: I18n, lang: str) -
         kb = paginated_currency_keyboard(currencies, page, "PortfolioBase", i18n, lang, selected=[base_currency])
         await call.message.edit_reply_markup(reply_markup=kb)
         return
-        
+
     # If it's a currency toggle (e.g. PortfolioBase USD)
     currency = " ".join(parts[1:])
     if currency and currency not in ["save", "cancel", "position"]:

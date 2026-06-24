@@ -8,7 +8,6 @@ import time
 import platform
 import json
 from datetime import datetime, timedelta
-from typing import Optional
 
 from aiogram import Router, F
 from aiogram.filters import Command
@@ -48,12 +47,12 @@ def _get_recent_errors(hours: int = 3) -> str:
     error_log_path = LOGS_DIR / "errors.log"
     if not error_log_path.exists():
         return ""
-    
+
     cutoff_time = datetime.now() - timedelta(hours=hours)
     recent_errors = []
     # format: 2026-06-20 16:15:26 [ERROR] ...
     time_pattern = re.compile(r"^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})")
-    
+
     try:
         with open(error_log_path, "r", encoding="utf-8") as f:
             lines = f.readlines()
@@ -70,7 +69,7 @@ def _get_recent_errors(hours: int = 3) -> str:
                         pass
         return "\n".join(recent_errors[-10:]) # max 10 lines
     except Exception as e:
-        log.warning(f"Failed to read errors: %s", e)
+        log.warning("Failed to read errors: %s", e)
         return ""
 
 @router.message(Command("admin"))
@@ -96,15 +95,15 @@ async def cmd_ping(message: Message, i18n: I18n, lang: str) -> None:
 @router.callback_query(F.data.startswith("admin_"))
 async def cb_admin(call: CallbackQuery, i18n: I18n, lang: str, state: FSMContext) -> None:
     callback_start_time = time.time()
-    
+
     if not _is_admin(call.from_user.id):
         await call.answer(str(i18n.get("admin.access_denied", lang)), show_alert=True)
         return
-        
+
     action = call.data.replace("admin_", "")
     t = lambda k: str(i18n.get(f"admin.{k}", lang))
     db = get_db()
-    
+
     # Restart logic
     if action == "restart":
         kb = InlineKeyboardMarkup(inline_keyboard=[
@@ -113,17 +112,17 @@ async def cb_admin(call: CallbackQuery, i18n: I18n, lang: str, state: FSMContext
         ])
         await call.message.edit_text(t("restart_prompt"), reply_markup=kb, parse_mode="HTML")
         return
-        
+
     if action == "confirm_restart":
         await call.message.edit_text(t("restarting"), parse_mode="HTML")
         log.info("Restart command initiated by admin %s", call.from_user.id)
-        
+
         state_path = CONFIG_DIR / ".restart_state.json"
         try:
             with open(state_path, "w", encoding="utf-8") as f:
                 json.dump({"chat_id": call.message.chat.id, "message_id": call.message.message_id}, f)
         except Exception as e:
-            log.error(f"Failed to save restart state: %s", e)
+            log.error("Failed to save restart state: %s", e)
 
         try:
             from app.db import close_db
@@ -138,7 +137,7 @@ async def cb_admin(call: CallbackQuery, i18n: I18n, lang: str, state: FSMContext
 
         os.execv(sys.executable, [sys.executable, "-m", "app"] + sys.argv[1:])
         return
-        
+
     if action == "cancel_restart":
         await call.message.edit_text(t("panel"), reply_markup=_admin_kb(i18n, lang), parse_mode="HTML")
         return
@@ -153,10 +152,9 @@ async def cb_admin(call: CallbackQuery, i18n: I18n, lang: str, state: FSMContext
         today_midnight = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
         total_users = await db["Users"].count_documents({})
         dau = await db["Users"].count_documents({"last_active": {"$gte": today_midnight}})
-        
+
         errors_today = 0
         from app.config import LOGS_DIR
-        import re
         error_log_path = LOGS_DIR / "errors.log"
         if error_log_path.exists():
             today_str = datetime.now().strftime("%Y-%m-%d")
@@ -184,7 +182,7 @@ async def cb_admin(call: CallbackQuery, i18n: I18n, lang: str, state: FSMContext
                 f"🔥 Active Today (DAU): <code>{dau}</code>\n"
                 f"🔄 Parser Cycles Today: <code>{cycles_today}</code>\n"
                 f"❌ Errors Today: <code>{errors_today}</code>\n")
-        
+
         kb = InlineKeyboardMarkup(inline_keyboard=[
             [InlineKeyboardButton(text=t("dashboard_requests"), callback_data="admin_dash_reqs"),
              InlineKeyboardButton(text=t("dashboard_db"), callback_data="admin_dash_db")],
@@ -202,10 +200,10 @@ async def cb_admin(call: CallbackQuery, i18n: I18n, lang: str, state: FSMContext
         mau_time = datetime.now() - timedelta(days=30)
         wau = await db["Users"].count_documents({"last_active": {"$gte": wau_time}})
         mau = await db["Users"].count_documents({"last_active": {"$gte": mau_time}})
-        
+
         users_list = await db["Users"].find().to_list(length=None)
         total_reqs = sum(u.get("stats", {}).get("total_requests", 0) for u in users_list)
-        
+
         text = (f"📅 <b>Requests & Activity</b>\n\n"
                 f"Weekly Active (WAU): <code>{wau}</code>\n"
                 f"Monthly Active (MAU): <code>{mau}</code>\n"
@@ -220,12 +218,12 @@ async def cb_admin(call: CallbackQuery, i18n: I18n, lang: str, state: FSMContext
         collections = await db.list_collection_names()
         db_stats = await db.command("dbstats")
         size_mb = db_stats.get("dataSize", 0) / (1024 * 1024)
-        
+
         col_text = ""
         for c in collections:
             cnt = await db[c].count_documents({})
             col_text += f" - {c}: <code>{cnt}</code>\n"
-            
+
         text = (f"🗄️ <b>Database Statistics</b>\n\n"
                 f"Total Data Size: <code>{size_mb:.2f} MB</code>\n"
                 f"Collections:\n{col_text}")
@@ -233,10 +231,10 @@ async def cb_admin(call: CallbackQuery, i18n: I18n, lang: str, state: FSMContext
             [InlineKeyboardButton(text=t("back"), callback_data="admin_dashboard")]])
         await call.message.edit_text(text, reply_markup=kb, parse_mode="HTML")
         return
-        
+
     if action == "dash_probs":
-        text = (f"⚠️ <b>Problematic Data Sources</b>\n\n"
-                f"<i>TODO: Tracking for specific sources (e.g. failed exchange endpoints) to be implemented in DB.</i>")
+        text = ("⚠️ <b>Problematic Data Sources</b>\n\n"
+                "<i>TODO: Tracking for specific sources (e.g. failed exchange endpoints) to be implemented in DB.</i>")
         kb = InlineKeyboardMarkup(inline_keyboard=[
             [InlineKeyboardButton(text=t("back"), callback_data="admin_dashboard")]])
         await call.message.edit_text(text, reply_markup=kb, parse_mode="HTML")
@@ -249,13 +247,13 @@ async def cb_admin(call: CallbackQuery, i18n: I18n, lang: str, state: FSMContext
             [InlineKeyboardButton(text=t("back"), callback_data="admin_dashboard")]])
         await call.message.edit_text(f"{t('dashboard_export')}", reply_markup=kb, parse_mode="HTML")
         return
-        
+
     if action == "export_csv":
         await call.answer()
         csv_io = await export_stats_csv(db)
         await call.message.answer_document(BufferedInputFile(csv_io.getvalue(), filename="stats.csv"))
         return
-        
+
     if action == "export_md":
         await call.answer()
         md_io = await export_stats_markdown(db)
@@ -266,14 +264,14 @@ async def cb_admin(call: CallbackQuery, i18n: I18n, lang: str, state: FSMContext
         cfg = get_settings()
         if action == "toggle_parser":
             import dataclasses
-            # need to mutate nested dataclass properly. 
+            # need to mutate nested dataclass properly.
             new_parser = dataclasses.replace(cfg.parser, auto_update=not cfg.parser.auto_update)
             cfg = dataclasses.replace(cfg, parser=new_parser)
             save_settings(cfg)
             await call.answer()
-            
+
         parser_status = t("parser_toggle_on") if cfg.parser.auto_update else t("parser_toggle_off")
-        
+
         text = (f"{t('config_title')}\n\n"
                 f"Auto update: {'✅' if cfg.parser.auto_update else '❌'}\n"
                 f"Interval: {cfg.parser.update_interval_sec}s\n"
@@ -313,15 +311,15 @@ async def cb_admin(call: CallbackQuery, i18n: I18n, lang: str, state: FSMContext
                     f"Python: {platform.python_version()}\n")
         except ImportError:
             res_text = "psutil not installed\n\n"
-            
+
         recent_errs = _get_recent_errors(3)
         err_text = t('diagnostics_recent_errors') + (recent_errs if recent_errs else t('error_none'))
-        
+
         elapsed_ms = int((time.time() - callback_start_time) * 1000)
         time_text = t('diagnostics_response_time').format(ms=elapsed_ms)
-        
+
         text = f"{t('diagnostics_title')}\n\n{res_text}\n{err_text}\n\n{time_text}"
-        
+
         kb = InlineKeyboardMarkup(inline_keyboard=[
             [InlineKeyboardButton(text=t("back"), callback_data="admin_back")]])
         await call.message.edit_text(text, reply_markup=kb, parse_mode="HTML")
@@ -341,14 +339,14 @@ async def cb_admin(call: CallbackQuery, i18n: I18n, lang: str, state: FSMContext
             [InlineKeyboardButton(text=t("back"), callback_data="admin_back")]])
         await call.message.edit_text(text, reply_markup=kb, parse_mode="HTML")
         return
-        
+
     if action == "download_logs":
         # Double check admin explicitly
         if call.from_user.id not in get_settings().bot.admin_ids:
             log.warning(f"Unauthorized log download attempt by {call.from_user.id}")
             await call.answer(t("errors_auth_failed"), show_alert=True)
             return
-            
+
         from app.config import LOGS_DIR
         error_log_path = LOGS_DIR / "errors.log"
         if error_log_path.exists():
@@ -371,24 +369,24 @@ async def process_parser_interval(message: Message, state: FSMContext, i18n: I18
         kb = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text=t("back"), callback_data="admin_config")]])
         await message.answer(t("parser_invalid_interval"), reply_markup=kb)
         return
-        
+
     import dataclasses
     cfg = get_settings()
     new_parser = dataclasses.replace(cfg.parser, update_interval_sec=val)
     cfg = dataclasses.replace(cfg, parser=new_parser)
     save_settings(cfg)
-    
+
     await state.clear()
-    
+
     text = (f"{t('config_title')}\n\n"
             f"Auto update: {'✅' if cfg.parser.auto_update else '❌'}\n"
             f"Interval: {cfg.parser.update_interval_sec}s\n"
             f"Critical: {len(cfg.parser.critical_currencies)}")
-            
+
     parser_status = t("parser_toggle_on") if cfg.parser.auto_update else t("parser_toggle_off")
     kb = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text=parser_status, callback_data="admin_toggle_parser")],
         [InlineKeyboardButton(text=t("parser_change_interval"), callback_data="admin_change_interval")],
         [InlineKeyboardButton(text=t("back"), callback_data="admin_back")]])
-        
+
     await message.answer(text, reply_markup=kb, parse_mode="HTML")

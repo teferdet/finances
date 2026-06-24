@@ -2,7 +2,7 @@
 Bot + Dispatcher factory — creates and wires everything together.
 """
 from __future__ import annotations
-from aiogram import Bot, Dispatcher, F
+from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from app.config import get_settings
