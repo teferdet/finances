@@ -14,9 +14,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import signal
 import sys
-import os
 from app.logger import setup_logging, get_logger
 from app.config import get_settings
 from app.db import get_db, ensure_indexes, close_db
@@ -47,25 +45,25 @@ async def on_startup(bot) -> None:
         try:
             with open(state_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
-            
+
             chat_id = data.get("chat_id")
             message_id = data.get("message_id")
-            
+
             from app.i18n import get_i18n
             from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
             i18n = get_i18n()
             lang = settings.i18n.default_language
-            
+
             kb = InlineKeyboardMarkup(inline_keyboard=[
                 [InlineKeyboardButton(text=str(i18n.get("admin.main_menu", lang)), callback_data="admin_back")]
             ])
             text = str(i18n.get("admin.restart_success", lang))
-            
+
             try:
                 await bot.edit_message_text(chat_id=chat_id, message_id=message_id, text=text, reply_markup=kb, parse_mode="HTML")
             except Exception as e:
                 log.warning("Could not edit restart message: %s", e)
-                
+
             state_path.unlink()
         except Exception as e:
             log.warning("Error handling restart state: %s", e)
@@ -94,7 +92,7 @@ async def on_startup(bot) -> None:
                 BotCommand(command="my_data", description=i18n.get("commands.my_data", lang)),
             ]
             await bot.set_my_commands(commands_list, language_code=lang)
-            
+
         # Default fallback
         commands_list_default = [
             BotCommand(command="start", description=i18n.get("commands.start", "en")),

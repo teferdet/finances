@@ -31,12 +31,12 @@ def crypto_keypad(amount: float, active_currency: str = "USD") -> InlineKeyboard
         ("USD", "$"), ("GBP", "£"), ("EUR", "€"),
         ("UAH", "₴"), ("PLN", "zł"), ("CZK", "Kč")
     ]
-    
+
     buttons = []
     for code, symbol in currencies:
         if code != active_currency:
             buttons.append(InlineKeyboardButton(text=symbol, callback_data=f"crypto {code} {amount}"))
-            
+
     # We expect 5 buttons. Let's group them 3 in first row, 2 in second
     inline_keyboard = []
     if len(buttons) >= 3:
@@ -44,7 +44,7 @@ def crypto_keypad(amount: float, active_currency: str = "USD") -> InlineKeyboard
         inline_keyboard.append(buttons[3:])
     else:
         inline_keyboard.append(buttons)
-        
+
     return InlineKeyboardMarkup(inline_keyboard=inline_keyboard)
 
 

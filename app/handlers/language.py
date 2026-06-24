@@ -9,7 +9,7 @@ from aiogram.filters import Command
 from aiogram.types import Message, CallbackQuery
 
 from app.db import get_db
-from app.i18n import I18n, get_i18n
+from app.i18n import I18n
 from app.keyboards.inline import language_keyboard, LANGUAGE_INFO
 
 router = Router(name="language")

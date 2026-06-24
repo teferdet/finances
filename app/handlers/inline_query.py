@@ -22,56 +22,56 @@ async def inline_calculator(inline_query: InlineQuery, i18n: I18n, lang: str) ->
     if not query:
         # Prompt user to type something
         return
-        
+
     parsed = TextProcessing(query)
     data = parsed.get_results()
-    
+
     if not data:
         # Not a valid currency request
         return
-        
+
     user_id = inline_query.from_user.id
     db = get_db()
-    
+
     # Try to get user's fiat output preferences
     user = await db["Users"].find_one({"_id": user_id}, {"Fiat currency": 1})
     output = (user or {}).get("Fiat currency", [])
     if not output:
         output = ["USD", "EUR", "UAH", "GBP", "PLN"]
-        
+
     codes = parsed.get_codes()
     index = 0 if any(c in ["BTC", "ETH"] for c in codes) else 1
-    
+
     # Perform conversion
     result = await convert_currencies(data, output, index)
-    
+
     if result in ("server error", "bad request"):
         return
-        
+
     # Get emojis for the title
     all_info = await get_currencies_info()
     info_map = {i["code"]: i for i in all_info}
-    
+
     articles = []
-    
+
     for code, amount in data:
         ci = info_map.get(code, {})
         emoji = ci.get("emoji", "")
         symbol = ci.get("symbol", "")
-        
+
         title = f"{emoji} {amount} {code}".strip()
-        
+
         # Calculate result specifically for this one
         single_all_res = await convert_currencies([(code, amount)], output, index)
         if single_all_res in ("server error", "bad request"):
             continue
-            
+
         desc_lines = [line for line in single_all_res.split("\n") if line.strip()]
         desc_all = " | ".join(desc_lines[:3]) + ("..." if len(desc_lines) > 3 else "")
-        
+
         # 1. Option: All Currencies
         t_all = str(i18n.get("inline mode.all_currencies", lang) or "All Selected Currencies")
-        
+
         articles.append(
             InlineQueryResultArticle(
                 id=hashlib.sha256(f"{code}_{amount}_ALL".encode()).hexdigest()[:32],
@@ -83,7 +83,7 @@ async def inline_calculator(inline_query: InlineQuery, i18n: I18n, lang: str) ->
                 )
             )
         )
-        
+
         # 2. Options: Individual currencies
         for line in desc_lines:
             match = re.search(r"([A-Z0-9]{2,10}):", line)
@@ -91,17 +91,17 @@ async def inline_calculator(inline_query: InlineQuery, i18n: I18n, lang: str) ->
                 continue
             target_code = match.group(1)
             target_ci = info_map.get(target_code, {})
-            
+
             # Name of target currency for extra info
             target_name = target_ci.get("name", target_code)
             target_emoji = target_ci.get("emoji", "")
-            
+
             # Format: 🇪🇺 EUR - Euro
             item_title = f"{target_emoji} {target_code} — {target_name}".strip()
-            
+
             # Description: 🇪🇺 EUR: 92.40€
             item_desc = line.strip()
-            
+
             articles.append(
                 InlineQueryResultArticle(
                     id=hashlib.sha256(f"{code}_{amount}_{target_code}".encode()).hexdigest()[:32],
@@ -113,7 +113,7 @@ async def inline_calculator(inline_query: InlineQuery, i18n: I18n, lang: str) ->
                     )
                 )
             )
-        
+
     if articles:
         await inline_query.answer(
             articles,

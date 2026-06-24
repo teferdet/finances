@@ -4,7 +4,6 @@ Stocks handler — /stocks command.
 
 from __future__ import annotations
 
-from time import strftime
 
 from aiogram import Router
 from aiogram.filters import Command

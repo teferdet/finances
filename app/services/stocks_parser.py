@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import asyncio
 import datetime
-from typing import Dict, Optional
+from typing import Optional
 
 from app.config import get_settings
 from app.db import get_db

@@ -9,7 +9,7 @@ from __future__ import annotations
 from typing import Any, Awaitable, Callable, Dict
 
 from aiogram import BaseMiddleware
-from aiogram.types import TelegramObject, Update, Message, CallbackQuery
+from aiogram.types import TelegramObject, Message, CallbackQuery
 
 from app.db import get_db
 from app.i18n import get_i18n

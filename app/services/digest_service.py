@@ -190,7 +190,7 @@ def _build_user_digest(
     holdings.sort(key=lambda x: x["value"], reverse=True)
 
     lines = [
-        f"📊 <b>Weekly Portfolio Digest</b>",
+        "📊 <b>Weekly Portfolio Digest</b>",
         f"Hello, {name}! Here's your weekly summary:\n",
     ]
 

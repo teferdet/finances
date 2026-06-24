@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import asyncio
 import random
-import re
 from datetime import datetime, timezone
 from typing import Dict, Optional
 

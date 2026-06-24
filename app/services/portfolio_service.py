@@ -11,7 +11,7 @@ Responsibilities:
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Any, Optional
+from typing import Any
 
 from app.db import get_db
 from app.logger import get_logger
@@ -101,10 +101,8 @@ async def add_asset(
     db = get_db()
 
     # Auto-detect price if not provided
-    auto_price = False
     if buy_price_usd is None:
         buy_price_usd = await _get_current_usd_price(ticker)
-        auto_price = True
 
     lot = {
         "ticker": ticker,
