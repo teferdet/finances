@@ -290,7 +290,7 @@ async def convert_currencies(
 
             rate_data = doc["rates"][target_code]
             try:
-                rate = float(rate_data.get("reverse_rate", 0))
+                rate = float(rate_data.get("rate", 0))
                 if rate == 0:
                     continue
                 converted_val = amount_target * rate
@@ -313,7 +313,7 @@ async def convert_currencies(
 
                 target_symbol = rate_data.get("symbol", "")
                 if not target_symbol:
-                    target_symbol = _cd_map.get(code, {}).get("symbol", "")
+                    target_symbol = _cd_map.get(target_code, {}).get("symbol", "")
                 results.append(f"{emoji} {code}: {converted}{target_symbol}")
             except Exception:
                 continue
