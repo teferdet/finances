@@ -1,6 +1,7 @@
 import io
 from typing import Dict, Any
 from datetime import datetime
+from app.db import get_fiat_collection_name
 
 
 async def _get_extended_stats(db: Any) -> Dict[str, Any]:
@@ -8,7 +9,7 @@ async def _get_extended_stats(db: Any) -> Dict[str, Any]:
     total_users = await db["Users"].count_documents({})
     dau = await db["Users"].count_documents({"last_active": {"$gte": today_midnight}})
     total_groups = await db["Groups"].count_documents({"Status": "Active"})
-    total_fiat = await db["fiat_rates"].count_documents({})
+    total_fiat = await db[get_fiat_collection_name()].count_documents({})
 
     users_list = await db["Users"].find().to_list(length=None)
     total_reqs = sum(u.get("stats", {}).get("total_requests", 0) for u in users_list)

@@ -63,7 +63,11 @@
         "main rate": "Kurs zum {}\\n{}\\n\\n{}",
         "sub rate": "Kurs zum {}\\n{}",
         "currency_not_found": "😢 Währung <b>{}</b> wurde nicht gefunden oder wird nicht mehr unterstützt.",
-        "unknown command": "😖 Unknown command! To convert currency, use the format: <b>100 USD</b>"
+        "unknown command": "😖 Unknown command! To convert currency, use the format: <b>100 USD</b>",
+        "loading": "🔄 Wechselkurse werden aktualisiert, bitte warten...",
+        "loading_title": "🔄 Daten werden geladen oder aktualisiert...",
+        "loading_desc": "Bitte warten Sie einige Sekunden und geben Sie Ihre Anfrage erneut ein (oder fügen Sie ein Leerzeichen hinzu)",
+        "loading_msg": "⏳ Wechselkurse werden derzeit aktualisiert, bitte versuchen Sie es in einigen Sekunden erneut."
     },
     "inline mode": {
         "server error": "😖 Server ist nicht verfügbar, versuchen Sie es später",
@@ -489,5 +493,10 @@
         "by_language": "🌐 By language:",
         "target_all": "📢 All users",
         "target_lang": "🌐 {lang} only ({count})"
+    },
+    "crypto": {
+        "no_data": "No crypto data available",
+        "not_found": "No data for {currency}",
+        "empty": "No currencies selected"
     }
 }

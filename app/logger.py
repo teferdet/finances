@@ -74,3 +74,20 @@ def setup_logging(level: int = logging.INFO) -> None:
 def get_logger(name: str) -> logging.Logger:
     """Get a named child logger under 'app' namespace."""
     return logging.getLogger(f"app.{name}")
+
+def get_d_admin_logger() -> logging.Logger:
+    """Get logger specifically for dynamic admin actions in the debug menu."""
+    logger = logging.getLogger("d_admin")
+    if not logger.handlers:
+        logger.setLevel(logging.INFO)
+        handler = RotatingFileHandler(
+            LOGS_DIR / "d_admin.log",
+            maxBytes=5 * 1024 * 1024,
+            backupCount=3,
+            encoding="utf-8",
+        )
+        fmt = "%(asctime)s | %(message)s"
+        handler.setFormatter(logging.Formatter(fmt, datefmt="%Y-%m-%d %H:%M:%S"))
+        logger.addHandler(handler)
+        logger.propagate = False
+    return logger

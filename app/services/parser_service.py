@@ -18,7 +18,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from app.config import get_settings, get_currencies_data
-from app.db import get_db
+from app.db import get_db, get_fiat_collection_name
 from app.cache import cache
 from app.logger import get_logger
 from app.services.fiat_parser import FiatParser
@@ -34,7 +34,7 @@ log = get_logger("parser.service")
 async def is_currency_stale(code: str, ttl_hours: int = 5) -> bool:
     """Check if a currency's data in MongoDB is older than ttl_hours."""
     db = get_db()
-    doc = await db["fiat_rates"].find_one({"currency": code.upper()}, {"updated_at": 1})
+    doc = await db[get_fiat_collection_name()].find_one({"currency": code.upper()}, {"updated_at": 1})
     if not doc or "updated_at" not in doc:
         return True
     updated = doc["updated_at"]
@@ -85,7 +85,7 @@ async def get_fiat_rate(base: str, target: str) -> Optional[dict]:
     asyncio.create_task(_bg_ensure(base))
 
     db = get_db()
-    doc = await db["fiat_rates"].find_one({"currency": base}, {"rates": 1})
+    doc = await db[get_fiat_collection_name()].find_one({"currency": base}, {"rates": 1})
     if doc and "rates" in doc:
         return doc["rates"].get(target)
     return None
@@ -107,7 +107,7 @@ async def get_currencies_info() -> list[dict]:
         return cached
 
     db = get_db()
-    cursor = db["fiat_rates"].find({}, {"currency": 1, "rates": 1})
+    cursor = db[get_fiat_collection_name()].find({}, {"currency": 1, "rates": 1})
     docs = await cursor.to_list(length=500)
 
     metadata: dict[str, dict] = {}
@@ -158,7 +158,7 @@ async def convert_currencies(
     index=0: Reverse (targets → base)
     """
     db = get_db()
-    collection = db["fiat_rates"]
+    collection = db[get_fiat_collection_name()]
 
     # Build name→code map
     all_info = await get_currencies_info()
@@ -197,33 +197,63 @@ async def convert_currencies(
             await ensure_currency(code, force=False)
 
             doc = await collection.find_one({"currency": code}, {"rates": 1})
-            if not doc or "rates" not in doc:
-                continue
-            rates = doc["rates"]
-
-            for out_name in output_currencies:
-                target_code = name_to_code.get(out_name)
-                if not target_code and out_name in rates:
-                    target_code = out_name
-                if not target_code or target_code not in rates:
-                    continue
-
-                rate_info = rates[target_code]
-                try:
-                    rate = float(rate_info.get("rate", 0))
-                    if rate == 0:
+            if doc and "rates" in doc:
+                rates = doc["rates"]
+                for out_name in output_currencies:
+                    target_code = name_to_code.get(out_name)
+                    if not target_code and out_name in rates:
+                        target_code = out_name
+                    if not target_code or target_code not in rates:
                         continue
-                    converted = round(amount * rate, 4)
-                    symbol = rate_info.get("symbol", "")
-                    emoji = rate_info.get("emoji", "")
-                    # Fallback to currencies_data.json
-                    if not emoji:
-                        emoji = _cd_map.get(target_code, {}).get("emoji", "")
-                    if not symbol:
-                        symbol = _cd_map.get(target_code, {}).get("symbol", "")
-                    results.append(f"{emoji} {target_code}: {converted}{symbol}")
-                except (ValueError, TypeError):
-                    continue
+
+                    rate_info = rates[target_code]
+                    try:
+                        rate = float(rate_info.get("rate", 0))
+                        if rate == 0:
+                            continue
+                        converted = round(amount * rate, 4)
+                        symbol = rate_info.get("symbol", "")
+                        emoji = rate_info.get("emoji", "")
+                        if not emoji:
+                            emoji = _cd_map.get(target_code, {}).get("emoji", "")
+                        if not symbol:
+                            symbol = _cd_map.get(target_code, {}).get("symbol", "")
+                        results.append(f"{emoji} {target_code}: {converted}{symbol}")
+                    except (ValueError, TypeError):
+                        continue
+            else:
+                # Fallback: check inside output currency documents
+                base_codes = [name_to_code.get(n) for n in output_currencies]
+                base_codes = [c for c in base_codes if c]
+                for bcode in base_codes:
+                    bdoc = await collection.find_one({"currency": bcode}, {"rates": 1})
+                    if not bdoc or "rates" not in bdoc:
+                        continue
+                    if code not in bdoc["rates"]:
+                        continue
+                    
+                    rate_info = bdoc["rates"][code]
+                    try:
+                        rate = float(rate_info.get("reverse_rate", 0))
+                        if rate == 0:
+                            continue
+                        converted = round(amount * rate, 4)
+                        
+                        target_emoji = ""
+                        target_symbol = ""
+                        for info in all_info:
+                            if info["code"] == bcode:
+                                target_emoji = info.get("emoji", "")
+                                target_symbol = info.get("symbol", "")
+                                break
+                        if not target_emoji:
+                            target_emoji = _cd_map.get(bcode, {}).get("emoji", "")
+                        if not target_symbol:
+                            target_symbol = _cd_map.get(bcode, {}).get("symbol", "")
+                            
+                        results.append(f"{target_emoji} {bcode}: {converted}{target_symbol}")
+                    except (ValueError, TypeError):
+                        continue
 
     else:
         # Reverse mode: targets → base
@@ -260,7 +290,7 @@ async def convert_currencies(
 
             rate_data = doc["rates"][target_code]
             try:
-                rate = float(rate_data.get("rate", 0))
+                rate = float(rate_data.get("reverse_rate", 0))
                 if rate == 0:
                     continue
                 converted_val = amount_target * rate
@@ -298,6 +328,11 @@ async def convert_currencies(
 
 async def run_parser_loop() -> None:
     """Main parser loop — runs as background asyncio task."""
+    import sys
+    if "--debug" in sys.argv or "debug" in sys.argv:
+        log.info("Parser service disabled in debug mode.")
+        return
+
     log.info("Parser service starting...")
 
     # Initial population
@@ -339,7 +374,7 @@ async def run_parser_loop() -> None:
 
 async def _initial_population() -> None:
     db = get_db()
-    count = await db["fiat_rates"].count_documents({})
+    count = await db[get_fiat_collection_name()].count_documents({})
     cfg = get_settings().parser
     if count < len(cfg.critical_currencies) // 2:
         log.info("Initial population needed...")

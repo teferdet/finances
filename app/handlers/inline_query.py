@@ -43,8 +43,31 @@ async def inline_calculator(inline_query: InlineQuery, i18n: I18n, lang: str) ->
     codes = parsed.get_codes()
     index = 0 if any(c in ["BTC", "ETH"] for c in codes) else 1
 
-    # Perform conversion
-    result = await convert_currencies(data, output, index)
+    import asyncio
+    convert_task = asyncio.create_task(convert_currencies(data, output, index))
+    done, pending = await asyncio.wait([convert_task], timeout=0.5)
+    
+    if not done:
+        t_loading = str(i18n.get("exchange rate.loading_title", lang))
+        t_desc = str(i18n.get("exchange rate.loading_desc", lang))
+        t_msg = str(i18n.get("exchange rate.loading_msg", lang))
+        await inline_query.answer(
+            [
+                InlineQueryResultArticle(
+                    id="loading_id",
+                    title=t_loading,
+                    description=t_desc,
+                    input_message_content=InputTextMessageContent(
+                        message_text=t_msg
+                    ),
+                )
+            ],
+            cache_time=0,
+            is_personal=True,
+        )
+        return
+
+    result = convert_task.result()
 
     if result in ("server error", "bad request"):
         return
@@ -78,6 +101,8 @@ async def inline_calculator(inline_query: InlineQuery, i18n: I18n, lang: str) ->
                 id=hashlib.sha256(f"{code}_{amount}_ALL".encode()).hexdigest()[:32],
                 title=f"🌐 {t_all} ({len(output)})",
                 description=desc_all,
+                hide_url=True,
+                thumbnail_url="https://flagcdn.com/w160/un.jpg",
                 input_message_content=InputTextMessageContent(
                     message_text=f"💱 <b>{title}</b>\n\n{single_all_res}", parse_mode="HTML"
                 ),
@@ -107,6 +132,8 @@ async def inline_calculator(inline_query: InlineQuery, i18n: I18n, lang: str) ->
                     id=hashlib.sha256(f"{code}_{amount}_{target_code}".encode()).hexdigest()[:32],
                     title=item_title,
                     description=item_desc,
+                    hide_url=True,
+                    thumbnail_url=f"https://flagcdn.com/w160/{target_code[:2].lower()}.jpg",
                     input_message_content=InputTextMessageContent(
                         message_text=f"💱 <b>{title}</b> ➡️ <b>{item_desc}</b>", parse_mode="HTML"
                     ),

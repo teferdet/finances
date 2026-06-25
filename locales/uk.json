@@ -63,7 +63,11 @@
         "main rate": "📈 <b>Курс валют станом на {}</b>\n{}\n\n{}",
         "sub rate": "📈 <b>Курс валют станом на {}</b>\n{}",
         "currency_not_found": "😢 На жаль, валюту <b>{}</b> не знайдено або вона більше не підтримується.",
-        "unknown command": "😖 Unknown command! To convert currency, use the format: <b>100 USD</b>"
+        "unknown command": "😖 Unknown command! To convert currency, use the format: <b>100 USD</b>",
+        "loading": "🔄 Оновлення актуальних курсів валют, зачекайте хвилиночку...",
+        "loading_title": "🔄 Завантаження або оновлення даних...",
+        "loading_desc": "Будь ласка, зачекайте пару секунд і введіть запит ще раз (або додайте пробіл)",
+        "loading_msg": "⏳ Курси валют зараз оновлюються, будь ласка, спробуйте ще раз через пару секунд."
     },
     "inline mode": {
         "server error": "😖 Сервер тимчасово ліг. Спробуйте трішки пізніше.",
@@ -495,5 +499,10 @@
         "by_language": "🌐 За мовою:",
         "target_all": "📢 Всі користувачі",
         "target_lang": "🌐 Тільки {lang} ({count})"
+    },
+    "crypto": {
+        "no_data": "Немає даних по криптовалютах",
+        "not_found": "Немає даних для {currency}",
+        "empty": "Валюти не обрані"
     }
 }

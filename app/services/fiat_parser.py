@@ -16,7 +16,7 @@ from curl_cffi.requests import AsyncSession
 from bs4 import BeautifulSoup
 
 from app.config import get_settings, get_currencies_data
-from app.db import get_db
+from app.db import get_db, get_fiat_collection_name
 from app.logger import get_logger
 
 log = get_logger("parser.fiat")
@@ -193,7 +193,7 @@ class FiatParser:
             },
             "updated_at": datetime.now(timezone.utc),
         }
-        await db["fiat_rates"].update_one(
+        await db[get_fiat_collection_name()].update_one(
             {"currency": code},
             {"$set": doc, "$setOnInsert": {"created_at": datetime.now(timezone.utc)}},
             upsert=True,

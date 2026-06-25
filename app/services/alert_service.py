@@ -17,7 +17,7 @@ from typing import Optional
 
 from aiogram import Bot
 
-from app.db import get_db
+from app.db import get_db, get_fiat_collection_name
 from app.i18n import get_i18n
 from app.logger import get_logger
 
@@ -143,7 +143,7 @@ async def _get_pair_price(currency_from: str, currency_to: str) -> Optional[floa
 async def _get_fiat_rate(base: str, target: str) -> Optional[float]:
     """Get fiat exchange rate from fiat_rates collection."""
     db = get_db()
-    doc = await db["fiat_rates"].find_one({"currency": base}, {"rates": 1})
+    doc = await db[get_fiat_collection_name()].find_one({"currency": base}, {"rates": 1})
     if doc and "rates" in doc:
         rate_info = doc["rates"].get(target)
         if rate_info:

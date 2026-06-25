@@ -63,7 +63,11 @@
         "main rate": "Taux au {}\\n{}\\n\\n{}",
         "sub rate": "Taux au {}\\n{}",
         "currency_not_found": "😢 La devise <b>{}</b> n'a pas été trouvée ou n'est plus prise en charge.",
-        "unknown command": "😖 Unknown command! To convert currency, use the format: <b>100 USD</b>"
+        "unknown command": "😖 Unknown command! To convert currency, use the format: <b>100 USD</b>",
+        "loading": "🔄 Mise à jour des taux de change, veuillez patienter...",
+        "loading_title": "🔄 Chargement ou mise à jour des données...",
+        "loading_desc": "Veuillez patienter quelques secondes et saisir à nouveau votre requête (ou ajouter un espace)",
+        "loading_msg": "⏳ Les taux de change sont en cours de mise à jour, veuillez réessayer dans quelques secondes."
     },
     "inline mode": {
         "server error": "😖 Le serveur est indisponible, réessayez plus tard",
@@ -489,5 +493,10 @@
         "by_language": "🌐 By language:",
         "target_all": "📢 All users",
         "target_lang": "🌐 {lang} only ({count})"
+    },
+    "crypto": {
+        "no_data": "No crypto data available",
+        "not_found": "No data for {currency}",
+        "empty": "No currencies selected"
     }
 }

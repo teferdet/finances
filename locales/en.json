@@ -63,7 +63,11 @@
         "main rate": "📈 <b>Exchange Rates as of {}</b>\n{}\n\n{}",
         "sub rate": "📈 <b>Exchange Rate as of {}</b>\n{}",
         "currency_not_found": "😢 Unfortunately, the currency <b>{}</b> was not found or is no longer supported.",
-        "unknown command": "😖 Unknown command! To convert currency, use the format: <b>100 USD</b>"
+        "unknown command": "😖 Unknown command! To convert currency, use the format: <b>100 USD</b>",
+        "loading": "🔄 Updating exchange rates, please wait a moment...",
+        "loading_title": "🔄 Loading or updating data...",
+        "loading_desc": "Please wait a few seconds and enter your query again (or add a space)",
+        "loading_msg": "⏳ Exchange rates are currently updating, please try again in a few seconds."
     },
     "inline mode": {
         "server error": "😖 The server is down. Please try again later.",
@@ -493,5 +497,10 @@
         "by_language": "🌐 By language:",
         "target_all": "📢 All users",
         "target_lang": "🌐 {lang} only ({count})"
+    },
+    "crypto": {
+        "no_data": "No crypto data available",
+        "not_found": "No data for {currency}",
+        "empty": "No currencies selected"
     }
 }

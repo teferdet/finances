@@ -175,6 +175,12 @@ async def main() -> None:
     if settings.bot.backup_enabled:
         backup_task = asyncio.create_task(run_daily_backup_loop(settings.database.mongo_uri))
         background_tasks.append(("backup_scheduler", backup_task))
+        
+    import sys
+    if "--debug" in sys.argv or "debug" in sys.argv:
+        from app.debug_cli import run_debug_cli
+        debug_cli_task = asyncio.create_task(run_debug_cli())
+        background_tasks.append(("debug_cli", debug_cli_task))
 
     log.info("Started %d background tasks", len(background_tasks))
 

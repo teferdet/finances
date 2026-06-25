@@ -13,7 +13,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any
 
-from app.db import get_db
+from app.db import get_db, get_fiat_collection_name
 from app.logger import get_logger
 
 log = get_logger("portfolio.service")
@@ -446,7 +446,7 @@ async def _get_usd_to_base_rate(base_currency: str) -> float:
     db = get_db()
 
     # Try USD → base_currency
-    fiat_doc = await db["fiat_rates"].find_one({"currency": "USD"})
+    fiat_doc = await db[get_fiat_collection_name()].find_one({"currency": "USD"})
     if fiat_doc and "rates" in fiat_doc:
         rate_info = fiat_doc["rates"].get(base_currency)
         if rate_info:
@@ -456,7 +456,7 @@ async def _get_usd_to_base_rate(base_currency: str) -> float:
                 pass
 
     # Try inverse: base_currency → USD
-    fiat_doc2 = await db["fiat_rates"].find_one({"currency": base_currency})
+    fiat_doc2 = await db[get_fiat_collection_name()].find_one({"currency": base_currency})
     if fiat_doc2 and "rates" in fiat_doc2:
         usd_info = fiat_doc2["rates"].get("USD")
         if usd_info:
@@ -473,7 +473,7 @@ async def _get_fiat_usd_price(currency_code: str) -> float | None:
     db = get_db()
 
     # Try: USD rates doc, look for currency_code
-    fiat_doc = await db["fiat_rates"].find_one({"currency": "USD"})
+    fiat_doc = await db[get_fiat_collection_name()].find_one({"currency": "USD"})
     if fiat_doc and "rates" in fiat_doc:
         rate_info = fiat_doc["rates"].get(currency_code)
         if rate_info:
@@ -485,7 +485,7 @@ async def _get_fiat_usd_price(currency_code: str) -> float | None:
                 pass
 
     # Try inverse: currency_code rates doc, look for USD
-    fiat_doc2 = await db["fiat_rates"].find_one({"currency": currency_code})
+    fiat_doc2 = await db[get_fiat_collection_name()].find_one({"currency": currency_code})
     if fiat_doc2 and "rates" in fiat_doc2:
         usd_info = fiat_doc2["rates"].get("USD")
         if usd_info:

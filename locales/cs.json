@@ -63,7 +63,11 @@
         "main rate": "Kurz k {}\\n{}\\n\\n{}",
         "sub rate": "Kurz k {}\\n{}",
         "currency_not_found": "😢 Měna <b>{}</b> nebyla nalezena nebo již není podporována.",
-        "unknown command": "😖 Unknown command! To convert currency, use the format: <b>100 USD</b>"
+        "unknown command": "😖 Unknown command! To convert currency, use the format: <b>100 USD</b>",
+        "loading": "🔄 Aktualizace směnných kurzů, počkejte chvíli...",
+        "loading_title": "🔄 Načítání nebo aktualizace dat...",
+        "loading_desc": "Počkejte několik sekund a zadejte dotaz znovu (nebo přidejte mezeru)",
+        "loading_msg": "⏳ Směnné kurzy se právě aktualizují, zkuste to prosím znovu za několik sekund."
     },
     "inline mode": {
         "server error": "😖 Server je nedostupný, zkuste to později",
@@ -528,5 +532,10 @@
         "by_language": "🌐 By language:",
         "target_all": "📢 All users",
         "target_lang": "🌐 {lang} only ({count})"
+    },
+    "crypto": {
+        "no_data": "No crypto data available",
+        "not_found": "No data for {currency}",
+        "empty": "No currencies selected"
     }
 }

@@ -18,15 +18,15 @@ from app.keyboards.inline import crypto_keypad
 router = Router(name="crypto")
 
 
-async def _get_crypto_data(currency: str, amount: float, user_id: int) -> str:
+async def _get_crypto_data(currency: str, amount: float, user_id: int, i18n: I18n, lang: str) -> str:
     """Retrieve and format cryptocurrency data for a user."""
     db = get_db()
     crypto_doc = await db["Crypto&Stocks"].find_one({"_id": "crypto"})
     if not crypto_doc:
-        return "No crypto data available"
+        return str(i18n.get("crypto.no_data", lang))
 
     if currency not in crypto_doc:
-        return f"No data for {currency}"
+        return str(i18n.get("crypto.not_found", lang)).format(currency=currency)
 
     currency_data = crypto_doc[currency]
 
@@ -40,7 +40,7 @@ async def _get_crypto_data(currency: str, amount: float, user_id: int) -> str:
             calc = round(price * amount, 4)
             lines.append(f"💵 {name}/{currency.upper()} {calc}{symbol}")
 
-    return "\n".join(lines) if lines else "No currencies selected"
+    return "\n".join(lines) if lines else str(i18n.get("crypto.empty", lang))
 
 
 @router.message(Command("crypto"))
@@ -63,7 +63,7 @@ async def cmd_crypto(message: Message, i18n: I18n, lang: str) -> None:
         if nums:
             amount = float(nums[0])
 
-    value = await _get_crypto_data(currency, amount, message.from_user.id)
+    value = await _get_crypto_data(currency, amount, message.from_user.id, i18n, lang)
     day = strftime("%d.%m.%y")
     text = i18n.get("exchange rate.sub rate", lang)
     text = str(text).format(day, value)
@@ -80,7 +80,7 @@ async def cb_crypto(call: CallbackQuery, i18n: I18n, lang: str) -> None:
     currency = parts[1]
     amount = float(parts[2])
 
-    value = await _get_crypto_data(currency, amount, call.from_user.id)
+    value = await _get_crypto_data(currency, amount, call.from_user.id, i18n, lang)
     day = strftime("%d.%m.%y")
     text = i18n.get("exchange rate.sub rate", lang)
     text = str(text).format(day, value)

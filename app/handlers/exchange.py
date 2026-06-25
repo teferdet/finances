@@ -70,8 +70,17 @@ async def handle_exchange(message: Message, i18n: I18n, lang: str) -> None:
     if len(codes) == 1 and not is_crypto:
         keypad = er_keypad(i18n, lang, data[0][0], data[0][1], index)
 
-    result = await convert_currencies(data, output, index)
-
+    import asyncio
+    convert_task = asyncio.create_task(convert_currencies(data, output, index))
+    done, pending = await asyncio.wait([convert_task], timeout=0.5)
+    
+    loading_msg = None
+    if not done:
+        loading_text = str(i18n.get("exchange rate.loading", lang))
+        loading_msg = await message.answer(str(loading_text))
+        await convert_task
+        
+    result = convert_task.result()
     day = strftime("%d.%m.%y")
     er_text = i18n.get_section("exchange rate", lang)
 
@@ -82,7 +91,10 @@ async def handle_exchange(message: Message, i18n: I18n, lang: str) -> None:
         template = str(er_text.get("main rate", "Rate as of {}\n{}\n\n{}"))
         text_out = template.format(day, info, result)
 
-    await message.answer(text_out, reply_markup=keypad)
+    if loading_msg:
+        await loading_msg.edit_text(text_out, reply_markup=keypad)
+    else:
+        await message.answer(text_out, reply_markup=keypad)
 
 
 # ── Callback for alternative conversion ─────────────────────────────
@@ -103,7 +115,20 @@ async def cb_alternative_convert(call: CallbackQuery, i18n: I18n, lang: str) -> 
 
     # Flip the index
     new_index = 0 if index == 1 else 1
-    result = await convert_currencies([(currency, amount)], output, new_index)
+    
+    import asyncio
+    convert_task = asyncio.create_task(convert_currencies([(currency, amount)], output, new_index))
+    done, pending = await asyncio.wait([convert_task], timeout=0.5)
+    
+    if not done:
+        loading_text = str(i18n.get("exchange rate.loading", lang))
+        try:
+            await call.message.edit_text(str(loading_text), reply_markup=None)
+        except Exception:
+            pass
+        await convert_task
+        
+    result = convert_task.result()
 
     day = strftime("%d.%m.%y")
     er_text = i18n.get_section("exchange rate", lang)
