@@ -168,6 +168,39 @@ def group_delete_kb(i18n: I18n, lang: str) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text=text, callback_data="delete")]])
 
 
+def user_groups_list_kb(groups: list[dict], bot_username: str, i18n: I18n, lang: str) -> InlineKeyboardMarkup:
+    from aiogram.utils.keyboard import InlineKeyboardBuilder
+    builder = InlineKeyboardBuilder()
+    
+    for g in groups:
+        title = g.get("title", f"Group {g.get('id')}")
+        builder.row(InlineKeyboardButton(text=title, callback_data=f"user_group:{g.get('id')}"))
+        
+    ug_text = i18n.get_section("settings.user_groups", lang)
+    add_group_text = ug_text.get("add_group_btn", "➕ Add group")
+    builder.row(InlineKeyboardButton(text=add_group_text, url=f"https://t.me/{bot_username}?startgroup=botstart"))
+        
+    back_text = i18n.get("keyboard.settings.back", lang) or "◀️ Back"
+    builder.row(InlineKeyboardButton(text=back_text, callback_data="menu"))
+    return builder.as_markup()
+
+
+def user_group_settings_kb(chat_id: int, i18n: I18n, lang: str) -> InlineKeyboardMarkup:
+    from aiogram.utils.keyboard import InlineKeyboardBuilder
+    builder = InlineKeyboardBuilder()
+    
+    s = i18n.get_section("keyboard.settings", lang)
+    in_text = s.get("input_currencies", "📥 Input Currencies")
+    out_text = s.get("output_currencies", "📤 Output Currencies")
+    back_text = s.get("back", "◀️ Back")
+    
+    builder.row(InlineKeyboardButton(text=in_text, callback_data=f"user_group:input:{chat_id}"))
+    builder.row(InlineKeyboardButton(text=out_text, callback_data=f"user_group:output:{chat_id}"))
+    builder.row(InlineKeyboardButton(text=back_text, callback_data="groups"))
+    
+    return builder.as_markup()
+
+
 # ── Paginated Currency Selector ─────────────────────────────────────
 
 

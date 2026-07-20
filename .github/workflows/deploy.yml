@@ -39,10 +39,13 @@ jobs:
               echo "📦 First deploy — cloning repository..."
               git clone "$REPO_URL" "$APP_DIR"
               echo "" > /tmp/.finances_prev_commit
+              echo "" > /tmp/.finances_prev_req_hash
             else
               echo "🔄 Pulling latest changes..."
               cd "$APP_DIR"
               git rev-parse HEAD > /tmp/.finances_prev_commit
+              # Save hash of current requirements to detect changes
+              sha256sum "$APP_DIR/requirements.txt" | awk '{print $1}' > /tmp/.finances_prev_req_hash
               git remote set-url origin "$REPO_URL"
               git fetch origin main
               git reset --hard origin/main
@@ -78,7 +81,7 @@ jobs:
                 'bot': {
                     'token': os.environ.get('BOT_TOKEN', ''),
                     'admin_ids': json.loads(os.environ.get('BOT_ADMIN_IDS', '[1693890078]')),
-                    'version': 'finances v6.1.5 \'black & blue\''
+                    'version': 'finances v6.2 \\'a lot like Vegas\\''
                 },
                 'database': {
                     'mongo_uri': os.environ.get('MONGO_URI', ''),
@@ -150,7 +153,7 @@ jobs:
       # ── 3. Install Dependencies ──────────────────────────────────
       - name: 🐍 Install Dependencies
         uses: appleboy/ssh-action@v1.0.3
-        timeout-minutes: 5
+        timeout-minutes: 10
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USERNAME }}
@@ -160,16 +163,134 @@ jobs:
             set -e
             APP_DIR="/home/ubuntu/finances"
             VENV_DIR="$APP_DIR/venv"
+            REQ_FILE="$APP_DIR/requirements.txt"
+            CACHE_DIR="$HOME/.cache/pip-deploy"
 
+            # ── Create venv if missing ─────────────────────────────
             if [ ! -d "$VENV_DIR" ]; then
-              echo "🐍 Creating virtual environment..."
+              echo "🐍 Creating virtual environment (Python $(python3 --version))..."
               python3 -m venv "$VENV_DIR"
+              echo "✅ venv created at $VENV_DIR"
             fi
 
-            echo "📥 Installing / updating dependencies..."
-            "$VENV_DIR/bin/pip" install --upgrade pip -q
-            "$VENV_DIR/bin/pip" install -r "$APP_DIR/requirements.txt" -q
-            echo "✅ Dependencies installed"
+            PIP="$VENV_DIR/bin/pip"
+            PYTHON="$VENV_DIR/bin/python"
+
+            # ── Upgrade pip & setuptools first ────────────────────
+            echo "⬆️  Upgrading pip + setuptools + wheel..."
+            "$PIP" install --quiet --upgrade pip setuptools wheel
+            echo "   pip $("$PIP" --version | awk '{print $2}')"
+
+            # ── Detect if requirements.txt changed ────────────────
+            CURRENT_HASH=$(sha256sum "$REQ_FILE" | awk '{print $1}')
+            PREV_HASH=$(cat /tmp/.finances_prev_req_hash 2>/dev/null || echo "")
+
+            if [ "$CURRENT_HASH" = "$PREV_HASH" ] && [ -f "$VENV_DIR/pyvenv.cfg" ]; then
+              echo "📋 requirements.txt unchanged — running fast integrity check..."
+              MISSING=$("$PIP" check 2>&1 || true)
+              if [ -z "$MISSING" ]; then
+                echo "✅ All packages OK — skipping full install (requirements unchanged)"
+                # Still run verify step below
+              else
+                echo "⚠️  Dependency issues detected, forcing reinstall:"
+                echo "$MISSING"
+              fi
+            fi
+
+            # ── Install / sync all dependencies ───────────────────
+            echo "📥 Installing packages from requirements.txt..."
+            "$PIP" install \
+              --requirement "$REQ_FILE" \
+              --cache-dir "$CACHE_DIR" \
+              --upgrade \
+              --upgrade-strategy only-if-needed \
+              2>&1 | tee /tmp/.pip_install_log.txt
+
+            INSTALL_EXIT=${PIPESTATUS[0]}
+            if [ "$INSTALL_EXIT" -ne 0 ]; then
+              echo ""
+              echo "❌ pip install FAILED (exit code $INSTALL_EXIT)"
+              echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+              echo "Full pip output:"
+              cat /tmp/.pip_install_log.txt
+              echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+              echo ""
+              echo "💡 To fix locally, run:"
+              echo "   pip install -r requirements.txt"
+              exit 1
+            fi
+
+            # ── Post-install integrity check ───────────────────────
+            echo ""
+            echo "🔍 Verifying installed packages..."
+            CHECK_OUTPUT=$("$PIP" check 2>&1)
+            CHECK_EXIT=$?
+            if [ "$CHECK_EXIT" -ne 0 ]; then
+              echo "⚠️  Dependency conflicts detected:"
+              echo "$CHECK_OUTPUT"
+              echo ""
+              echo "🔧 Attempting to resolve conflicts..."
+              "$PIP" install \
+                --requirement "$REQ_FILE" \
+                --cache-dir "$CACHE_DIR" \
+                --force-reinstall \
+                --quiet
+              # Re-check
+              "$PIP" check && echo "✅ Conflicts resolved!" || {
+                echo "❌ Could not resolve dependency conflicts. Manual intervention required."
+                exit 1
+              }
+            else
+              echo "✅ All packages installed and consistent"
+            fi
+
+            # ── Verify critical imports ────────────────────────────
+            echo ""
+            echo "🧪 Verifying critical package imports..."
+            IMPORT_ERRORS=()
+            declare -A PACKAGES=(
+              ["aiogram"]="aiogram"
+              ["motor"]="motor"
+              ["pymongo"]="pymongo"
+              ["curl_cffi"]="curl_cffi"
+              ["aiohttp"]="aiohttp"
+              ["bs4"]="bs4"
+              ["yfinance"]="yfinance"
+              ["pandas"]="pandas"
+              ["psutil"]="psutil"
+              ["cryptography"]="cryptography"
+            )
+            for pkg in "${!PACKAGES[@]}"; do
+              module="${PACKAGES[$pkg]}"
+              if "$PYTHON" -c "import $module" 2>/dev/null; then
+                VERSION=$("$PYTHON" -c "import $module; v = getattr($module, '__version__', getattr($module, 'version', '?')); print(v)" 2>/dev/null || echo "?")
+                echo "   ✅ $pkg ($VERSION)"
+              else
+                echo "   ❌ $pkg — import FAILED"
+                IMPORT_ERRORS+=("$pkg")
+              fi
+            done
+
+            if [ "${#IMPORT_ERRORS[@]}" -gt 0 ]; then
+              echo ""
+              echo "❌ The following packages failed to import:"
+              for err in "${IMPORT_ERRORS[@]}"; do
+                echo "   ✗ $err"
+              done
+              echo ""
+              echo "💡 Run on the server:"
+              echo "   pip install ${IMPORT_ERRORS[*]}"
+              exit 1
+            fi
+
+            # ── Show installed package summary ─────────────────────
+            echo ""
+            echo "📦 Installed packages summary:"
+            "$PIP" list --format=columns 2>/dev/null | head -40
+            TOTAL=$("$PIP" list 2>/dev/null | tail -n +3 | wc -l)
+            echo "   ... $TOTAL packages total in venv"
+            echo ""
+            echo "✅ Dependencies step complete"
 
       # ── 4. Configure Systemd ─────────────────────────────────────
       - name: ⚙️ Configure Systemd Service
@@ -241,7 +362,12 @@ jobs:
                 echo "⏪ Rolling back to commit $PREV_COMMIT..."
                 cd "$APP_DIR"
                 git reset --hard "$PREV_COMMIT"
-                "$VENV_DIR/bin/pip" install -r requirements.txt -q
+                echo "📥 Restoring dependencies for previous commit..."
+                "$VENV_DIR/bin/pip" install \
+                  --requirement "$APP_DIR/requirements.txt" \
+                  --upgrade \
+                  --upgrade-strategy only-if-needed \
+                  --quiet
                 sudo systemctl restart finances-bot.service
                 sleep 3
                 if sudo systemctl is-active --quiet finances-bot.service; then
@@ -255,4 +381,5 @@ jobs:
 
             # Cleanup
             rm -f /tmp/.finances_prev_commit
+            rm -f /tmp/.finances_prev_req_hash
             echo "🎉 Deploy completed successfully!"

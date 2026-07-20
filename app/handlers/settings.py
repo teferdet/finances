@@ -154,6 +154,17 @@ async def cb_data_processing(call: CallbackQuery, i18n: I18n, lang: str) -> None
         update_type = cd.get("update type")
         if "group" in cd:
             await db["Groups"].update_one({"_id": cd["group"]}, {"$set": {prefix: data}})
+            chat_id = cd["group"]
+            del cd["group"]
+            cd["update data"] = []
+            await cache.json_set(key, cd)
+            await call.answer(stx.get("success", "Saved"), show_alert=False)
+            
+            from app.keyboards.inline import user_group_settings_kb
+            ug_text = i18n.get_section("settings.user_groups", lang)
+            group_settings_text = ug_text.get("settings_title", "⚙️ Group Settings")
+            await call.message.edit_text(group_settings_text, reply_markup=user_group_settings_kb(chat_id, i18n, lang))
+            return
         elif update_type:
             await db["Users"].update_one({"_id": uid}, {"$set": {update_type: data}})
         await call.answer(stx.get("success", "Saved"), show_alert=False)
@@ -165,6 +176,19 @@ async def cb_data_processing(call: CallbackQuery, i18n: I18n, lang: str) -> None
         return
 
     if command == "cancel":
+        if "group" in cd:
+            chat_id = cd["group"]
+            del cd["group"]
+            cd["update data"] = []
+            await cache.json_set(key, cd)
+            await call.answer(stx.get("exit", "Cancelled"), show_alert=False)
+            
+            from app.keyboards.inline import user_group_settings_kb
+            ug_text = i18n.get_section("settings.user_groups", lang)
+            group_settings_text = ug_text.get("settings_title", "⚙️ Group Settings")
+            await call.message.edit_text(group_settings_text, reply_markup=user_group_settings_kb(chat_id, i18n, lang))
+            return
+            
         cd["update data"] = []
         await cache.json_set(key, cd)
         await call.answer(stx.get("exit", "Cancelled"), show_alert=False)
@@ -390,3 +414,81 @@ async def cb_delete(call: CallbackQuery, i18n: I18n, lang: str) -> None:
         await call.message.delete()
     except Exception:
         await call.answer(str(i18n.get("other.error", lang)), show_alert=False)
+
+
+# ── User Group Settings ────────────────────────────────────────────
+
+
+@router.callback_query(F.data == "groups")
+async def cb_user_groups_list(call: CallbackQuery, i18n: I18n, lang: str) -> None:
+    uid = call.from_user.id
+    db = get_db()
+    user = await db["Users"].find_one({"_id": uid}, {"Groups": 1})
+    groups = (user or {}).get("Groups", [])
+    
+    bot_info = await call.bot.get_me()
+    bot_username = bot_info.username
+    
+    ug_text = i18n.get_section("settings.user_groups", lang)
+    if not groups:
+        text = str(ug_text.get("no_groups", "You haven't added the bot to any groups yet. Add it to a group to configure it here!"))
+        from app.keyboards.inline import user_groups_list_kb
+        await call.message.edit_text(text, reply_markup=user_groups_list_kb([], bot_username, i18n, lang), parse_mode="HTML")
+        return
+        
+    text = str(ug_text.get("select_group", "Select a group to configure:"))
+    from app.keyboards.inline import user_groups_list_kb
+    await call.message.edit_text(text, reply_markup=user_groups_list_kb(groups, bot_username, i18n, lang), parse_mode="HTML")
+
+
+@router.callback_query(F.data.startswith("user_group:"))
+async def cb_user_group_settings(call: CallbackQuery, i18n: I18n, lang: str) -> None:
+    parts = call.data.split(":")
+    db = get_db()
+    uid = call.from_user.id
+    
+    if len(parts) == 2:
+        # F.data == "user_group:{chat_id}"
+        chat_id = int(parts[1])
+        group = await db["Groups"].find_one({"_id": chat_id}, {"Status": 1})
+        
+        ug_text = i18n.get_section("settings.user_groups", lang)
+        if not group or group.get("Status") != "Active":
+            text = str(ug_text.get("group_inactive", "This group is inactive or the bot was removed."))
+            await call.answer(text, show_alert=True)
+            return
+            
+        group_settings_text = ug_text.get("settings_title", "⚙️ Group Settings")
+        from app.keyboards.inline import user_group_settings_kb
+        await call.message.edit_text(group_settings_text, reply_markup=user_group_settings_kb(chat_id, i18n, lang), parse_mode="HTML")
+        return
+        
+    if len(parts) == 3:
+        # F.data == "user_group:{input/output}:{chat_id}"
+        action = parts[1]
+        chat_id = int(parts[2])
+        
+        group = await db["Groups"].find_one({"_id": chat_id}, {"Input": 1, "Output": 1})
+        if not group:
+            await call.answer()
+            return
+            
+        key = await _cache_key(uid)
+        cd = (await cache.json_get(key)) or {}
+        
+        prefix = "Input" if action == "input" else "Output"
+        cd["update data"] = group.get(prefix, [])
+        cd["group"] = chat_id
+        cd["page"] = 0
+        await cache.json_set(key, cd)
+        
+        currencies = get_currencies_data()
+        stx = i18n.get_section("settings", lang)
+        desc = str(i18n.get("settings.output", lang))
+        selected_line = _selected_text(stx, cd["update data"])
+        text = f"{desc}\n\n{selected_line}"
+        
+        await call.message.edit_text(
+            text, reply_markup=paginated_currency_keyboard(currencies, 0, prefix, i18n, lang, selected=cd["update data"])
+        )
+

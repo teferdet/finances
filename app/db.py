@@ -53,6 +53,8 @@ async def ensure_indexes() -> None:
         await db["Users"].create_index("Username")
         await db["Users"].create_index("last_active")
         await db["Groups"].create_index("Status")
+        await db["groups"].create_index("chat_id", unique=True)
+        await db["groups"].create_index("is_active")
         await db["Alerts"].create_index("user_id")
         await db["Alerts"].create_index([("user_id", 1), ("triggered", 1)])
         await db["Alerts"].create_index([("triggered", 1), ("currency_from", 1)])

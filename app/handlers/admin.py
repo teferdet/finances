@@ -63,6 +63,7 @@ def _admin_kb(i18n: I18n, lang: str, user_id: int) -> InlineKeyboardMarkup:
     builder.button(text=t("config"), callback_data="admin_config")
     builder.button(text=t("errors"), callback_data="admin_errors")
     builder.button(text=t("broadcast"), callback_data="admin_broadcast")
+    builder.button(text=t("groups_btn"), callback_data="admin_groups")
     builder.button(text=t("diagnostics_btn"), callback_data="admin_diagnostics")
 
     if user_id in get_settings().bot.admin_ids:

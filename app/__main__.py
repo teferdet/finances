@@ -2,6 +2,7 @@
 Entry point — ``python -m app``
 
 Lifecycle:
+0. Dependency check (exits early if packages are missing)
 1. Setup logging
 2. Load config
 3. Connect to MongoDB, ensure indexes
@@ -14,9 +15,79 @@ Lifecycle:
 from __future__ import annotations
 
 import asyncio
+import importlib
 import logging
 import sys
-from app.logger import setup_logging, get_logger
+from pathlib import Path
+
+# ── Dependency check (must run before any project imports) ─────────────────────
+# Maps distribution package name → importable module name (when they differ)
+_IMPORT_NAME: dict[str, str] = {
+    "aiogram": "aiogram",
+    "motor": "motor",
+    "curl_cffi": "curl_cffi",
+    "aiohttp": "aiohttp",
+    "beautifulsoup4": "bs4",
+    "yfinance": "yfinance",
+    "pandas": "pandas",
+    "psutil": "psutil",
+    "pymongo": "pymongo",
+    "python-dotenv": "dotenv",
+    "colorama": "colorama",
+    "requests": "requests",
+    "cryptography": "cryptography",
+    "bson": "bson",
+}
+
+
+def _check_dependencies() -> None:
+    """Check that all required packages are importable. Exit with a helpful
+    error message if any are missing."""
+    # Read the package names listed in requirements.txt
+    req_path = Path(__file__).resolve().parent.parent / "requirements.txt"
+    required: list[str] = []
+    if req_path.exists():
+        for raw_line in req_path.read_text(encoding="utf-8").splitlines():
+            line = raw_line.strip()
+            # Skip comments and empty lines
+            if not line or line.startswith("#"):
+                continue
+            # Strip version specifiers (>=, ==, <=, ~=, !=)
+            pkg_name = line.split(">")[0].split("<")[0].split("=")[0].split("~")[0].split("!")[0].strip()
+            if pkg_name:
+                required.append(pkg_name)
+    else:
+        # Fallback: use the hard-coded map keys
+        required = list(_IMPORT_NAME.keys())
+
+    missing: list[str] = []
+    for pkg in required:
+        module = _IMPORT_NAME.get(pkg, pkg.replace("-", "_"))
+        try:
+            importlib.import_module(module)
+        except ImportError:
+            missing.append(pkg)
+
+    if missing:
+        sep = "=" * 60
+        pkgs = " ".join(missing)
+        print(f"\n{sep}")
+        print("  STARTUP ERROR — missing Python packages")
+        print(sep)
+        print(f"\n  The following package(s) are not installed:\n")
+        for m in missing:
+            print(f"    ✗  {m}")
+        print(f"\n  Install them by running:")
+        print(f"\n    pip install {pkgs}")
+        print(f"\n  Or install all dependencies at once:")
+        print(f"\n    pip install -r requirements.txt")
+        print(f"\n{sep}\n")
+        sys.exit(1)
+
+
+_check_dependencies()
+# ──────────────────────────────────────────────────────────────────────────────
+from app.logger import setup_logging, get_logger, AsyncTelegramErrorHandler
 from app.config import get_settings
 from app.db import get_db, ensure_indexes, close_db
 from app.bot import create_bot, create_dispatcher
@@ -28,6 +99,7 @@ from app.services.alert_service import (
 )
 from app.services.digest_service import run_digest_scheduler
 from app.services.backup import run_daily_backup_loop
+from app.services.analytics_reporter import AnalyticsReporter
 
 log = get_logger("main")
 
@@ -154,6 +226,10 @@ async def main() -> None:
     bot = create_bot()
     dp = create_dispatcher()
 
+    # Setup Telegram error handler
+    telegram_error_handler = AsyncTelegramErrorHandler(bot=bot, db=get_db())
+    logging.getLogger().addHandler(telegram_error_handler)
+
     # Set bot reference for alert/volatility notifications
     set_alert_bot(bot)
 
@@ -171,6 +247,10 @@ async def main() -> None:
 
     digest_task = asyncio.create_task(run_digest_scheduler())
     background_tasks.append(("digest_scheduler", digest_task))
+    
+    analytics_reporter = AnalyticsReporter(bot=bot, db=get_db())
+    analytics_task = asyncio.create_task(analytics_reporter.start())
+    background_tasks.append(("analytics_reporter", analytics_task))
 
     if settings.bot.backup_enabled:
         backup_task = asyncio.create_task(run_daily_backup_loop(settings.database.mongo_uri))

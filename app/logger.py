@@ -89,5 +89,102 @@ def get_d_admin_logger() -> logging.Logger:
         fmt = "%(asctime)s | %(message)s"
         handler.setFormatter(logging.Formatter(fmt, datefmt="%Y-%m-%d %H:%M:%S"))
         logger.addHandler(handler)
-        logger.propagate = False
     return logger
+
+class AsyncTelegramErrorHandler(logging.Handler):
+    """
+    Custom handler that sends log messages (ERROR/WARNING/CRITICAL)
+    to Telegram groups configured to receive them.
+    """
+    def __init__(self, bot, db):
+        super().__init__()
+        self.bot = bot
+        self.db = db
+        self.last_sent = {}  # dict[chat_id, float] for debouncing
+
+    def emit(self, record: logging.LogRecord):
+        # We handle min_level dynamically from the DB, but we only intercept ERROR, WARNING, CRITICAL anyway
+        if record.levelno < logging.WARNING:
+            return
+
+        import asyncio
+        import time
+        from datetime import datetime
+
+        # Format message variables
+        dt_str = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
+        level_name = record.levelname
+        emoji = "🔴" if level_name in ("ERROR", "CRITICAL") else "🟠"
+        
+        # Exception details
+        exc_text = ""
+        if record.exc_info:
+            import traceback
+            tb_lines = traceback.format_exception(*record.exc_info)
+            # Take last 3 lines (excluding the very last empty string if present)
+            tb_short = "".join(tb_lines[-4:]) if len(tb_lines) >= 4 else "".join(tb_lines)
+            exc_text = tb_short
+        
+        asyncio.create_task(self._send_to_groups(
+            record.levelno, level_name, emoji, dt_str, 
+            record.pathname, record.lineno, record.getMessage(), 
+            exc_text, time.time()
+        ))
+
+    async def _send_to_groups(self, levelno: int, level_name: str, emoji: str, dt_str: str, pathname: str, lineno: int, message: str, exc_text: str, current_time: float):
+        from aiogram.exceptions import TelegramForbiddenError, TelegramBadRequest
+        from app.repositories.groups import get_active_groups, toggle_group_active
+        from app.i18n import get_i18n
+        from app.config import get_settings
+
+        try:
+            settings = get_settings()
+            lang = settings.i18n.default_language
+            i18n = get_i18n()
+            
+            traceback_part = ""
+            if exc_text:
+                traceback_part = str(i18n.get("admin.groups.traceback_label", lang)).format(tb=exc_text)
+                
+            text = str(i18n.get("admin.groups.error_report", lang)).format(
+                emoji=emoji,
+                level=level_name,
+                date=dt_str,
+                path=pathname,
+                line=lineno,
+                message=message,
+                traceback=traceback_part
+            )
+            
+            groups = await get_active_groups()
+            for group in groups:
+                chat_id = group.get("chat_id")
+                notifs = group.get("notifications", {}).get("errors", {})
+                if not notifs.get("enabled"):
+                    continue
+                
+                # Check min level
+                min_level_str = notifs.get("min_level", "ERROR")
+                min_level = getattr(logging, min_level_str.upper(), logging.ERROR)
+                
+                if levelno < min_level:
+                    continue
+                
+                # Debounce (1 per 10s per group)
+                if current_time - self.last_sent.get(chat_id, 0) < 10:
+                    continue
+                    
+                self.last_sent[chat_id] = current_time
+                
+                try:
+                    await self.bot.send_message(chat_id, text, parse_mode="HTML")
+                except TelegramForbiddenError:
+                    await toggle_group_active(chat_id, False)
+                except TelegramBadRequest as e:
+                    if "chat not found" in str(e).lower() or "bot was kicked" in str(e).lower():
+                        await toggle_group_active(chat_id, False)
+                except Exception:
+                    pass
+        except Exception:
+            pass
+

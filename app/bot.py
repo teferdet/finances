@@ -25,6 +25,8 @@ from app.handlers import (
     portability,
     alerts,
     my_data,
+    admin_groups,
+    guest,
 )
 from app.logger import get_logger
 
@@ -48,10 +50,12 @@ def create_dispatcher() -> Dispatcher:
     dp.message.outer_middleware(ErrorMiddleware())
     dp.callback_query.outer_middleware(ErrorMiddleware())
     dp.inline_query.outer_middleware(ErrorMiddleware())
+    dp.my_chat_member.outer_middleware(ErrorMiddleware())
 
     dp.message.outer_middleware(I18nMiddleware())
     dp.callback_query.outer_middleware(I18nMiddleware())
     dp.inline_query.outer_middleware(I18nMiddleware())
+    dp.my_chat_member.outer_middleware(I18nMiddleware())
 
     rate_limit = RateLimitMiddleware(
         limit=s.security.rate_limit_requests,
@@ -63,6 +67,7 @@ def create_dispatcher() -> Dispatcher:
 
     # Register routers (order matters — first match wins)
     dp.include_router(start.router)
+    dp.include_router(admin_groups.router)
     dp.include_router(admin.router)
     dp.include_router(language.router)
     dp.include_router(crypto.router)
@@ -74,6 +79,7 @@ def create_dispatcher() -> Dispatcher:
     dp.include_router(my_data.router)
     dp.include_router(portability.router)
     dp.include_router(exchange.router)
+    dp.include_router(guest.router)  # Handles guest_message mentions
     dp.include_router(groups.router)
     dp.include_router(inline_query.router)
 
