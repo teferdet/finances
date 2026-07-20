@@ -568,5 +568,21 @@
     "help_title": "ℹ️ Help",
     "help_description": "Bot usage information",
     "help_text": "I am a finance bot. Mention me with an amount and currency to convert it (e.g. <code>@financesbot 100 USD</code>). I will reply here!"
+  },
+  "group_settings": {
+    "title": "⚙️ <b>Налаштування групи — {title}</b>\n\nНалаштуйте поведінку бота в цьому чаті:",
+    "access_denied": "⚠️ Тільки адміністратори групи можуть використовувати це меню.",
+    "not_in_group": "⚠️ Ця команда доступна лише в групових чатах. Використовуйте /settings в особистих повідомленнях.",
+    "auto_convert_on": "✅ Авто-конвертація: Увімкнена",
+    "auto_convert_off": "❌ Авто-конвертація: Вимкнена",
+    "toggle_auto_convert": "🔄 Перемкнути авто-конвертацію",
+    "language_title": "🌐 <b>Оберіть мову за замовчуванням для відповідей бота в цій групі:</b>",
+    "language_set": "✅ Мову групи змінено на <b>{language}</b>.",
+    "set_language": "🌐 Змінити мову",
+    "admins_title": "👥 <b>Адміністратори чату</b>",
+    "admins_list": "Бот бачить наступних адміністраторів у цій групі:",
+    "view_admins": "👥 Переглянути адмінів",
+    "close": "✖️ Закрити",
+    "back": "◀️ Назад"
   }
 }

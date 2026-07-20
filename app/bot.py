@@ -26,6 +26,7 @@ from app.handlers import (
     alerts,
     my_data,
     admin_groups,
+    group_admin,
     guest,
 )
 from app.logger import get_logger
@@ -80,6 +81,7 @@ def create_dispatcher() -> Dispatcher:
     dp.include_router(portability.router)
     dp.include_router(exchange.router)
     dp.include_router(guest.router)  # Handles guest_message mentions
+    dp.include_router(group_admin.router)  # /group_settings — before groups catch-all
     dp.include_router(groups.router)
     dp.include_router(inline_query.router)
 

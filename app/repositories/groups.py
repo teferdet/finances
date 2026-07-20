@@ -54,6 +54,10 @@ async def upsert_group_from_chat_member(
                         "ephemeral": False,
                     },
                 },
+                "settings": {
+                    "language": "en",
+                    "auto_convert": True,
+                },
             },
         },
         upsert=True,
@@ -93,6 +97,10 @@ async def add_group(chat_id: int, title: str, group_type: str, added_by: int) ->
                     "timezone": "UTC",
                     "ephemeral": False,
                 },
+            },
+            "settings": {
+                "language": "en",
+                "auto_convert": True,
             },
         }
     )
@@ -144,3 +152,22 @@ async def toggle_group_active(chat_id: int, is_active: bool) -> bool:
         {"$set": {"is_active": is_active, "updated_at": datetime.utcnow()}},
     )
     return result.modified_count > 0
+
+
+async def update_group_settings(chat_id: int, settings: dict) -> bool:
+    """Update the group-level settings sub-document (language, auto_convert, etc.)."""
+    db = get_db()
+    result = await db["groups"].update_one(
+        {"chat_id": chat_id},
+        {"$set": {"settings": settings, "updated_at": datetime.utcnow()}},
+    )
+    return result.modified_count > 0
+
+
+async def get_group_settings(chat_id: int) -> dict:
+    """Return the settings sub-document for a group, or defaults."""
+    db = get_db()
+    doc = await db["groups"].find_one({"chat_id": chat_id}, {"settings": 1})
+    if doc and doc.get("settings"):
+        return doc["settings"]
+    return {"language": "en", "auto_convert": True}

@@ -566,5 +566,21 @@
     "help_title": "ℹ️ Help",
     "help_description": "Bot usage information",
     "help_text": "I am a finance bot. Mention me with an amount and currency to convert it (e.g. <code>@financesbot 100 USD</code>). I will reply here!"
+  },
+  "group_settings": {
+    "title": "⚙️ <b>Group Settings — {title}</b>\n\nConfigure how the bot behaves in this chat:",
+    "access_denied": "⚠️ Only group administrators can access this menu.",
+    "not_in_group": "⚠️ This command is only available in group chats. Use /settings in private messages instead.",
+    "auto_convert_on": "✅ Auto-Conversion: Enabled",
+    "auto_convert_off": "❌ Auto-Conversion: Disabled",
+    "toggle_auto_convert": "🔄 Toggle Auto-Conversion",
+    "language_title": "🌐 <b>Select the default language for bot responses in this group:</b>",
+    "language_set": "✅ Group language set to <b>{language}</b>.",
+    "set_language": "🌐 Set Language",
+    "admins_title": "👥 <b>Chat Administrators</b>",
+    "admins_list": "Bot can see the following administrators in this group:",
+    "view_admins": "👥 View Admins",
+    "close": "✖️ Close",
+    "back": "◀️ Back"
   }
 }

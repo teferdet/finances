@@ -34,7 +34,7 @@ async def handle_group_message(message: Message, i18n: I18n, lang: str) -> None:
     db = get_db()
     # Check both the legacy Groups collection and the new groups collection
     group = await db["groups"].find_one(
-        {"chat_id": message.chat.id}, {"is_active": 1}
+        {"chat_id": message.chat.id}, {"is_active": 1, "settings": 1}
     )
     if not group or not group.get("is_active", False):
         # Fallback: legacy uppercase collection
@@ -46,6 +46,11 @@ async def handle_group_message(message: Message, i18n: I18n, lang: str) -> None:
         allowed_input = legacy.get("Input", [])
         output = legacy.get("Output", [])
     else:
+        # Check if auto-conversion is disabled by group admin
+        group_settings = group.get("settings", {})
+        if not group_settings.get("auto_convert", True):
+            return
+
         allowed_input = group.get("Input", ["USD", "EUR"])
         output = group.get("Output", ["UAH"])
 
