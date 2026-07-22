@@ -1,17 +1,5 @@
 version: 2
 updates:
-  # Python dependencies (pip)
-  - package-ecosystem: "pip"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-    labels:
-      - "dependencies"
-      - "python"
-    commit-message:
-      prefix: "deps"
-    open-pull-requests-limit: 5
-
   # GitHub Actions versions
   - package-ecosystem: "github-actions"
     directory: "/"

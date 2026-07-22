@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Finances Telegram Bot — Official Site & Documentation</title>
+  <meta name="description"
+    content="Official website and documentation for Finances Telegram Bot — Real-time financial market tracking, portfolio management, and admin diagnostics.">
+
+  <!-- Classic Documentation Stylesheet -->
+  <link rel="stylesheet" href="css/styles.css">
+
+  <!-- Prism.js Syntax Highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+
+  <!-- Marked.js Markdown Parser -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+  <!-- Prism Syntax Highlighting Scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+
+  <!-- Mermaid Diagrams -->
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+</head>
+
+<body>
+
+  <!-- Top Fixed Navigation Header -->
+  <header class="site-header">
+    <a href="#" class="brand-area" id="brand-home-link">
+      <span>📊 Finances Bot</span>
+      <span class="brand-badge">v6.3</span>
+    </a>
+
+    <nav class="header-nav">
+      <button class="nav-link-btn active" id="nav-btn-home">Home</button>
+      <button class="nav-link-btn" id="nav-btn-docs">Documentation</button>
+    </nav>
+
+    <div class="header-actions">
+      <button class="search-btn" id="search-btn" title="Search Documentation (Ctrl+K)">
+        <span>🔍 Search...</span>
+        <kbd>Ctrl K</kbd>
+      </button>
+
+      <button class="icon-btn" id="theme-toggle-btn" title="Toggle Light/Dark Theme">
+        <span id="theme-icon">🌙</span>
+      </button>
+
+      <a href="https://github.com/teferdet/finances" target="_blank" rel="noopener" class="icon-btn"
+        title="GitHub Repository">
+        <span>🐙</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- Page 1: Landing Home Page -->
+  <main id="view-home" class="page-view active">
+    <div class="home-container">
+      <div class="hero-box">
+        <h1 class="hero-title">📊 Finances Telegram Bot</h1>
+        <p class="hero-description">
+          A comprehensive, open-source personal financial assistant for Telegram. Real-time fiat, crypto, and stock
+          tracking, portfolio analytics, automated price alert schedulers, and zero-downtime interactive admin control.
+        </p>
+
+        <!-- Button Row: Telegram Link, Open Documentation, GitHub Link -->
+        <div class="button-group">
+          <a href="https://t.me/fStatisticsBot" target="_blank" rel="noopener" class="btn-action btn-tg">
+            <span>📱 Open Telegram Bot</span>
+          </a>
+          <button class="btn-action btn-docs" id="hero-btn-open-docs">
+            <span>📚 Open Documentation</span>
+          </button>
+          <a href="https://github.com/teferdet/finances" target="_blank" rel="noopener" class="btn-action btn-gh">
+            <span>🐙 GitHub Repository</span>
+          </a>
+        </div>
+
+        <div class="code-box">
+          <span>git clone https://github.com/teferdet/finances.git</span>
+          <button onclick="navigator.clipboard.writeText('git clone https://github.com/teferdet/finances.git')"
+            title="Copy Command">📋 Copy</button>
+        </div>
+      </div>
+
+      <!-- Feature Summary Grid -->
+      <div class="home-grid">
+        <div class="home-card">
+          <div class="home-card-icon">🎛️</div>
+          <h3 class="home-card-title">No-Redeploy Admin Panel</h3>
+          <p class="home-card-text">Control parser intervals, inspect CPU/RAM diagnostics, purge logs, or broadcast
+            announcements directly inside Telegram via <code>/admin</code>.</p>
+        </div>
+
+        <div class="home-card">
+          <div class="home-card-icon">🛡️</div>
+          <h3 class="home-card-title">Cloudflare Bypass Scraper</h3>
+          <p class="home-card-text">Scrapes live exchange rates using <code>curl_cffi</code> Chrome 120 browser
+            impersonation to bypass anti-bot challenges securely.</p>
+        </div>
+
+        <div class="home-card">
+          <div class="home-card-icon">🌍</div>
+          <h3 class="home-card-title">i18n Localization System</h3>
+          <p class="home-card-text">Custom zero-dependency JSON localization engine supporting dot-notation keys and
+            instant language switching (EN, UK, PL, CS, SK, DE, FR).</p>
+        </div>
+
+        <div class="home-card">
+          <div class="home-card-icon">📈</div>
+          <h3 class="home-card-title">Portfolio & Volatility Monitor</h3>
+          <p class="home-card-text">Track asset lots, aggregate live P&L, and receive background alerts on sudden market
+            swings (≥3%).</p>
+        </div>
+
+        <div class="home-card">
+          <div class="home-card-icon">💬</div>
+          <h3 class="home-card-title">Group & Guest Mode</h3>
+          <p class="home-card-text">Auto-converts natural currency text in group chats, provides self-deleting menu UI,
+            and handles <code>@bot</code> guest queries.</p>
+        </div>
+
+        <div class="home-card">
+          <div class="home-card-icon">🚀</div>
+          <h3 class="home-card-title">DevOps & Automated Backups</h3>
+          <p class="home-card-text">Daily compressed MongoDB snapshots and automated GitHub Actions SSH deployment with
+            instant failure rollback.</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Page 2: Classic 3-Column Documentation Workspace -->
+  <main id="view-docs" class="page-view">
+    <div class="docs-viewport">
+
+      <!-- Left Navigation Sidebar -->
+      <aside class="docs-sidebar">
+        <nav id="docs-sidebar-nav"></nav>
+      </aside>
+
+      <!-- Center Article Content Reader -->
+      <section class="docs-main">
+        <article class="markdown-body" id="docs-content-area"></article>
+      </section>
+
+      <!-- Right Side Table of Contents -->
+      <aside class="docs-toc">
+        <div class="toc-title">On this page</div>
+        <nav id="docs-toc-nav"></nav>
+      </aside>
+
+    </div>
+  </main>
+
+  <!-- Search Modal Overlay -->
+  <div class="search-modal-backdrop" id="search-modal-backdrop">
+    <div class="search-modal">
+      <div class="search-input-wrapper">
+        <span>🔍</span>
+        <input type="text" class="search-input-field" id="search-input-field"
+          placeholder="Search documentation topics, modules, methods..." />
+      </div>
+      <div class="search-results-list" id="search-results-list"></div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/docs-data.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+  </script>
+</body>
+
+</html>

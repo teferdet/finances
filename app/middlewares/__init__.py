@@ -1,1 +1,0 @@
-# app/middlewares package
