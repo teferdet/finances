@@ -83,6 +83,7 @@ async def _build_currency_response(text: str, i18n: I18n, lang: str) -> str | No
 
 # ── Guest Message Handler ─────────────────────────────────────────────────────
 
+
 @router.guest_message(F.guest_query_id)
 async def handle_guest_message(message: Message, i18n: I18n, lang: str) -> None:
     """

@@ -45,17 +45,20 @@ router = Router(name="admin_groups")
 
 # ── FSM states ────────────────────────────────────────────────────────────────
 
+
 class AdminGroupsFSM(StatesGroup):
-    waiting_for_chat_id = State()          # manual numeric ID entry
-    waiting_for_invite_link = State()      # invite-link / username entry
-    waiting_for_analytics_time = State()   # HH:MM input
+    waiting_for_chat_id = State()  # manual numeric ID entry
+    waiting_for_invite_link = State()  # invite-link / username entry
+    waiting_for_analytics_time = State()  # HH:MM input
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
+
 def _is_admin(user_id: int) -> bool:
     from app.config import get_settings
     from app.state import dynamic_admin_ids
+
     return user_id in get_settings().bot.admin_ids or user_id in dynamic_admin_ids
 
 
@@ -139,6 +142,7 @@ async def _render_settings(call: CallbackQuery, chat_id: int, i18n: I18n, lang: 
 
 # ── List & Entry ──────────────────────────────────────────────────────────────
 
+
 @router.callback_query(F.data.in_({"admin_groups", "admin_groups:list"}))
 async def cb_groups_list(call: CallbackQuery, i18n: I18n, lang: str, state: FSMContext) -> None:
     if not _is_admin(call.from_user.id):
@@ -155,6 +159,7 @@ async def cb_groups_list(call: CallbackQuery, i18n: I18n, lang: str, state: FSMC
 
 
 # ── Add by numeric ID ─────────────────────────────────────────────────────────
+
 
 @router.callback_query(F.data == "admin_groups:add_id")
 async def cb_add_by_id(call: CallbackQuery, i18n: I18n, lang: str, state: FSMContext) -> None:
@@ -186,6 +191,7 @@ async def process_add_by_id(message: Message, state: FSMContext, i18n: I18n, lan
 
 
 # ── Add by invite link / username ─────────────────────────────────────────────
+
 
 @router.callback_query(F.data == "admin_groups:add_link")
 async def cb_add_by_link(call: CallbackQuery, i18n: I18n, lang: str, state: FSMContext) -> None:
@@ -238,6 +244,7 @@ async def process_add_by_link(message: Message, state: FSMContext, i18n: I18n, l
 
 # ── Shared add logic ──────────────────────────────────────────────────────────
 
+
 async def _finalize_add(
     message: Message,
     state: FSMContext,
@@ -271,9 +278,7 @@ async def _finalize_add(
 
     success = await add_group(chat_id, title, group_type, message.from_user.id)
     if success:
-        text = str(i18n.get("admin.groups.add_success", lang)).format(
-            title=title, chat_id=chat_id, type=group_type
-        )
+        text = str(i18n.get("admin.groups.add_success", lang)).format(title=title, chat_id=chat_id, type=group_type)
         await message.answer(text, reply_markup=admin_groups_confirm_kb(chat_id, i18n, lang), parse_mode="HTML")
         await state.clear()
         log.info("Admin %d added group '%s' (%d)", message.from_user.id, title, chat_id)
@@ -282,6 +287,7 @@ async def _finalize_add(
 
 
 # ── Settings card ─────────────────────────────────────────────────────────────
+
 
 @router.callback_query(F.data.startswith("admin_groups:settings:"))
 async def cb_group_settings(call: CallbackQuery, i18n: I18n, lang: str, state: FSMContext) -> None:
@@ -294,6 +300,7 @@ async def cb_group_settings(call: CallbackQuery, i18n: I18n, lang: str, state: F
 
 
 # ── Error notifications ───────────────────────────────────────────────────────
+
 
 @router.callback_query(F.data.startswith("admin_groups:errors:toggle:"))
 async def cb_errors_toggle(call: CallbackQuery, i18n: I18n, lang: str) -> None:
@@ -347,6 +354,7 @@ async def cb_errors_set_level(call: CallbackQuery, i18n: I18n, lang: str) -> Non
 
 
 # ── Analytics notifications ───────────────────────────────────────────────────
+
 
 @router.callback_query(F.data.startswith("admin_groups:analytics:toggle:"))
 async def cb_analytics_toggle(call: CallbackQuery, i18n: I18n, lang: str) -> None:
@@ -447,6 +455,7 @@ async def process_analytics_time(message: Message, state: FSMContext, i18n: I18n
 
 
 # ── Activate / Deactivate / Delete ────────────────────────────────────────────
+
 
 @router.callback_query(F.data.startswith("admin_groups:toggle_active:"))
 async def cb_toggle_active(call: CallbackQuery, i18n: I18n, lang: str) -> None:

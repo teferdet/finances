@@ -329,6 +329,7 @@ async def convert_currencies(
 async def run_parser_loop() -> None:
     """Main parser loop — runs as background asyncio task."""
     import sys
+
     if "--debug" in sys.argv or "debug" in sys.argv:
         log.info("Parser service disabled in debug mode.")
         return

@@ -88,9 +88,7 @@ async def _check_admin_permissions(event: Message | CallbackQuery, chat_id: int,
     if not await is_chat_admin(event.bot, chat_id, user.id):
         denied_msg = str(i18n.get("group_settings.access_denied", lang))
         if isinstance(event, Message):
-            await send_ephemeral_or_fallback(
-                event.bot, chat_id, user.id, denied_msg, fallback_to_regular=True
-            )
+            await send_ephemeral_or_fallback(event.bot, chat_id, user.id, denied_msg, fallback_to_regular=True)
         elif isinstance(event, CallbackQuery):
             await event.answer(strip_html(denied_msg), show_alert=True)
         return False
@@ -131,9 +129,7 @@ async def cmd_rate(message: Message, i18n: I18n, lang: str) -> None:
 
     group = await get_group(chat_id)
     group_settings = (group or {}).get("settings", {})
-    output = group_settings.get(
-        "output_currencies", ["USD", "EUR", "GBP", "JPY", "PLN", "CHF", "UAH"]
-    )
+    output = group_settings.get("output_currencies", ["USD", "EUR", "GBP", "JPY", "PLN", "CHF", "UAH"])
 
     codes = parsed.get_codes()
     index = 0 if any(c in ("BTC", "ETH") for c in codes) else 1
@@ -141,9 +137,7 @@ async def cmd_rate(message: Message, i18n: I18n, lang: str) -> None:
 
     if result in ("server error", "bad request"):
         err_msg = str(i18n.get(f"exchange rate.{result}", lang))
-        await send_ephemeral_or_fallback(
-            message.bot, chat_id, user_id, err_msg, fallback_to_regular=True
-        )
+        await send_ephemeral_or_fallback(message.bot, chat_id, user_id, err_msg, fallback_to_regular=True)
         return
 
     day = strftime("%d.%m.%y")
@@ -165,6 +159,7 @@ async def cmd_rate(message: Message, i18n: I18n, lang: str) -> None:
 
     # Attach "📢 Share to Group" button so user can share rate publicly
     from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+
     share_label = str(i18n.get("group_settings.share_to_group", lang) or "📢 Share to Group")
     kb = InlineKeyboardMarkup(
         inline_keyboard=[[InlineKeyboardButton(text=share_label, callback_data="grp_rate:share")]]
@@ -241,9 +236,7 @@ async def cmd_group_stats(message: Message, i18n: I18n, lang: str) -> None:
         f"📤 Outputs: {out_curr}"
     )
 
-    await send_ephemeral_or_fallback(
-        message.bot, chat_id, user_id, text, parse_mode="HTML", fallback_to_regular=True
-    )
+    await send_ephemeral_or_fallback(message.bot, chat_id, user_id, text, parse_mode="HTML", fallback_to_regular=True)
 
 
 # ── /group_settings ──────────────────────────────────────────────────────────
@@ -375,7 +368,7 @@ async def cb_cycle_mode(call: CallbackQuery, i18n: I18n, lang: str) -> None:
 
     settings["mode"] = new_mode
     # Sync auto_convert bool for backward compatibility
-    settings["auto_convert"] = (new_mode == "auto")
+    settings["auto_convert"] = new_mode == "auto"
     await update_group_settings(chat_id, settings)
 
     group = await get_group(chat_id)
@@ -422,9 +415,7 @@ async def cb_input_currencies(call: CallbackQuery, i18n: I18n, lang: str) -> Non
     desc = str(i18n.get("group_settings.input_currencies", lang))
     text = f"{desc}\n\nSelected: {', '.join(selected) if selected else 'none'}"
 
-    kb = paginated_currency_keyboard(
-        currencies, 0, "GRP_CURR", i18n, lang, selected=selected
-    )
+    kb = paginated_currency_keyboard(currencies, 0, "GRP_CURR", i18n, lang, selected=selected)
     await _edit_message_or_ephemeral(call, text, reply_markup=kb, parse_mode="HTML")
     await call.answer()
 
@@ -459,9 +450,7 @@ async def cb_output_currencies(call: CallbackQuery, i18n: I18n, lang: str) -> No
     desc = str(i18n.get("group_settings.output_currencies", lang))
     text = f"{desc}\n\nSelected: {', '.join(selected) if selected else 'none'}"
 
-    kb = paginated_currency_keyboard(
-        currencies, 0, "GRP_CURR", i18n, lang, selected=selected
-    )
+    kb = paginated_currency_keyboard(currencies, 0, "GRP_CURR", i18n, lang, selected=selected)
     await _edit_message_or_ephemeral(call, text, reply_markup=kb, parse_mode="HTML")
     await call.answer()
 
@@ -589,6 +578,7 @@ async def cb_set_lang(call: CallbackQuery, i18n: I18n, lang: str) -> None:
     await update_group_settings(chat_id, settings)
 
     from app.keyboards.inline import LANGUAGE_INFO
+
     lang_info = LANGUAGE_INFO.get(new_lang, {"native": new_lang})
     lang_name = lang_info.get("native", new_lang)
 

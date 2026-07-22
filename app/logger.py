@@ -75,6 +75,7 @@ def get_logger(name: str) -> logging.Logger:
     """Get a named child logger under 'app' namespace."""
     return logging.getLogger(f"app.{name}")
 
+
 def get_d_admin_logger() -> logging.Logger:
     """Get logger specifically for dynamic admin actions in the debug menu."""
     logger = logging.getLogger("d_admin")
@@ -91,11 +92,13 @@ def get_d_admin_logger() -> logging.Logger:
         logger.addHandler(handler)
     return logger
 
+
 class AsyncTelegramErrorHandler(logging.Handler):
     """
     Custom handler that sends log messages (ERROR/WARNING/CRITICAL)
     to Telegram groups configured to receive them.
     """
+
     def __init__(self, bot, db):
         super().__init__()
         self.bot = bot
@@ -120,18 +123,38 @@ class AsyncTelegramErrorHandler(logging.Handler):
         exc_text = ""
         if record.exc_info:
             import traceback
+
             tb_lines = traceback.format_exception(*record.exc_info)
             # Take last 3 lines (excluding the very last empty string if present)
             tb_short = "".join(tb_lines[-4:]) if len(tb_lines) >= 4 else "".join(tb_lines)
             exc_text = tb_short
 
-        asyncio.create_task(self._send_to_groups(
-            record.levelno, level_name, emoji, dt_str,
-            record.pathname, record.lineno, record.getMessage(),
-            exc_text, time.time()
-        ))
+        asyncio.create_task(
+            self._send_to_groups(
+                record.levelno,
+                level_name,
+                emoji,
+                dt_str,
+                record.pathname,
+                record.lineno,
+                record.getMessage(),
+                exc_text,
+                time.time(),
+            )
+        )
 
-    async def _send_to_groups(self, levelno: int, level_name: str, emoji: str, dt_str: str, pathname: str, lineno: int, message: str, exc_text: str, current_time: float):
+    async def _send_to_groups(
+        self,
+        levelno: int,
+        level_name: str,
+        emoji: str,
+        dt_str: str,
+        pathname: str,
+        lineno: int,
+        message: str,
+        exc_text: str,
+        current_time: float,
+    ):
         from aiogram.exceptions import TelegramForbiddenError, TelegramBadRequest
         from app.repositories.groups import get_active_groups, toggle_group_active
         from app.i18n import get_i18n
@@ -153,7 +176,7 @@ class AsyncTelegramErrorHandler(logging.Handler):
                 path=pathname,
                 line=lineno,
                 message=message,
-                traceback=traceback_part
+                traceback=traceback_part,
             )
 
             groups = await get_active_groups()
@@ -187,4 +210,3 @@ class AsyncTelegramErrorHandler(logging.Handler):
                     pass
         except Exception:
             pass
-

@@ -71,11 +71,13 @@ async def get_chat_admin_list(bot: Bot, chat_id: int) -> list[dict]:
         name_parts = [user.first_name or ""]
         if user.last_name:
             name_parts.append(user.last_name)
-        result.append({
-            "user_id": user.id,
-            "name": " ".join(name_parts).strip() or str(user.id),
-            "username": user.username,
-            "status": member.status,
-            "is_bot": user.is_bot,
-        })
+        result.append(
+            {
+                "user_id": user.id,
+                "name": " ".join(name_parts).strip() or str(user.id),
+                "username": user.username,
+                "status": member.status,
+                "is_bot": user.is_bot,
+            }
+        )
     return result

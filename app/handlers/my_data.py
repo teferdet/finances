@@ -135,6 +135,7 @@ async def cb_reset_settings(call: CallbackQuery, i18n: I18n, lang: str) -> None:
     await call.answer(md.get("reset_success", "✅ Reset!"), show_alert=True)
 
     from app.keyboards.inline import settings_menu
+
     text = i18n.get("settings.menu", lang)
     text = "".join(text) if isinstance(text, list) else str(text)
     await call.message.edit_text(text, reply_markup=settings_menu(i18n, lang))

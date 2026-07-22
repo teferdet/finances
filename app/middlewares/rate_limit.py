@@ -2,6 +2,7 @@
 Rate Limiting Middleware for aiogram 3.x.
 Limits message frequency per user to prevent spam and DDoS-like behavior.
 """
+
 import logging
 import time
 from collections import defaultdict, deque
@@ -62,6 +63,7 @@ class RateLimitMiddleware(BaseMiddleware):
 
         # Skip rate limiting for admins or unknown users
         from app.state import dynamic_admin_ids
+
         if user_id is None or user_id in self.admin_ids or user_id in dynamic_admin_ids:
             return await handler(event, data)
 

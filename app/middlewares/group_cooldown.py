@@ -87,8 +87,6 @@ class GroupCooldownMiddleware(BaseMiddleware):
         # Periodic cleanup of stale entries
         if len(self._last_reply) > 5000:
             cutoff = now - self.cooldown_sec * 10
-            self._last_reply = {
-                k: v for k, v in self._last_reply.items() if v > cutoff
-            }
+            self._last_reply = {k: v for k, v in self._last_reply.items() if v > cutoff}
 
         return result

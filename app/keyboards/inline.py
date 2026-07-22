@@ -170,6 +170,7 @@ def group_delete_kb(i18n: I18n, lang: str) -> InlineKeyboardMarkup:
 
 def user_groups_list_kb(groups: list[dict], bot_username: str, i18n: I18n, lang: str) -> InlineKeyboardMarkup:
     from aiogram.utils.keyboard import InlineKeyboardBuilder
+
     builder = InlineKeyboardBuilder()
 
     for g in groups:
@@ -187,6 +188,7 @@ def user_groups_list_kb(groups: list[dict], bot_username: str, i18n: I18n, lang:
 
 def user_group_settings_kb(chat_id: int, i18n: I18n, lang: str) -> InlineKeyboardMarkup:
     from aiogram.utils.keyboard import InlineKeyboardBuilder
+
     builder = InlineKeyboardBuilder()
 
     s = i18n.get_section("keyboard.settings", lang)
@@ -206,6 +208,7 @@ def user_group_settings_kb(chat_id: int, i18n: I18n, lang: str) -> InlineKeyboar
 
 def user_group_delete_confirm_kb(chat_id: int, i18n: I18n, lang: str) -> InlineKeyboardMarkup:
     from aiogram.utils.keyboard import InlineKeyboardBuilder
+
     builder = InlineKeyboardBuilder()
 
     confirm_text = str(i18n.get("keyboard.settings.confirm", lang) or "✅ Confirm")

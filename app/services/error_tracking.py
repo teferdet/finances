@@ -1,8 +1,10 @@
 """
 Error tracking for data sources.
 """
+
 from datetime import datetime, timezone
 from app.db import get_db
+
 
 async def report_source_error(source_name: str, error_msg: str) -> None:
     db = get_db()
@@ -13,23 +15,20 @@ async def report_source_error(source_name: str, error_msg: str) -> None:
     await db["ProblematicSources"].update_one(
         {"_id": source_name},
         {
-            "$set": {
-                "last_error": error_msg,
-                "updated_at": datetime.now(timezone.utc),
-                "resolved": False
-            },
+            "$set": {"last_error": error_msg, "updated_at": datetime.now(timezone.utc), "resolved": False},
             "$inc": {"error_count": 1},
-            "$setOnInsert": {"created_at": datetime.now(timezone.utc)}
+            "$setOnInsert": {"created_at": datetime.now(timezone.utc)},
         },
-        upsert=True
+        upsert=True,
     )
+
 
 async def clear_source_error(source_name: str) -> None:
     db = get_db()
     await db["ProblematicSources"].update_one(
-        {"_id": source_name},
-        {"$set": {"resolved": True, "updated_at": datetime.now(timezone.utc)}}
+        {"_id": source_name}, {"$set": {"resolved": True, "updated_at": datetime.now(timezone.utc)}}
     )
+
 
 async def get_active_errors() -> list[dict]:
     db = get_db()

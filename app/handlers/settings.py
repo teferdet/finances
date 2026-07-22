@@ -24,7 +24,6 @@ log = get_logger("settings")
 router = Router(name="settings")
 
 
-
 async def _cache_key(uid: int) -> str:
     return f"settings:{uid}"
 
@@ -160,6 +159,7 @@ async def cb_data_processing(call: CallbackQuery, i18n: I18n, lang: str) -> None
             chat_id = cd["group"]
             field_name = "input_currencies" if prefix == "Input" else "output_currencies"
             from app.repositories.groups import update_group_currencies
+
             await update_group_currencies(chat_id, field_name, data)
             # Legacy fallback write
             await db["Groups"].update_one({"_id": chat_id}, {"$set": {prefix: data}}, upsert=True)
@@ -170,6 +170,7 @@ async def cb_data_processing(call: CallbackQuery, i18n: I18n, lang: str) -> None
             await call.answer(stx.get("success", "Saved"), show_alert=False)
 
             from app.keyboards.inline import user_group_settings_kb
+
             ug_text = i18n.get_section("settings.user_groups", lang)
             group_settings_text = ug_text.get("settings_title", "⚙️ Group Settings")
             await call.message.edit_text(group_settings_text, reply_markup=user_group_settings_kb(chat_id, i18n, lang))
@@ -193,6 +194,7 @@ async def cb_data_processing(call: CallbackQuery, i18n: I18n, lang: str) -> None
             await call.answer(stx.get("exit", "Cancelled"), show_alert=False)
 
             from app.keyboards.inline import user_group_settings_kb
+
             ug_text = i18n.get_section("settings.user_groups", lang)
             group_settings_text = ug_text.get("settings_title", "⚙️ Group Settings")
             await call.message.edit_text(group_settings_text, reply_markup=user_group_settings_kb(chat_id, i18n, lang))
@@ -440,10 +442,12 @@ async def cb_user_groups_list(call: CallbackQuery, i18n: I18n, lang: str) -> Non
     for g in all_active:
         chat_id = g.get("chat_id")
         if chat_id and await is_chat_admin(call.bot, chat_id, uid):
-            user_admin_groups.append({
-                "id": chat_id,
-                "title": g.get("title", f"Group {chat_id}"),
-            })
+            user_admin_groups.append(
+                {
+                    "id": chat_id,
+                    "title": g.get("title", f"Group {chat_id}"),
+                }
+            )
 
     if not user_admin_groups:
         db = get_db()
@@ -457,14 +461,24 @@ async def cb_user_groups_list(call: CallbackQuery, i18n: I18n, lang: str) -> Non
 
     ug_text = i18n.get_section("settings.user_groups", lang)
     if not user_admin_groups:
-        text = str(ug_text.get("no_groups", "You haven't added the bot to any groups yet. Add it to a group to configure it here!"))
+        text = str(
+            ug_text.get(
+                "no_groups", "You haven't added the bot to any groups yet. Add it to a group to configure it here!"
+            )
+        )
         from app.keyboards.inline import user_groups_list_kb
-        await call.message.edit_text(text, reply_markup=user_groups_list_kb([], bot_username, i18n, lang), parse_mode="HTML")
+
+        await call.message.edit_text(
+            text, reply_markup=user_groups_list_kb([], bot_username, i18n, lang), parse_mode="HTML"
+        )
         return
 
     text = str(ug_text.get("select_group", "Select a group to configure:"))
     from app.keyboards.inline import user_groups_list_kb
-    await call.message.edit_text(text, reply_markup=user_groups_list_kb(user_admin_groups, bot_username, i18n, lang), parse_mode="HTML")
+
+    await call.message.edit_text(
+        text, reply_markup=user_groups_list_kb(user_admin_groups, bot_username, i18n, lang), parse_mode="HTML"
+    )
 
 
 @router.callback_query(F.data.startswith("user_group:"))
@@ -494,7 +508,10 @@ async def cb_user_group_settings(call: CallbackQuery, i18n: I18n, lang: str) -> 
 
         group_settings_text = ug_text.get("settings_title", "⚙️ Group Settings")
         from app.keyboards.inline import user_group_settings_kb
-        await call.message.edit_text(group_settings_text, reply_markup=user_group_settings_kb(chat_id, i18n, lang), parse_mode="HTML")
+
+        await call.message.edit_text(
+            group_settings_text, reply_markup=user_group_settings_kb(chat_id, i18n, lang), parse_mode="HTML"
+        )
         return
 
     if len(parts) == 3:
@@ -510,12 +527,16 @@ async def cb_user_group_settings(call: CallbackQuery, i18n: I18n, lang: str) -> 
             ug_text = i18n.get_section("settings.user_groups", lang)
             confirm_msg = str(ug_text.get("delete_confirm", i18n.get("settings.remove", lang)))
             from app.keyboards.inline import user_group_delete_confirm_kb
-            await call.message.edit_text(confirm_msg, reply_markup=user_group_delete_confirm_kb(chat_id, i18n, lang), parse_mode="HTML")
+
+            await call.message.edit_text(
+                confirm_msg, reply_markup=user_group_delete_confirm_kb(chat_id, i18n, lang), parse_mode="HTML"
+            )
             await call.answer()
             return
 
         if action == "confirm_delete":
             from app.repositories.groups import toggle_group_active, remove_group
+
             await toggle_group_active(chat_id, False)
             await remove_group(chat_id)
             # Remove from legacy DB and user document if present
@@ -545,7 +566,9 @@ async def cb_user_group_settings(call: CallbackQuery, i18n: I18n, lang: str) -> 
         if group:
             selected_currencies = settings.get(
                 field_key,
-                ["USD", "EUR", "GBP", "CZK", "PLN", "CHF", "CNY", "UAH", "BTC", "ETH"] if action == "input" else ["USD", "EUR", "GBP", "JPY", "PLN", "CHF", "UAH"]
+                ["USD", "EUR", "GBP", "CZK", "PLN", "CHF", "CNY", "UAH", "BTC", "ETH"]
+                if action == "input"
+                else ["USD", "EUR", "GBP", "JPY", "PLN", "CHF", "UAH"],
             )
         else:
             legacy = await db["Groups"].find_one({"_id": chat_id}, {"Input": 1, "Output": 1})
@@ -569,6 +592,6 @@ async def cb_user_group_settings(call: CallbackQuery, i18n: I18n, lang: str) -> 
         text = f"{desc}\n\n{selected_line}"
 
         await call.message.edit_text(
-            text, reply_markup=paginated_currency_keyboard(currencies, 0, prefix, i18n, lang, selected=cd["update data"])
+            text,
+            reply_markup=paginated_currency_keyboard(currencies, 0, prefix, i18n, lang, selected=cd["update data"]),
         )
-

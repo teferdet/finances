@@ -13,11 +13,26 @@ from app.db import get_db
 # These match the historical defaults from the old telebot-based versions.
 
 DEFAULT_INPUT_CURRENCIES = [
-    "USD", "EUR", "GBP", "CZK", "PLN", "CHF", "CNY", "UAH", "BTC", "ETH",
+    "USD",
+    "EUR",
+    "GBP",
+    "CZK",
+    "PLN",
+    "CHF",
+    "CNY",
+    "UAH",
+    "BTC",
+    "ETH",
 ]
 
 DEFAULT_OUTPUT_CURRENCIES = [
-    "USD", "EUR", "GBP", "JPY", "PLN", "CHF", "UAH",
+    "USD",
+    "EUR",
+    "GBP",
+    "JPY",
+    "PLN",
+    "CHF",
+    "UAH",
 ]
 
 
@@ -206,9 +221,7 @@ async def get_group_settings(chat_id: int) -> dict:
 # ── Currency list helpers ────────────────────────────────────────────────────
 
 
-async def update_group_currencies(
-    chat_id: int, field: str, currencies: list[str]
-) -> bool:
+async def update_group_currencies(chat_id: int, field: str, currencies: list[str]) -> bool:
     """
     Update input or output currency list for a group.
 

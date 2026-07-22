@@ -46,14 +46,9 @@ class I18nMiddleware(BaseMiddleware):
                 db_ = get_db()
                 try:
                     await db_["Users"].update_one(
-                        {"_id": uid},
-                        {"$set": {"last_active": now}, "$inc": {"stats.total_requests": 1}}
+                        {"_id": uid}, {"$set": {"last_active": now}, "$inc": {"stats.total_requests": 1}}
                     )
-                    await db_["DailyStats"].update_one(
-                        {"_id": today_str},
-                        {"$inc": {"requests": 1}},
-                        upsert=True
-                    )
+                    await db_["DailyStats"].update_one({"_id": today_str}, {"$inc": {"requests": 1}}, upsert=True)
                 except Exception:
                     pass
 

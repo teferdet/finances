@@ -38,6 +38,7 @@ def get_db() -> AsyncIOMotorDatabase:
     log.info("MongoDB connection established -> %s", settings.database.mongo_database)
     return _db
 
+
 def get_fiat_collection_name() -> str:
     """Return the collection name for fiat rates, using a separate one if --debug is active."""
     return "fiat_rates_debug" if ("--debug" in sys.argv or "debug" in sys.argv) else "fiat_rates"

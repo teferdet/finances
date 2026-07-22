@@ -4,6 +4,7 @@ Creates a compressed JSON/BSON archive of all collections using the Motor driver
 Does NOT require mongodump to be installed.
 Keeps only the last 7 backups to save disk space.
 """
+
 import asyncio
 import gzip
 import json
@@ -45,6 +46,7 @@ def _bson_to_json_safe(obj):
         return {"$date": obj.isoformat()}
     if isinstance(obj, bytes):
         import base64
+
         return {"$binary": base64.b64encode(obj).decode()}
     return obj
 
@@ -99,7 +101,10 @@ async def daily_backup(mongo_uri: str) -> None:
         size_kb = archive_path.stat().st_size / 1024
         logger.info(
             "Backup created: %s (%.1f KB, %d documents across %d collections)",
-            archive_path.name, size_kb, total_docs, len(BACKUP_COLLECTIONS),
+            archive_path.name,
+            size_kb,
+            total_docs,
+            len(BACKUP_COLLECTIONS),
         )
 
     except Exception as e:
@@ -133,7 +138,8 @@ async def run_daily_backup_loop(mongo_uri: str) -> None:
         sleep_seconds = (next_run - now).total_seconds()
         logger.info(
             "Next MongoDB backup scheduled in %.0f seconds (at %s UTC).",
-            sleep_seconds, next_run,
+            sleep_seconds,
+            next_run,
         )
 
         await asyncio.sleep(sleep_seconds)

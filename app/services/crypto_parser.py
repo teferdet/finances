@@ -53,6 +53,7 @@ async def fetch_crypto() -> Optional[dict]:
                         log.error("CMC HTTP %d for %s", resp.status, currency)
                         crypto_data[currency] = {}
                         from app.services.error_tracking import report_source_error
+
                         await report_source_error("crypto_cmc", f"HTTP {resp.status} for {currency}")
                         continue
                     data = await resp.json()
@@ -73,12 +74,14 @@ async def fetch_crypto() -> Optional[dict]:
                     crypto_data[currency] = currency_entries
                     log.info("[Crypto] %s: %d coins fetched", currency, len(currency_entries))
                     from app.services.error_tracking import clear_source_error
+
                     await clear_source_error("crypto_cmc")
 
             except Exception as exc:
                 log.error("[Crypto] Error fetching %s: %s", currency, exc)
                 crypto_data[currency] = {}
                 from app.services.error_tracking import report_source_error
+
                 await report_source_error("crypto_cmc", f"Exception for {currency}: {exc}")
 
     # Save to MongoDB

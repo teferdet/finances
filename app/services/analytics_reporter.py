@@ -14,6 +14,7 @@ from app.i18n import get_i18n
 
 log = get_logger("analytics")
 
+
 class AnalyticsReporter:
     def __init__(self, bot, db):
         self.bot = bot
@@ -43,13 +44,9 @@ class AnalyticsReporter:
 
                     if current_time_str == send_time:
                         if schedule == "daily":
-                            await self._send_daily_report(
-                                chat_id, now, use_ephemeral, admin_user_id
-                            )
+                            await self._send_daily_report(chat_id, now, use_ephemeral, admin_user_id)
                         elif schedule == "weekly" and now.weekday() == 0:  # Monday
-                            await self._send_weekly_report(
-                                chat_id, now, use_ephemeral, admin_user_id
-                            )
+                            await self._send_weekly_report(chat_id, now, use_ephemeral, admin_user_id)
 
                 # Sleep until next minute
                 await asyncio.sleep(60 - datetime.utcnow().second)
@@ -72,14 +69,14 @@ class AnalyticsReporter:
         i18n = get_i18n()
         stats = await self._collect_daily_stats(now, i18n, lang)
         text = str(i18n.get("admin.groups.analytics_report_daily", lang)).format(
-            date=now.strftime('%d %b %Y'),
-            active_today=stats['active_today'],
-            new_today=stats['new_today'],
-            total_users=stats['total_users'],
-            requests_today=stats['requests_today'],
-            peak_hour=stats['peak_hour'],
-            top_currencies=stats['top_currencies'],
-            errors_today=stats['errors_today']
+            date=now.strftime("%d %b %Y"),
+            active_today=stats["active_today"],
+            new_today=stats["new_today"],
+            total_users=stats["total_users"],
+            requests_today=stats["requests_today"],
+            peak_hour=stats["peak_hour"],
+            top_currencies=stats["top_currencies"],
+            errors_today=stats["errors_today"],
         )
         await self._send_message(chat_id, text, use_ephemeral, admin_user_id)
 
@@ -94,17 +91,17 @@ class AnalyticsReporter:
         lang = settings.i18n.default_language
         i18n = get_i18n()
         stats = await self._collect_weekly_stats(now, i18n, lang)
-        start_date = (now - timedelta(days=7)).strftime('%d')
-        end_date = (now - timedelta(days=1)).strftime('%d %b %Y')
+        start_date = (now - timedelta(days=7)).strftime("%d")
+        end_date = (now - timedelta(days=1)).strftime("%d %b %Y")
         text = str(i18n.get("admin.groups.analytics_report_weekly", lang)).format(
             date=f"{start_date}–{end_date}",
-            active_weekly=stats['active_weekly'],
-            new_weekly=stats['new_weekly'],
-            retention=stats['retention'],
-            requests_weekly=stats['requests_weekly'],
-            peak_day=stats['peak_day'],
-            top_currencies=stats['top_currencies'],
-            errors_weekly=stats['errors_weekly']
+            active_weekly=stats["active_weekly"],
+            new_weekly=stats["new_weekly"],
+            retention=stats["retention"],
+            requests_weekly=stats["requests_weekly"],
+            peak_day=stats["peak_day"],
+            top_currencies=stats["top_currencies"],
+            errors_weekly=stats["errors_weekly"],
         )
         await self._send_message(chat_id, text, use_ephemeral, admin_user_id)
 
@@ -127,12 +124,15 @@ class AnalyticsReporter:
             if eph_id is not None:
                 log.info(
                     "Ephemeral analytics sent to user %d in chat %d (eph_id=%d)",
-                    admin_user_id, chat_id, eph_id,
+                    admin_user_id,
+                    chat_id,
+                    eph_id,
                 )
                 return
             log.warning(
                 "Ephemeral analytics failed for chat %d user %d — falling back to public",
-                chat_id, admin_user_id,
+                chat_id,
+                admin_user_id,
             )
         # ── Standard public send ───────────────────────────────────────────
         try:
@@ -152,18 +152,19 @@ class AnalyticsReporter:
         active_today = await self.db["Users"].count_documents({"last_active": {"$gte": today_midnight}})
 
         # New today (assuming 'created_at' or 'joined_at', but we use 'last_active' logic since there might not be created_at. Wait, let's use '_id' logic or assume 'created_at' doesn't exist and we just use TODO)
-        new_today = 0 # TODO: require field in schema for new users
+        new_today = 0  # TODO: require field in schema for new users
 
         no_data_str = str(i18n.get("admin.groups.no_data", lang))
 
         # Requests and currencies (Requires request_stats)
-        requests_today = 0 # TODO: requires request_stats collection
-        peak_hour = "Unknown" # TODO: requires request_stats collection
-        top_currencies = no_data_str # TODO: requires request_stats collection
+        requests_today = 0  # TODO: requires request_stats collection
+        peak_hour = "Unknown"  # TODO: requires request_stats collection
+        top_currencies = no_data_str  # TODO: requires request_stats collection
 
         # Errors (parsing logs)
         errors_today = 0
         from app.config import LOGS_DIR
+
         error_log_path = LOGS_DIR / "errors.log"
         if error_log_path.exists():
             today_str = now.strftime("%Y-%m-%d")
@@ -180,7 +181,7 @@ class AnalyticsReporter:
             "requests_today": f"{requests_today:,}",
             "peak_hour": peak_hour,
             "top_currencies": top_currencies,
-            "errors_today": f"{errors_today:,}"
+            "errors_today": f"{errors_today:,}",
         }
 
     async def _collect_weekly_stats(self, now: datetime, i18n, lang: str) -> dict:
@@ -194,14 +195,15 @@ class AnalyticsReporter:
 
         no_data_str = str(i18n.get("admin.groups.no_data", lang))
 
-        new_weekly = 0 # TODO: require field in schema for new users
-        requests_weekly = 0 # TODO: requires request_stats collection
-        peak_day = "Unknown" # TODO: requires request_stats collection
-        top_currencies = no_data_str # TODO: requires request_stats collection
+        new_weekly = 0  # TODO: require field in schema for new users
+        requests_weekly = 0  # TODO: requires request_stats collection
+        peak_day = "Unknown"  # TODO: requires request_stats collection
+        top_currencies = no_data_str  # TODO: requires request_stats collection
 
         # Errors (parsing logs)
         errors_weekly = 0
         from app.config import LOGS_DIR
+
         error_log_path = LOGS_DIR / "errors.log"
         if error_log_path.exists():
             dates = [(now - timedelta(days=i)).strftime("%Y-%m-%d") for i in range(7)]
@@ -218,5 +220,5 @@ class AnalyticsReporter:
             "requests_weekly": f"{requests_weekly:,}",
             "peak_day": peak_day,
             "top_currencies": top_currencies,
-            "errors_weekly": f"{errors_weekly:,}"
+            "errors_weekly": f"{errors_weekly:,}",
         }

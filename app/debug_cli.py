@@ -2,13 +2,14 @@ import asyncio
 from app.state import dynamic_admin_ids
 from app.logger import get_d_admin_logger
 
+
 async def run_debug_cli():
     # Wait for bot to initialize and dynamic admins to load
     await asyncio.sleep(8)
 
-    print("\n" + "="*40)
+    print("\n" + "=" * 40)
     print("🐛 Debug CLI Mode Activated")
-    print("="*40)
+    print("=" * 40)
 
     current_admin_id = None
 
@@ -56,6 +57,7 @@ async def run_debug_cli():
                     logger.info(f"Dynamic Admin {current_admin_id} executed CLI action: Force fetch fiat (USD)")
                 print("Fetching USD rates into debug cluster...")
                 from app.services.parser_service import ensure_currency
+
                 success = await ensure_currency("USD", force=True)
                 print(f"Fetch {'Success ✅' if success else 'Failed ❌'}")
 
@@ -63,6 +65,7 @@ async def run_debug_cli():
                 if current_admin_id != "System":
                     logger.info(f"Dynamic Admin {current_admin_id} executed CLI action: Clear fiat debug collection")
                 from app.db import get_db, get_fiat_collection_name
+
                 db = get_db()
                 result = await db[get_fiat_collection_name()].delete_many({})
                 print(f"Cleared fiat debug collection. Deleted {result.deleted_count} documents.")

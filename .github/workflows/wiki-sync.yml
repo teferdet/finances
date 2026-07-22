@@ -32,7 +32,10 @@ jobs:
             exit 1
           }
 
-          # Copy docs files into wiki repository
+          # Remove all old .md files in wiki_temp to delete obsolete/duplicate pages
+          find wiki_temp -maxdepth 1 -type f -name "*.md" -delete
+
+          # Copy fresh docs files into wiki repository
           cp -r docs/* wiki_temp/
           
           # GitHub Wiki uses Home.md as the main landing page
@@ -40,13 +43,22 @@ jobs:
             cp wiki_temp/README.md wiki_temp/Home.md
           fi
 
+          # Adapt links for GitHub Wiki: convert (README.md) links to point to (Home) page
+          find wiki_temp -maxdepth 1 -type f -name "*.md" -exec sed -i 's/(README.md)/(Home)/g' {} +
+          find wiki_temp -maxdepth 1 -type f -name "*.md" -exec sed -i 's/(README.md#/(Home#/g' {} +
+          
+          # Strip .md extension from inline Markdown links for seamless Wiki routing
+          find wiki_temp -maxdepth 1 -type f -name "*.md" -exec sed -i -E 's/\(([^)]+)\.md\)/(\1)/g' {} +
+          find wiki_temp -maxdepth 1 -type f -name "*.md" -exec sed -i -E 's/\(([^)]+)\.md#/\(\1#/g' {} +
+
           cd wiki_temp
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
+          # Stage all additions AND deletions
+          git add -A
           if [ -n "$(git status --porcelain)" ]; then
-            git add .
-            git commit -m "docs: auto-sync documentation to GitHub Wiki [skip ci]"
+            git commit -m "docs: auto-sync clean documentation to GitHub Wiki [skip ci]"
             git push
             echo "✅ Successfully updated GitHub Wiki!"
           else

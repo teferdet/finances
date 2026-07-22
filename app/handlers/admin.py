@@ -40,10 +40,12 @@ router = Router(name="admin")
 class AdminStates(StatesGroup):
     waiting_for_parser_interval = State()
 
+
 class BroadcastStates(StatesGroup):
     choosing_target = State()
     waiting_for_text = State()
     confirming = State()
+
 
 class AdminManagementStates(StatesGroup):
     waiting_for_new_admin_id = State()
@@ -52,6 +54,7 @@ class AdminManagementStates(StatesGroup):
 
 def _is_admin(user_id: int) -> bool:
     from app.state import dynamic_admin_ids
+
     return user_id in get_settings().bot.admin_ids or user_id in dynamic_admin_ids
 
 
@@ -115,7 +118,9 @@ async def cmd_admin(message: Message, i18n: I18n, lang: str, state: FSMContext) 
     if not _is_admin(message.from_user.id):
         await message.answer(str(i18n.get("admin.access_denied", lang)))
         return
-    await message.answer(str(i18n.get("admin.panel", lang)), reply_markup=_admin_kb(i18n, lang, message.from_user.id), parse_mode="HTML")
+    await message.answer(
+        str(i18n.get("admin.panel", lang)), reply_markup=_admin_kb(i18n, lang, message.from_user.id), parse_mode="HTML"
+    )
 
 
 @router.message(Command("ping"))
@@ -213,6 +218,7 @@ async def cb_admin(call: CallbackQuery, i18n: I18n, lang: str, state: FSMContext
 
         try:
             from app.db import close_db
+
             await close_db()
         except Exception as exc:
             log.warning("Error during pre-shutdown cleanup: %s", exc)
@@ -232,6 +238,7 @@ async def cb_admin(call: CallbackQuery, i18n: I18n, lang: str, state: FSMContext
             return
 
         from app.state import dynamic_admin_ids
+
         admin_list = "\n".join(f"• <code>{admin_id}</code>" for admin_id in dynamic_admin_ids)
         if not admin_list:
             admin_list = "—"
@@ -241,8 +248,12 @@ async def cb_admin(call: CallbackQuery, i18n: I18n, lang: str, state: FSMContext
         kb = InlineKeyboardMarkup(
             inline_keyboard=[
                 [
-                    InlineKeyboardButton(text=str(i18n.get("admin.add_admin_btn", lang)), callback_data="admin_add_admin"),
-                    InlineKeyboardButton(text=str(i18n.get("admin.remove_admin_btn", lang)), callback_data="admin_remove_admin"),
+                    InlineKeyboardButton(
+                        text=str(i18n.get("admin.add_admin_btn", lang)), callback_data="admin_add_admin"
+                    ),
+                    InlineKeyboardButton(
+                        text=str(i18n.get("admin.remove_admin_btn", lang)), callback_data="admin_remove_admin"
+                    ),
                 ],
                 [InlineKeyboardButton(text=t("back"), callback_data="admin_back")],
             ]
@@ -268,17 +279,23 @@ async def cb_admin(call: CallbackQuery, i18n: I18n, lang: str, state: FSMContext
         await state.set_state(AdminManagementStates.waiting_for_remove_admin_id)
 
         kb = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text=t("back"), callback_data="admin_back")]])
-        await call.message.edit_text(str(i18n.get("admin.remove_admin_prompt", lang)), reply_markup=kb, parse_mode="HTML")
+        await call.message.edit_text(
+            str(i18n.get("admin.remove_admin_prompt", lang)), reply_markup=kb, parse_mode="HTML"
+        )
         return
 
     if action == "cancel_restart":
-        await call.message.edit_text(t("panel"), reply_markup=_admin_kb(i18n, lang, call.from_user.id), parse_mode="HTML")
+        await call.message.edit_text(
+            t("panel"), reply_markup=_admin_kb(i18n, lang, call.from_user.id), parse_mode="HTML"
+        )
         await call.answer()
         return
 
     if action == "back":
         await state.clear()
-        await call.message.edit_text(t("panel"), reply_markup=_admin_kb(i18n, lang, call.from_user.id), parse_mode="HTML")
+        await call.message.edit_text(
+            t("panel"), reply_markup=_admin_kb(i18n, lang, call.from_user.id), parse_mode="HTML"
+        )
         await call.answer()
         return
 
@@ -395,6 +412,7 @@ async def cb_admin(call: CallbackQuery, i18n: I18n, lang: str, state: FSMContext
 
     if action == "dash_probs":
         from app.services.error_tracking import get_active_errors
+
         errors = await get_active_errors()
 
         if not errors:
@@ -519,10 +537,7 @@ async def cb_admin(call: CallbackQuery, i18n: I18n, lang: str, state: FSMContext
     if action == "broadcast":
         stats = await get_broadcast_audience_stats(db)
 
-        lang_lines = "\n".join(
-            f"  • {lang.upper()}: <b>{count}</b>"
-            for lang, count in stats["by_language"].items()
-        )
+        lang_lines = "\n".join(f"  • {lang.upper()}: <b>{count}</b>" for lang, count in stats["by_language"].items())
 
         stats_text = (
             f"<b>{i18n.get('broadcast.stats_title', lang)}</b>\n\n"
@@ -535,7 +550,9 @@ async def cb_admin(call: CallbackQuery, i18n: I18n, lang: str, state: FSMContext
         )
 
         builder = InlineKeyboardBuilder()
-        builder.row(InlineKeyboardButton(text=str(i18n.get("broadcast.target_all", lang)), callback_data="broadcast:target:all"))
+        builder.row(
+            InlineKeyboardButton(text=str(i18n.get("broadcast.target_all", lang)), callback_data="broadcast:target:all")
+        )
 
         lang_buttons = []
         for lang_code, count in stats["by_language"].items():
@@ -545,7 +562,9 @@ async def cb_admin(call: CallbackQuery, i18n: I18n, lang: str, state: FSMContext
         if lang_buttons:
             builder.row(*lang_buttons, width=2)
 
-        builder.row(InlineKeyboardButton(text=str(i18n.get("broadcast.cancel_button", lang)), callback_data="broadcast:cancel"))
+        builder.row(
+            InlineKeyboardButton(text=str(i18n.get("broadcast.cancel_button", lang)), callback_data="broadcast:cancel")
+        )
 
         await call.message.edit_text(stats_text, parse_mode="HTML", reply_markup=builder.as_markup())
         await call.answer()
@@ -588,6 +607,7 @@ async def cb_admin(call: CallbackQuery, i18n: I18n, lang: str, state: FSMContext
 async def process_parser_interval(message: Message, state: FSMContext, i18n: I18n, lang: str) -> None:
     if not _is_admin(message.from_user.id):
         return
+
     def t(k):
         return str(i18n.get(f"admin.{k}", lang))
 
@@ -629,7 +649,9 @@ async def process_parser_interval(message: Message, state: FSMContext, i18n: I18
 
     await message.answer(text, reply_markup=kb, parse_mode="HTML")
 
+
 # ── Broadcast Feature ─────────────────────────────────────────────────────────
+
 
 @router.callback_query(F.data.startswith("broadcast:target:"))
 async def broadcast_target_chosen(call: CallbackQuery, state: FSMContext, i18n: I18n, lang: str) -> None:
@@ -640,7 +662,11 @@ async def broadcast_target_chosen(call: CallbackQuery, state: FSMContext, i18n: 
     await state.update_data(target=target)
     await state.set_state(BroadcastStates.waiting_for_text)
 
-    target_label = str(i18n.get("broadcast.target_all", lang)) if target == "all" else str(i18n.get("broadcast.target_lang", lang)).format(lang=target.upper(), count="")
+    target_label = (
+        str(i18n.get("broadcast.target_all", lang))
+        if target == "all"
+        else str(i18n.get("broadcast.target_lang", lang)).format(lang=target.upper(), count="")
+    )
 
     await call.message.edit_text(
         f"✏️ <b>{target_label}</b>\n\n"
@@ -651,23 +677,30 @@ async def broadcast_target_chosen(call: CallbackQuery, state: FSMContext, i18n: 
     )
     await call.answer()
 
+
 @router.callback_query(F.data == "broadcast:cancel")
 async def broadcast_cancel_callback(call: CallbackQuery, state: FSMContext, i18n: I18n, lang: str) -> None:
     if not _is_admin(call.from_user.id):
         await call.answer(str(i18n.get("admin.access_denied", lang)), show_alert=True)
         return
     await state.clear()
-    kb = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text=str(i18n.get("admin.back", lang)), callback_data="admin_back")]])
+    kb = InlineKeyboardMarkup(
+        inline_keyboard=[[InlineKeyboardButton(text=str(i18n.get("admin.back", lang)), callback_data="admin_back")]]
+    )
     await call.message.edit_text(str(i18n.get("broadcast.cancelled", lang)), reply_markup=kb)
     await call.answer()
+
 
 @router.message(StateFilter(BroadcastStates.waiting_for_text), Command("cancel"))
 async def cancel_broadcast_cmd(message: Message, state: FSMContext, i18n: I18n, lang: str) -> None:
     if not _is_admin(message.from_user.id):
         return
     await state.clear()
-    kb = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text=str(i18n.get("admin.back", lang)), callback_data="admin_back")]])
+    kb = InlineKeyboardMarkup(
+        inline_keyboard=[[InlineKeyboardButton(text=str(i18n.get("admin.back", lang)), callback_data="admin_back")]]
+    )
     await message.answer(str(i18n.get("broadcast.cancelled", lang)), parse_mode="HTML", reply_markup=kb)
+
 
 @router.message(StateFilter(BroadcastStates.waiting_for_text), F.text, ~Command("cancel"))
 async def broadcast_text_received(message: Message, state: FSMContext, i18n: I18n, lang: str) -> None:
@@ -679,7 +712,11 @@ async def broadcast_text_received(message: Message, state: FSMContext, i18n: I18
 
     fsm_data = await state.get_data()
     target = fsm_data.get("target", "all")
-    target_label = str(i18n.get("broadcast.target_all", lang)) if target == "all" else str(i18n.get("broadcast.target_lang", lang)).format(lang=target.upper(), count="")
+    target_label = (
+        str(i18n.get("broadcast.target_all", lang))
+        if target == "all"
+        else str(i18n.get("broadcast.target_lang", lang)).format(lang=target.upper(), count="")
+    )
 
     builder = InlineKeyboardBuilder()
     builder.button(text=str(i18n.get("broadcast.confirm_button", lang)), callback_data="broadcast:confirm")
@@ -697,17 +734,22 @@ async def broadcast_text_received(message: Message, state: FSMContext, i18n: I18
         reply_markup=builder.as_markup(),
     )
 
+
 @router.callback_query(F.data == "broadcast:cancel_confirmed")
 async def broadcast_cancel_confirmed(call: CallbackQuery, state: FSMContext, i18n: I18n, lang: str) -> None:
     if not _is_admin(call.from_user.id):
         await call.answer(str(i18n.get("admin.access_denied", lang)), show_alert=True)
         return
     await state.clear()
-    kb = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text=str(i18n.get("admin.back", lang)), callback_data="admin_back")]])
+    kb = InlineKeyboardMarkup(
+        inline_keyboard=[[InlineKeyboardButton(text=str(i18n.get("admin.back", lang)), callback_data="admin_back")]]
+    )
     await call.message.edit_text(str(i18n.get("broadcast.cancelled", lang)), reply_markup=kb)
     await call.answer()
 
+
 BROADCAST_DELAY_SECONDS = 300  # 5 minutes
+
 
 @router.callback_query(F.data == "broadcast:confirm")
 async def broadcast_confirmed(call: CallbackQuery, state: FSMContext, i18n: I18n, lang: str) -> None:
@@ -753,7 +795,7 @@ async def broadcast_confirmed(call: CallbackQuery, state: FSMContext, i18n: I18n
             confirmation_message=confirmation_msg,
             admin_chat_id=call.message.chat.id,
             i18n=i18n,
-            lang=lang
+            lang=lang,
         )
     )
     active_broadcast_tasks[admin_id] = task
@@ -771,11 +813,16 @@ async def broadcast_abort(call: CallbackQuery, i18n: I18n, lang: str) -> None:
     if task and not task.done():
         task.cancel()
         active_broadcast_tasks.pop(admin_id, None)
-        kb = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text=str(i18n.get("admin.back", lang)), callback_data="admin_back")]])
-        await call.message.edit_text(f"<b>{i18n.get('broadcast.cancelled', lang)}</b>", parse_mode="HTML", reply_markup=kb)
+        kb = InlineKeyboardMarkup(
+            inline_keyboard=[[InlineKeyboardButton(text=str(i18n.get("admin.back", lang)), callback_data="admin_back")]]
+        )
+        await call.message.edit_text(
+            f"<b>{i18n.get('broadcast.cancelled', lang)}</b>", parse_mode="HTML", reply_markup=kb
+        )
         await call.answer(str(i18n.get("broadcast.cancelled", lang)))
     else:
         await call.answer(str(i18n.get("broadcast.not_found", lang)), show_alert=True)
+
 
 async def _delayed_broadcast(
     bot,
@@ -786,7 +833,7 @@ async def _delayed_broadcast(
     confirmation_message: Message,
     admin_chat_id: int,
     i18n: I18n,
-    lang: str
+    lang: str,
 ) -> None:
     try:
         await asyncio.sleep(BROADCAST_DELAY_SECONDS)
@@ -819,10 +866,7 @@ async def _delayed_broadcast(
     failed_text = str(i18n.get("broadcast.failed", lang)).format(count=fail_count)
 
     report = (
-        f"<b>{i18n.get('broadcast.complete', lang)}</b>\n\n"
-        f"{sent_text}\n"
-        f"{failed_text}\n"
-        f"🎯 Target: <b>{target_label}</b>"
+        f"<b>{i18n.get('broadcast.complete', lang)}</b>\n\n{sent_text}\n{failed_text}\n🎯 Target: <b>{target_label}</b>"
     )
 
     try:
@@ -833,14 +877,16 @@ async def _delayed_broadcast(
                 chat_id=confirmation_message.chat.id,
                 message_id=confirmation_message.message_id,
                 text=report + "\n\n<i>Broadcast finished.</i>",
-                parse_mode="HTML"
+                parse_mode="HTML",
             )
         except Exception:
             pass
     except Exception:
         pass
 
+
 # ── Admin Management ──────────────────────────────────────────────────────────
+
 
 @router.message(StateFilter(AdminManagementStates.waiting_for_new_admin_id))
 async def process_new_admin_id(message: Message, state: FSMContext, i18n: I18n, lang: str) -> None:
@@ -851,18 +897,20 @@ async def process_new_admin_id(message: Message, state: FSMContext, i18n: I18n, 
         return
 
     from app.state import dynamic_admin_ids
+
     db = get_db()
 
     dynamic_admin_ids.add(new_admin_id)
-    await db["Settings"].update_one(
-        {"_id": "dynamic_admins"},
-        {"$addToSet": {"admin_ids": new_admin_id}},
-        upsert=True
-    )
+    await db["Settings"].update_one({"_id": "dynamic_admins"}, {"$addToSet": {"admin_ids": new_admin_id}}, upsert=True)
 
     await state.clear()
-    kb = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text=str(i18n.get("admin.back", lang)), callback_data="admin_manage_admins")]])
+    kb = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text=str(i18n.get("admin.back", lang)), callback_data="admin_manage_admins")]
+        ]
+    )
     await message.answer(str(i18n.get("admin.admin_added", lang)), reply_markup=kb)
+
 
 @router.message(StateFilter(AdminManagementStates.waiting_for_remove_admin_id))
 async def process_remove_admin_id(message: Message, state: FSMContext, i18n: I18n, lang: str) -> None:
@@ -873,14 +921,16 @@ async def process_remove_admin_id(message: Message, state: FSMContext, i18n: I18
         return
 
     from app.state import dynamic_admin_ids
+
     db = get_db()
 
     dynamic_admin_ids.discard(remove_admin_id)
-    await db["Settings"].update_one(
-        {"_id": "dynamic_admins"},
-        {"$pull": {"admin_ids": remove_admin_id}}
-    )
+    await db["Settings"].update_one({"_id": "dynamic_admins"}, {"$pull": {"admin_ids": remove_admin_id}})
 
     await state.clear()
-    kb = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text=str(i18n.get("admin.back", lang)), callback_data="admin_manage_admins")]])
+    kb = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text=str(i18n.get("admin.back", lang)), callback_data="admin_manage_admins")]
+        ]
+    )
     await message.answer(str(i18n.get("admin.admin_removed", lang)), reply_markup=kb)

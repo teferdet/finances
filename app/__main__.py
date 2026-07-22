@@ -154,6 +154,7 @@ async def on_startup(bot) -> None:
     # Load dynamic admins
     try:
         from app.state import dynamic_admin_ids
+
         db = get_db()
         doc = await db["Settings"].find_one({"_id": "dynamic_admins"})
         if doc and "admin_ids" in doc:
@@ -273,8 +274,8 @@ async def main() -> None:
         background_tasks.append(("backup_scheduler", backup_task))
 
     if "--debug" in sys.argv or "debug" in sys.argv:
-
         from app.debug_cli import run_debug_cli
+
         debug_cli_task = asyncio.create_task(run_debug_cli())
         background_tasks.append(("debug_cli", debug_cli_task))
 

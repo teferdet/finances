@@ -53,15 +53,11 @@ async def handle_group_message(message: Message, i18n: I18n, lang: str, **kwargs
 
     db = get_db()
     # Read from the unified 'groups' collection
-    group = await db["groups"].find_one(
-        {"chat_id": message.chat.id}, {"is_active": 1, "settings": 1}
-    )
+    group = await db["groups"].find_one({"chat_id": message.chat.id}, {"is_active": 1, "settings": 1})
 
     if not group or not group.get("is_active", False):
         # Fallback: legacy uppercase collection (Groups)
-        legacy = await db["Groups"].find_one(
-            {"_id": message.chat.id}, {"Input": 1, "Output": 1, "Status": 1}
-        )
+        legacy = await db["Groups"].find_one({"_id": message.chat.id}, {"Input": 1, "Output": 1, "Status": 1})
         if not legacy or legacy.get("Status") != "Active":
             return
         allowed_input = legacy.get("Input", [])
@@ -84,9 +80,7 @@ async def handle_group_message(message: Message, i18n: I18n, lang: str, **kwargs
         allowed_input = group_settings.get(
             "input_currencies", ["USD", "EUR", "GBP", "CZK", "PLN", "CHF", "CNY", "UAH", "BTC", "ETH"]
         )
-        output = group_settings.get(
-            "output_currencies", ["USD", "EUR", "GBP", "JPY", "PLN", "CHF", "UAH"]
-        )
+        output = group_settings.get("output_currencies", ["USD", "EUR", "GBP", "JPY", "PLN", "CHF", "UAH"])
 
     codes = parsed.get_codes()
     if not any(c in allowed_input for c in codes):
@@ -184,8 +178,7 @@ async def on_my_chat_member(event: ChatMemberUpdated, i18n: I18n, lang: str) -> 
         if settings.bot.admin_ids:
             main_admin = settings.bot.admin_ids[0]
             community_line = (
-                f"\nCommunity: <b>{community_name}</b> (<code>{community_id}</code>)"
-                if community_id else ""
+                f"\nCommunity: <b>{community_name}</b> (<code>{community_id}</code>)" if community_id else ""
             )
             text = (
                 f"ℹ️ {i18n.get('admin.groups.bot_added_msg', lang)}\n\n"
@@ -225,6 +218,7 @@ async def on_user_chat_member(event: ChatMemberUpdated, i18n: I18n, lang: str) -
         user_lang = user.language_code if (user.language_code and user.language_code in i18n.supported) else lang
 
         from app.utils.ephemeral import send_ephemeral_or_fallback
+
         onboarding_template = str(i18n.get("group_settings.onboarding_welcome", user_lang))
         onboarding_text = onboarding_template.format(name=user.first_name or "friend")
 

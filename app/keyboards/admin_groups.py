@@ -173,9 +173,7 @@ def admin_group_settings_kb(group: dict, i18n: I18n, lang: str) -> InlineKeyboar
 
     # ── Activate / Deactivate + Delete ────────────────────────────────────────
     toggle_text = (
-        str(i18n.get("admin.groups.deactivate", lang))
-        if is_active
-        else str(i18n.get("admin.groups.activate", lang))
+        str(i18n.get("admin.groups.deactivate", lang)) if is_active else str(i18n.get("admin.groups.activate", lang))
     )
     builder.row(
         InlineKeyboardButton(
@@ -197,9 +195,7 @@ def admin_group_settings_kb(group: dict, i18n: I18n, lang: str) -> InlineKeyboar
     return builder.as_markup()
 
 
-def admin_group_errors_level_kb(
-    chat_id: int, current_level: str, i18n: I18n, lang: str
-) -> InlineKeyboardMarkup:
+def admin_group_errors_level_kb(chat_id: int, current_level: str, i18n: I18n, lang: str) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     for level in ("WARNING", "ERROR", "CRITICAL"):
         label = ("✅ " + level) if level == current_level else level
