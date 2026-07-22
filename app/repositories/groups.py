@@ -9,6 +9,18 @@ from datetime import datetime
 from app.db import get_db
 
 
+# ── Default currency sets for new groups ─────────────────────────────────────
+# These match the historical defaults from the old telebot-based versions.
+
+DEFAULT_INPUT_CURRENCIES = [
+    "USD", "EUR", "GBP", "CZK", "PLN", "CHF", "CNY", "UAH", "BTC", "ETH",
+]
+
+DEFAULT_OUTPUT_CURRENCIES = [
+    "USD", "EUR", "GBP", "JPY", "PLN", "CHF", "UAH",
+]
+
+
 async def upsert_group_from_chat_member(
     chat_id: int,
     title: str,
@@ -57,6 +69,12 @@ async def upsert_group_from_chat_member(
                 "settings": {
                     "language": "en",
                     "auto_convert": True,
+                    "mode": "auto",
+                    "input_currencies": list(DEFAULT_INPUT_CURRENCIES),
+                    "output_currencies": list(DEFAULT_OUTPUT_CURRENCIES),
+                },
+                "stats": {
+                    "total_requests": 0,
                 },
             },
         },
@@ -101,6 +119,12 @@ async def add_group(chat_id: int, title: str, group_type: str, added_by: int) ->
             "settings": {
                 "language": "en",
                 "auto_convert": True,
+                "mode": "auto",
+                "input_currencies": list(DEFAULT_INPUT_CURRENCIES),
+                "output_currencies": list(DEFAULT_OUTPUT_CURRENCIES),
+            },
+            "stats": {
+                "total_requests": 0,
             },
         }
     )
@@ -170,4 +194,46 @@ async def get_group_settings(chat_id: int) -> dict:
     doc = await db["groups"].find_one({"chat_id": chat_id}, {"settings": 1})
     if doc and doc.get("settings"):
         return doc["settings"]
-    return {"language": "en", "auto_convert": True}
+    return {
+        "language": "en",
+        "auto_convert": True,
+        "mode": "auto",
+        "input_currencies": list(DEFAULT_INPUT_CURRENCIES),
+        "output_currencies": list(DEFAULT_OUTPUT_CURRENCIES),
+    }
+
+
+# ── Currency list helpers ────────────────────────────────────────────────────
+
+
+async def update_group_currencies(
+    chat_id: int, field: str, currencies: list[str]
+) -> bool:
+    """
+    Update input or output currency list for a group.
+
+    Args:
+        chat_id: Telegram chat ID
+        field: Either 'input_currencies' or 'output_currencies'
+        currencies: New list of currency codes
+    """
+    if field not in ("input_currencies", "output_currencies"):
+        raise ValueError(f"Invalid field: {field}")
+    db = get_db()
+    result = await db["groups"].update_one(
+        {"chat_id": chat_id},
+        {"$set": {f"settings.{field}": currencies, "updated_at": datetime.utcnow()}},
+    )
+    return result.modified_count > 0
+
+
+# ── Stats helpers ────────────────────────────────────────────────────────────
+
+
+async def increment_group_stats(chat_id: int) -> None:
+    """Increment the total_requests counter for a group (fire-and-forget)."""
+    db = get_db()
+    await db["groups"].update_one(
+        {"chat_id": chat_id},
+        {"$inc": {"stats.total_requests": 1}},
+    )

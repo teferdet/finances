@@ -153,8 +153,13 @@ async def cb_data_processing(call: CallbackQuery, i18n: I18n, lang: str) -> None
     if command == "save":
         update_type = cd.get("update type")
         if "group" in cd:
-            await db["Groups"].update_one({"_id": cd["group"]}, {"$set": {prefix: data}})
             chat_id = cd["group"]
+            field_name = "input_currencies" if prefix == "Input" else "output_currencies"
+            from app.repositories.groups import update_group_currencies
+            await update_group_currencies(chat_id, field_name, data)
+            # Legacy fallback write
+            await db["Groups"].update_one({"_id": chat_id}, {"$set": {prefix: data}}, upsert=True)
+
             del cd["group"]
             cd["update data"] = []
             await cache.json_set(key, cd)
@@ -422,15 +427,32 @@ async def cb_delete(call: CallbackQuery, i18n: I18n, lang: str) -> None:
 @router.callback_query(F.data == "groups")
 async def cb_user_groups_list(call: CallbackQuery, i18n: I18n, lang: str) -> None:
     uid = call.from_user.id
-    db = get_db()
-    user = await db["Users"].find_one({"_id": uid}, {"Groups": 1})
-    groups = (user or {}).get("Groups", [])
-    
+    from app.repositories.groups import get_active_groups
+    from app.utils.chat_admin import is_chat_admin
+
+    all_active = await get_active_groups()
+    user_admin_groups = []
+
+    for g in all_active:
+        chat_id = g.get("chat_id")
+        if chat_id and await is_chat_admin(call.bot, chat_id, uid):
+            user_admin_groups.append({
+                "id": chat_id,
+                "title": g.get("title", f"Group {chat_id}"),
+            })
+
+    if not user_admin_groups:
+        db = get_db()
+        user = await db["Users"].find_one({"_id": uid}, {"Groups": 1})
+        legacy_groups = (user or {}).get("Groups", [])
+        if legacy_groups:
+            user_admin_groups = legacy_groups
+
     bot_info = await call.bot.get_me()
     bot_username = bot_info.username
     
     ug_text = i18n.get_section("settings.user_groups", lang)
-    if not groups:
+    if not user_admin_groups:
         text = str(ug_text.get("no_groups", "You haven't added the bot to any groups yet. Add it to a group to configure it here!"))
         from app.keyboards.inline import user_groups_list_kb
         await call.message.edit_text(text, reply_markup=user_groups_list_kb([], bot_username, i18n, lang), parse_mode="HTML")
@@ -438,7 +460,7 @@ async def cb_user_groups_list(call: CallbackQuery, i18n: I18n, lang: str) -> Non
         
     text = str(ug_text.get("select_group", "Select a group to configure:"))
     from app.keyboards.inline import user_groups_list_kb
-    await call.message.edit_text(text, reply_markup=user_groups_list_kb(groups, bot_username, i18n, lang), parse_mode="HTML")
+    await call.message.edit_text(text, reply_markup=user_groups_list_kb(user_admin_groups, bot_username, i18n, lang), parse_mode="HTML")
 
 
 @router.callback_query(F.data.startswith("user_group:"))
@@ -446,48 +468,102 @@ async def cb_user_group_settings(call: CallbackQuery, i18n: I18n, lang: str) -> 
     parts = call.data.split(":")
     db = get_db()
     uid = call.from_user.id
+    from app.repositories.groups import get_group
+    from app.utils.chat_admin import is_chat_admin
     
     if len(parts) == 2:
         # F.data == "user_group:{chat_id}"
         chat_id = int(parts[1])
-        group = await db["Groups"].find_one({"_id": chat_id}, {"Status": 1})
-        
         ug_text = i18n.get_section("settings.user_groups", lang)
-        if not group or group.get("Status") != "Active":
-            text = str(ug_text.get("group_inactive", "This group is inactive or the bot was removed."))
-            await call.answer(text, show_alert=True)
+
+        if not await is_chat_admin(call.bot, chat_id, uid):
+            await call.answer(str(ug_text.get("group_inactive", "Access denied")), show_alert=True)
             return
-            
+
+        group = await get_group(chat_id)
+        if not group or not group.get("is_active", False):
+            legacy = await db["Groups"].find_one({"_id": chat_id}, {"Status": 1})
+            if not legacy or legacy.get("Status") != "Active":
+                text = str(ug_text.get("group_inactive", "This group is inactive or the bot was removed."))
+                await call.answer(text, show_alert=True)
+                return
+
         group_settings_text = ug_text.get("settings_title", "⚙️ Group Settings")
         from app.keyboards.inline import user_group_settings_kb
         await call.message.edit_text(group_settings_text, reply_markup=user_group_settings_kb(chat_id, i18n, lang), parse_mode="HTML")
         return
         
     if len(parts) == 3:
-        # F.data == "user_group:{input/output}:{chat_id}"
+        # F.data == "user_group:{action}:{chat_id}"
         action = parts[1]
         chat_id = int(parts[2])
         
-        group = await db["Groups"].find_one({"_id": chat_id}, {"Input": 1, "Output": 1})
-        if not group:
+        if not await is_chat_admin(call.bot, chat_id, uid):
+            await call.answer("Access denied", show_alert=True)
+            return
+
+        if action == "delete":
+            ug_text = i18n.get_section("settings.user_groups", lang)
+            confirm_msg = str(ug_text.get("delete_confirm", i18n.get("settings.remove", lang)))
+            from app.keyboards.inline import user_group_delete_confirm_kb
+            await call.message.edit_text(confirm_msg, reply_markup=user_group_delete_confirm_kb(chat_id, i18n, lang), parse_mode="HTML")
             await call.answer()
             return
-            
+
+        if action == "confirm_delete":
+            from app.repositories.groups import toggle_group_active, remove_group
+            await toggle_group_active(chat_id, False)
+            await remove_group(chat_id)
+            # Remove from legacy DB and user document if present
+            await db["Groups"].delete_one({"_id": chat_id})
+            await db["Users"].update_one({"_id": uid}, {"$pull": {"Groups": {"id": chat_id}}})
+
+            # Bot leaves the group chat
+            try:
+                await call.bot.leave_chat(chat_id)
+            except Exception as exc:
+                log.debug("Could not leave chat %d on delete: %s", chat_id, exc)
+
+            ug_text = i18n.get_section("settings.user_groups", lang)
+            success_msg = str(ug_text.get("delete_success", i18n.get("settings.success remove", lang)))
+            await call.answer(success_msg, show_alert=True)
+
+            # Re-render group list
+            return await cb_user_groups_list(call, i18n, lang)
+
+        # Action is input or output
+        group = await get_group(chat_id)
+        settings = (group or {}).get("settings", {})
+
+        prefix = "Input" if action == "input" else "Output"
+        field_key = "input_currencies" if action == "input" else "output_currencies"
+
+        if group:
+            selected_currencies = settings.get(
+                field_key,
+                ["USD", "EUR", "GBP", "CZK", "PLN", "CHF", "CNY", "UAH", "BTC", "ETH"] if action == "input" else ["USD", "EUR", "GBP", "JPY", "PLN", "CHF", "UAH"]
+            )
+        else:
+            legacy = await db["Groups"].find_one({"_id": chat_id}, {"Input": 1, "Output": 1})
+            if not legacy:
+                await call.answer()
+                return
+            selected_currencies = legacy.get(prefix, [])
+
         key = await _cache_key(uid)
         cd = (await cache.json_get(key)) or {}
-        
-        prefix = "Input" if action == "input" else "Output"
-        cd["update data"] = group.get(prefix, [])
+
+        cd["update data"] = selected_currencies
         cd["group"] = chat_id
         cd["page"] = 0
         await cache.json_set(key, cd)
-        
+
         currencies = get_currencies_data()
         stx = i18n.get_section("settings", lang)
         desc = str(i18n.get("settings.output", lang))
         selected_line = _selected_text(stx, cd["update data"])
         text = f"{desc}\n\n{selected_line}"
-        
+
         await call.message.edit_text(
             text, reply_markup=paginated_currency_keyboard(currencies, 0, prefix, i18n, lang, selected=cd["update data"])
         )

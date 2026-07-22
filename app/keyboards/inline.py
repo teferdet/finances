@@ -190,14 +190,31 @@ def user_group_settings_kb(chat_id: int, i18n: I18n, lang: str) -> InlineKeyboar
     builder = InlineKeyboardBuilder()
     
     s = i18n.get_section("keyboard.settings", lang)
+    ug_text = i18n.get_section("settings.user_groups", lang)
     in_text = s.get("input_currencies", "📥 Input Currencies")
     out_text = s.get("output_currencies", "📤 Output Currencies")
+    delete_text = ug_text.get("delete_btn", "🗑 Remove Group")
     back_text = s.get("back", "◀️ Back")
     
     builder.row(InlineKeyboardButton(text=in_text, callback_data=f"user_group:input:{chat_id}"))
     builder.row(InlineKeyboardButton(text=out_text, callback_data=f"user_group:output:{chat_id}"))
+    builder.row(InlineKeyboardButton(text=delete_text, callback_data=f"user_group:delete:{chat_id}"))
     builder.row(InlineKeyboardButton(text=back_text, callback_data="groups"))
     
+    return builder.as_markup()
+
+
+def user_group_delete_confirm_kb(chat_id: int, i18n: I18n, lang: str) -> InlineKeyboardMarkup:
+    from aiogram.utils.keyboard import InlineKeyboardBuilder
+    builder = InlineKeyboardBuilder()
+
+    confirm_text = str(i18n.get("keyboard.settings.confirm", lang) or "✅ Confirm")
+    back_text = str(i18n.get("keyboard.settings.back", lang) or "◀️ Back")
+
+    builder.row(
+        InlineKeyboardButton(text=confirm_text, callback_data=f"user_group:confirm_delete:{chat_id}"),
+        InlineKeyboardButton(text=back_text, callback_data=f"user_group:{chat_id}"),
+    )
     return builder.as_markup()
 
 

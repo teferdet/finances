@@ -781,3 +781,10 @@ class TextValidator:
         if match:
             return match.group(1).lower(), match.group(2).strip()
         return None, text
+
+
+def strip_html(text: str) -> str:
+    """Remove HTML tags from text for plain-text contexts like Telegram callback alerts."""
+    if not text:
+        return ""
+    return re.sub(r"<[^>]*>", "", text)

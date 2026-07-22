@@ -29,6 +29,7 @@ from app.handlers import (
     group_admin,
     guest,
 )
+from app.middlewares.group_cooldown import GroupCooldownMiddleware
 from app.logger import get_logger
 
 log = get_logger("bot")
@@ -52,11 +53,15 @@ def create_dispatcher() -> Dispatcher:
     dp.callback_query.outer_middleware(ErrorMiddleware())
     dp.inline_query.outer_middleware(ErrorMiddleware())
     dp.my_chat_member.outer_middleware(ErrorMiddleware())
+    dp.chat_member.outer_middleware(ErrorMiddleware())
 
     dp.message.outer_middleware(I18nMiddleware())
     dp.callback_query.outer_middleware(I18nMiddleware())
     dp.inline_query.outer_middleware(I18nMiddleware())
     dp.my_chat_member.outer_middleware(I18nMiddleware())
+    dp.chat_member.outer_middleware(I18nMiddleware())
+
+    dp.message.outer_middleware(GroupCooldownMiddleware())
 
     rate_limit = RateLimitMiddleware(
         limit=s.security.rate_limit_requests,

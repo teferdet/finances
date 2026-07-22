@@ -23,33 +23,52 @@ def group_settings_menu_kb(
     builder = InlineKeyboardBuilder()
 
     settings = group.get("settings", {})
-    auto_convert = settings.get("auto_convert", True)
+    mode = settings.get("mode", "auto")
 
-    # Toggle auto-conversion
-    if auto_convert:
-        toggle_text = str(i18n.get("group_settings.auto_convert_on", lang))
+    # Mode toggle button (cycles: auto -> command -> disabled -> auto)
+    if mode == "command":
+        mode_text = str(i18n.get("group_settings.mode_command", lang))
+    elif mode == "disabled":
+        mode_text = str(i18n.get("group_settings.mode_disabled", lang))
     else:
-        toggle_text = str(i18n.get("group_settings.auto_convert_off", lang))
+        mode_text = str(i18n.get("group_settings.mode_auto", lang))
+
     builder.row(
         InlineKeyboardButton(
-            text=toggle_text,
-            callback_data=f"grp_settings:toggle_convert:{chat_id}",
+            text=mode_text,
+            callback_data=f"grp_settings:mode:{chat_id}",
         )
     )
 
-    # Language
+    # Input Currencies (Triggers)
+    builder.row(
+        InlineKeyboardButton(
+            text=str(i18n.get("group_settings.input_currencies", lang)),
+            callback_data=f"grp_settings:input:{chat_id}",
+        ),
+        InlineKeyboardButton(
+            text=str(i18n.get("group_settings.output_currencies", lang)),
+            callback_data=f"grp_settings:output:{chat_id}",
+        ),
+    )
+
+    # Language & View admins
     builder.row(
         InlineKeyboardButton(
             text=str(i18n.get("group_settings.set_language", lang)),
             callback_data=f"grp_settings:lang:{chat_id}",
-        )
-    )
-
-    # View admins (diagnostic)
-    builder.row(
+        ),
         InlineKeyboardButton(
             text=str(i18n.get("group_settings.view_admins", lang)),
             callback_data=f"grp_settings:admins:{chat_id}",
+        ),
+    )
+
+    # Deactivate bot in group
+    builder.row(
+        InlineKeyboardButton(
+            text=str(i18n.get("group_settings.deactivate", lang)),
+            callback_data=f"grp_settings:deactivate:{chat_id}",
         )
     )
 
@@ -97,4 +116,24 @@ def group_language_kb(
         )
     )
 
+    return builder.as_markup()
+
+
+def group_deactivate_confirm_kb(
+    chat_id: int,
+    i18n: I18n,
+    lang: str,
+) -> InlineKeyboardMarkup:
+    """Confirmation keyboard before deactivating bot in a group."""
+    builder = InlineKeyboardBuilder()
+    builder.row(
+        InlineKeyboardButton(
+            text=str(i18n.get("keyboard.settings.confirm", lang)),
+            callback_data=f"grp_settings:confirm_deactivate:{chat_id}",
+        ),
+        InlineKeyboardButton(
+            text=str(i18n.get("group_settings.back", lang)),
+            callback_data=f"grp_settings:menu:{chat_id}",
+        ),
+    )
     return builder.as_markup()
