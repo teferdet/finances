@@ -117,7 +117,8 @@
     "big_buttons_on": "📏 Big buttons are now <b>enabled</b>! Your keyboard buttons will appear larger.",
     "big_buttons_off": "📏 Big buttons are now <b>disabled</b>. Keyboard buttons will appear in standard size.",
     "current_selected": "<b>Currently selected:</b> {items}",
-    "current_selected_none": "<b>Currently selected:</b> <i>none</i>"
+    "current_selected_none": "<b>Currently selected:</b> <i>none</i>",
+    "error group list": "😢 Zdá sa, že zatiaľ nespravujete žiadne skupiny, v ktorých som."
   },
   "other": {
     "donate": [
@@ -405,7 +406,8 @@
       "add_by_link": "🔗 Pridat cez odkaz",
       "add_link_prompt": "Poslite odkaz na skupinu alebo username (napr. https://t.me/...). Bot musi byt uz clenom skupiny.",
       "invalid_link": "❌ Nepodarilo sa spracovat odkaz alebo meno."
-    }
+    },
+    "groups_btn": "📢 Skupiny"
   },
   "portfolio": {
     "title": "💼 <b>Vaše Investičné Portfólio</b>",

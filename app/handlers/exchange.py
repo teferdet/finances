@@ -73,13 +73,13 @@ async def handle_exchange(message: Message, i18n: I18n, lang: str) -> None:
     import asyncio
     convert_task = asyncio.create_task(convert_currencies(data, output, index))
     done, pending = await asyncio.wait([convert_task], timeout=0.5)
-    
+
     loading_msg = None
     if not done:
         loading_text = str(i18n.get("exchange rate.loading", lang))
         loading_msg = await message.answer(str(loading_text))
         await convert_task
-        
+
     result = convert_task.result()
     day = strftime("%d.%m.%y")
     er_text = i18n.get_section("exchange rate", lang)
@@ -115,11 +115,11 @@ async def cb_alternative_convert(call: CallbackQuery, i18n: I18n, lang: str) -> 
 
     # Flip the index
     new_index = 0 if index == 1 else 1
-    
+
     import asyncio
     convert_task = asyncio.create_task(convert_currencies([(currency, amount)], output, new_index))
     done, pending = await asyncio.wait([convert_task], timeout=0.5)
-    
+
     if not done:
         loading_text = str(i18n.get("exchange rate.loading", lang))
         try:
@@ -127,7 +127,7 @@ async def cb_alternative_convert(call: CallbackQuery, i18n: I18n, lang: str) -> 
         except Exception:
             pass
         await convert_task
-        
+
     result = convert_task.result()
 
     day = strftime("%d.%m.%y")

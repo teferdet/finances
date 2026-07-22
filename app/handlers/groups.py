@@ -22,7 +22,6 @@ from app.i18n import I18n
 from app.keyboards.inline import group_delete_kb
 from app.repositories.communities import add_group_to_community, get_or_create_community
 from app.repositories.groups import (
-    get_group,
     increment_group_stats,
     toggle_group_active,
     upsert_group_from_chat_member,

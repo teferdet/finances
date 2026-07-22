@@ -118,7 +118,8 @@
     "big_buttons_on": "📏 Big buttons are now <b>enabled</b>! Your keyboard buttons will appear larger.",
     "big_buttons_off": "📏 Big buttons are now <b>disabled</b>. Keyboard buttons will appear in standard size.",
     "current_selected": "<b>Currently selected:</b> {items}",
-    "current_selected_none": "<b>Currently selected:</b> <i>none</i>"
+    "current_selected_none": "<b>Currently selected:</b> <i>none</i>",
+    "error group list": "😢 Vypadá to, že zatím nespravujete žádné skupiny, ve kterých jsem."
   },
   "language": {
     "select": "🌐 Vyberte svůj preferovaný jazyk:",
@@ -493,7 +494,8 @@
       "add_by_link": "🔗 Pridat pres odkaz",
       "add_link_prompt": "Poslete odkaz na skupinu nebo username (napr. https://t.me/...). Bot musi byt uz clenem skupiny.",
       "invalid_link": "❌ Nepodarilo se zpracovat odkaz nebo uzivatelske jmeno."
-    }
+    },
+    "groups_btn": "📢 Skupiny"
   },
   "comparison": {
     "title": "📊 Porovnání měn",

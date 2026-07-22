@@ -118,7 +118,8 @@
     "big_buttons_on": "📏 Big buttons are now <b>enabled</b>! Your keyboard buttons will appear larger.",
     "big_buttons_off": "📏 Big buttons are now <b>disabled</b>. Keyboard buttons will appear in standard size.",
     "current_selected": "<b>Currently selected:</b> {items}",
-    "current_selected_none": "<b>Currently selected:</b> <i>none</i>"
+    "current_selected_none": "<b>Currently selected:</b> <i>none</i>",
+    "error group list": "😢 Wygląda na to, że nie administrujesz jeszcze żadną grupą, w której jestem."
   },
   "other": {
     "donate": [
@@ -385,7 +386,8 @@
       "add_by_link": "🔗 Dodaj przez link",
       "add_link_prompt": "Wyslij link do grupy lub username (np. https://t.me/...). Bot musi byc czlonkiem grupy.",
       "invalid_link": "❌ Nie udalo sie przetworzyc linku lub nazwy uzytkownika."
-    }
+    },
+    "groups_btn": "📢 Grupy"
   },
   "alerts": {
     "menu_title": "🔔 <b>Alerty cenowe</b>",

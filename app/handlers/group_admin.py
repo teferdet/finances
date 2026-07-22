@@ -19,16 +19,17 @@ TODO: Privacy Mode — the /group_settings and /rate commands always work becaus
 
 from __future__ import annotations
 
+from typing import Any
 from time import strftime
+
 
 from aiogram import Router, F
 from aiogram.filters import Command
 from aiogram.types import CallbackQuery, Message
-from aiogram.exceptions import TelegramBadRequest, TelegramForbiddenError
+from aiogram.exceptions import TelegramBadRequest
 
 from app.cache import cache
 from app.config import get_settings, get_currencies_data
-from app.db import get_db
 from app.i18n import I18n
 from app.logger import get_logger
 from app.keyboards.group_admin import (
@@ -39,7 +40,6 @@ from app.keyboards.group_admin import (
 from app.keyboards.inline import paginated_currency_keyboard
 from app.repositories.groups import (
     get_group,
-    get_group_settings,
     increment_group_stats,
     toggle_group_active,
     update_group_currencies,

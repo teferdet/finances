@@ -46,7 +46,7 @@ async def inline_calculator(inline_query: InlineQuery, i18n: I18n, lang: str) ->
     import asyncio
     convert_task = asyncio.create_task(convert_currencies(data, output, index))
     done, pending = await asyncio.wait([convert_task], timeout=0.5)
-    
+
     if not done:
         t_loading = str(i18n.get("exchange rate.loading_title", lang))
         t_desc = str(i18n.get("exchange rate.loading_desc", lang))

@@ -1,0 +1,54 @@
+name: Sync Docs to GitHub Wiki
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'docs/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync-wiki:
+    name: Sync Documentation to Wiki
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Main Repository
+        uses: actions/checkout@v4
+
+      - name: Sync to GitHub Wiki
+        run: |
+          echo "🚀 Synchronizing docs/ with GitHub Wiki..."
+          
+          # Clone the wiki repository using GITHUB_TOKEN
+          WIKI_URL="https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.wiki.git"
+          
+          git clone "$WIKI_URL" wiki_temp || {
+            echo "❌ Failed to clone Wiki repository. Make sure GitHub Wiki is enabled in Repo Settings and has at least one initial page created."
+            exit 1
+          }
+
+          # Copy docs files into wiki repository
+          cp -r docs/* wiki_temp/
+          
+          # GitHub Wiki uses Home.md as the main landing page
+          if [ -f "wiki_temp/README.md" ]; then
+            cp wiki_temp/README.md wiki_temp/Home.md
+          fi
+
+          cd wiki_temp
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          if [ -n "$(git status --porcelain)" ]; then
+            git add .
+            git commit -m "docs: auto-sync documentation to GitHub Wiki [skip ci]"
+            git push
+            echo "✅ Successfully updated GitHub Wiki!"
+          else
+            echo "ℹ️ Wiki is already up to date."
+          fi

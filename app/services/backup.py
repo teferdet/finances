@@ -8,7 +8,6 @@ import asyncio
 import gzip
 import json
 import logging
-from pathlib import Path
 from datetime import datetime, timedelta
 from bson import ObjectId, Decimal128
 

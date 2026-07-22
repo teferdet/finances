@@ -118,7 +118,8 @@
     "big_buttons_on": "📏 Big buttons are now <b>enabled</b>! Your keyboard buttons will appear larger.",
     "big_buttons_off": "📏 Big buttons are now <b>disabled</b>. Keyboard buttons will appear in standard size.",
     "current_selected": "<b>Currently selected:</b> {items}",
-    "current_selected_none": "<b>Currently selected:</b> <i>none</i>"
+    "current_selected_none": "<b>Currently selected:</b> <i>none</i>",
+    "error group list": "😢 Sieht so aus, als ob Sie noch keine Gruppen verwalten, in denen ich Mitglied bin."
   },
   "language": {
     "select": "🌐 Wählen Sie Ihre bevorzugte Sprache:",
@@ -454,7 +455,8 @@
       "add_by_link": "🔗 Per Link hinzufuegen",
       "add_link_prompt": "Sende den Gruppenlink oder Benutzernamen (z.B. https://t.me/...). Der Bot muss bereits Mitglied der Gruppe sein.",
       "invalid_link": "❌ Link oder Benutzername konnte nicht verarbeitet werden."
-    }
+    },
+    "groups_btn": "📢 Gruppen"
   },
   "comparison": {
     "title": "📊 Währungsvergleich",

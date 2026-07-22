@@ -16,7 +16,6 @@ from __future__ import annotations
 from typing import Any
 
 from aiogram import Bot
-from aiogram.exceptions import TelegramBadRequest, TelegramForbiddenError
 
 from app.logger import get_logger
 from app.services.ephemeral_service import ephemeral_tracker

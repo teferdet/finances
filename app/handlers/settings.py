@@ -18,7 +18,11 @@ from app.keyboards.inline import (
 )
 from app.keyboards.main import get_main_keyboard
 
+from app.logger import get_logger
+
+log = get_logger("settings")
 router = Router(name="settings")
+
 
 
 async def _cache_key(uid: int) -> str:
@@ -164,7 +168,7 @@ async def cb_data_processing(call: CallbackQuery, i18n: I18n, lang: str) -> None
             cd["update data"] = []
             await cache.json_set(key, cd)
             await call.answer(stx.get("success", "Saved"), show_alert=False)
-            
+
             from app.keyboards.inline import user_group_settings_kb
             ug_text = i18n.get_section("settings.user_groups", lang)
             group_settings_text = ug_text.get("settings_title", "⚙️ Group Settings")
@@ -187,13 +191,13 @@ async def cb_data_processing(call: CallbackQuery, i18n: I18n, lang: str) -> None
             cd["update data"] = []
             await cache.json_set(key, cd)
             await call.answer(stx.get("exit", "Cancelled"), show_alert=False)
-            
+
             from app.keyboards.inline import user_group_settings_kb
             ug_text = i18n.get_section("settings.user_groups", lang)
             group_settings_text = ug_text.get("settings_title", "⚙️ Group Settings")
             await call.message.edit_text(group_settings_text, reply_markup=user_group_settings_kb(chat_id, i18n, lang))
             return
-            
+
         cd["update data"] = []
         await cache.json_set(key, cd)
         await call.answer(stx.get("exit", "Cancelled"), show_alert=False)
@@ -450,14 +454,14 @@ async def cb_user_groups_list(call: CallbackQuery, i18n: I18n, lang: str) -> Non
 
     bot_info = await call.bot.get_me()
     bot_username = bot_info.username
-    
+
     ug_text = i18n.get_section("settings.user_groups", lang)
     if not user_admin_groups:
         text = str(ug_text.get("no_groups", "You haven't added the bot to any groups yet. Add it to a group to configure it here!"))
         from app.keyboards.inline import user_groups_list_kb
         await call.message.edit_text(text, reply_markup=user_groups_list_kb([], bot_username, i18n, lang), parse_mode="HTML")
         return
-        
+
     text = str(ug_text.get("select_group", "Select a group to configure:"))
     from app.keyboards.inline import user_groups_list_kb
     await call.message.edit_text(text, reply_markup=user_groups_list_kb(user_admin_groups, bot_username, i18n, lang), parse_mode="HTML")
@@ -470,7 +474,7 @@ async def cb_user_group_settings(call: CallbackQuery, i18n: I18n, lang: str) -> 
     uid = call.from_user.id
     from app.repositories.groups import get_group
     from app.utils.chat_admin import is_chat_admin
-    
+
     if len(parts) == 2:
         # F.data == "user_group:{chat_id}"
         chat_id = int(parts[1])
@@ -492,12 +496,12 @@ async def cb_user_group_settings(call: CallbackQuery, i18n: I18n, lang: str) -> 
         from app.keyboards.inline import user_group_settings_kb
         await call.message.edit_text(group_settings_text, reply_markup=user_group_settings_kb(chat_id, i18n, lang), parse_mode="HTML")
         return
-        
+
     if len(parts) == 3:
         # F.data == "user_group:{action}:{chat_id}"
         action = parts[1]
         chat_id = int(parts[2])
-        
+
         if not await is_chat_admin(call.bot, chat_id, uid):
             await call.answer("Access denied", show_alert=True)
             return

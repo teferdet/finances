@@ -231,14 +231,14 @@ async def convert_currencies(
                         continue
                     if code not in bdoc["rates"]:
                         continue
-                    
+
                     rate_info = bdoc["rates"][code]
                     try:
                         rate = float(rate_info.get("reverse_rate", 0))
                         if rate == 0:
                             continue
                         converted = round(amount * rate, 4)
-                        
+
                         target_emoji = ""
                         target_symbol = ""
                         for info in all_info:
@@ -250,7 +250,7 @@ async def convert_currencies(
                             target_emoji = _cd_map.get(bcode, {}).get("emoji", "")
                         if not target_symbol:
                             target_symbol = _cd_map.get(bcode, {}).get("symbol", "")
-                            
+
                         results.append(f"{target_emoji} {bcode}: {converted}{target_symbol}")
                     except (ValueError, TypeError):
                         continue

@@ -5,7 +5,6 @@ Service for sending periodic analytical reports to subscribed groups.
 from __future__ import annotations
 import asyncio
 from datetime import datetime, timedelta
-from app.db import get_db
 from app.logger import get_logger
 from app.repositories.groups import get_active_groups, toggle_group_active
 from app.services.ephemeral_service import send_ephemeral
@@ -148,20 +147,20 @@ class AnalyticsReporter:
 
     async def _collect_daily_stats(self, now: datetime, i18n, lang: str) -> dict:
         total_users = await self.db["Users"].count_documents({})
-        
+
         today_midnight = now.replace(hour=0, minute=0, second=0, microsecond=0)
         active_today = await self.db["Users"].count_documents({"last_active": {"$gte": today_midnight}})
-        
+
         # New today (assuming 'created_at' or 'joined_at', but we use 'last_active' logic since there might not be created_at. Wait, let's use '_id' logic or assume 'created_at' doesn't exist and we just use TODO)
         new_today = 0 # TODO: require field in schema for new users
-        
+
         no_data_str = str(i18n.get("admin.groups.no_data", lang))
-        
+
         # Requests and currencies (Requires request_stats)
         requests_today = 0 # TODO: requires request_stats collection
         peak_hour = "Unknown" # TODO: requires request_stats collection
         top_currencies = no_data_str # TODO: requires request_stats collection
-        
+
         # Errors (parsing logs)
         errors_today = 0
         from app.config import LOGS_DIR
@@ -187,19 +186,19 @@ class AnalyticsReporter:
     async def _collect_weekly_stats(self, now: datetime, i18n, lang: str) -> dict:
         weekly_midnight = now.replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=7)
         active_weekly = await self.db["Users"].count_documents({"last_active": {"$gte": weekly_midnight}})
-        
+
         today_midnight = now.replace(hour=0, minute=0, second=0, microsecond=0)
         active_today = await self.db["Users"].count_documents({"last_active": {"$gte": today_midnight}})
-        
+
         retention = round((active_today / active_weekly * 100), 1) if active_weekly > 0 else 0
-        
+
         no_data_str = str(i18n.get("admin.groups.no_data", lang))
-        
+
         new_weekly = 0 # TODO: require field in schema for new users
         requests_weekly = 0 # TODO: requires request_stats collection
         peak_day = "Unknown" # TODO: requires request_stats collection
         top_currencies = no_data_str # TODO: requires request_stats collection
-        
+
         # Errors (parsing logs)
         errors_weekly = 0
         from app.config import LOGS_DIR

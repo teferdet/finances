@@ -74,13 +74,13 @@ def _check_dependencies() -> None:
         print(f"\n{sep}")
         print("  STARTUP ERROR — missing Python packages")
         print(sep)
-        print(f"\n  The following package(s) are not installed:\n")
+        print("\n  The following package(s) are not installed:\n")
         for m in missing:
             print(f"    ✗  {m}")
-        print(f"\n  Install them by running:")
+        print("\n  Install them by running:")
         print(f"\n    pip install {pkgs}")
-        print(f"\n  Or install all dependencies at once:")
-        print(f"\n    pip install -r requirements.txt")
+        print("\n  Or install all dependencies at once:")
+        print("\n    pip install -r requirements.txt")
         print(f"\n{sep}\n")
         sys.exit(1)
 
@@ -263,7 +263,7 @@ async def main() -> None:
 
     digest_task = asyncio.create_task(run_digest_scheduler())
     background_tasks.append(("digest_scheduler", digest_task))
-    
+
     analytics_reporter = AnalyticsReporter(bot=bot, db=get_db())
     analytics_task = asyncio.create_task(analytics_reporter.start())
     background_tasks.append(("analytics_reporter", analytics_task))
@@ -271,9 +271,9 @@ async def main() -> None:
     if settings.bot.backup_enabled:
         backup_task = asyncio.create_task(run_daily_backup_loop(settings.database.mongo_uri))
         background_tasks.append(("backup_scheduler", backup_task))
-        
-    import sys
+
     if "--debug" in sys.argv or "debug" in sys.argv:
+
         from app.debug_cli import run_debug_cli
         debug_cli_task = asyncio.create_task(run_debug_cli())
         background_tasks.append(("debug_cli", debug_cli_task))

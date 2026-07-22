@@ -115,7 +115,7 @@ class AsyncTelegramErrorHandler(logging.Handler):
         dt_str = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
         level_name = record.levelname
         emoji = "🔴" if level_name in ("ERROR", "CRITICAL") else "🟠"
-        
+
         # Exception details
         exc_text = ""
         if record.exc_info:
@@ -124,10 +124,10 @@ class AsyncTelegramErrorHandler(logging.Handler):
             # Take last 3 lines (excluding the very last empty string if present)
             tb_short = "".join(tb_lines[-4:]) if len(tb_lines) >= 4 else "".join(tb_lines)
             exc_text = tb_short
-        
+
         asyncio.create_task(self._send_to_groups(
-            record.levelno, level_name, emoji, dt_str, 
-            record.pathname, record.lineno, record.getMessage(), 
+            record.levelno, level_name, emoji, dt_str,
+            record.pathname, record.lineno, record.getMessage(),
             exc_text, time.time()
         ))
 
@@ -141,11 +141,11 @@ class AsyncTelegramErrorHandler(logging.Handler):
             settings = get_settings()
             lang = settings.i18n.default_language
             i18n = get_i18n()
-            
+
             traceback_part = ""
             if exc_text:
                 traceback_part = str(i18n.get("admin.groups.traceback_label", lang)).format(tb=exc_text)
-                
+
             text = str(i18n.get("admin.groups.error_report", lang)).format(
                 emoji=emoji,
                 level=level_name,
@@ -155,27 +155,27 @@ class AsyncTelegramErrorHandler(logging.Handler):
                 message=message,
                 traceback=traceback_part
             )
-            
+
             groups = await get_active_groups()
             for group in groups:
                 chat_id = group.get("chat_id")
                 notifs = group.get("notifications", {}).get("errors", {})
                 if not notifs.get("enabled"):
                     continue
-                
+
                 # Check min level
                 min_level_str = notifs.get("min_level", "ERROR")
                 min_level = getattr(logging, min_level_str.upper(), logging.ERROR)
-                
+
                 if levelno < min_level:
                     continue
-                
+
                 # Debounce (1 per 10s per group)
                 if current_time - self.last_sent.get(chat_id, 0) < 10:
                     continue
-                    
+
                 self.last_sent[chat_id] = current_time
-                
+
                 try:
                     await self.bot.send_message(chat_id, text, parse_mode="HTML")
                 except TelegramForbiddenError:
