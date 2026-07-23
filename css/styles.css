@@ -85,6 +85,7 @@ body {
   color: var(--text-main);
   line-height: 1.6;
   min-height: 100vh;
+  overflow-x: hidden;
 }
 
 /* Header */
@@ -479,6 +480,7 @@ body {
 .docs-main {
   padding: 2.5rem 3rem;
   max-width: 860px;
+  overflow-x: hidden;
 }
 
 /* Classic Markdown Typography */
@@ -598,15 +600,29 @@ body {
   border-color: var(--accent-primary);
 }
 
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-bottom: 1.5rem;
+}
+
 .markdown-body table {
   width: 100%;
   border-collapse: collapse;
-  margin-bottom: 1.5rem;
   font-size: 0.92rem;
-  display: block;
+}
+
+.markdown-body table code {
+  word-break: normal;
+  white-space: nowrap;
+}
+
+.mermaid {
+  max-width: 100%;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
-  max-width: 100%;
+  margin-bottom: 1.5rem;
 }
 
 .markdown-body th, .markdown-body td {

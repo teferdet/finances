@@ -219,6 +219,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const doc = window.DOCS_DATA[activeDocKey];
     area.innerHTML = marked.parse(doc.content);
 
+    area.querySelectorAll('table').forEach(table => {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'table-wrapper';
+      table.parentNode.insertBefore(wrapper, table);
+      wrapper.appendChild(table);
+    });
+
     if (window.Prism) {
       Prism.highlightAllUnder(area);
     }
