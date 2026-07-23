@@ -1,83 +1,60 @@
-[← Back to docs index](README.md)
+# 🏗 Architecture
 
-# Architecture Overview
+**TL;DR:** Finances is an asynchronous Telegram bot built with Python (`aiogram` 3.x) and MongoDB (`motor`). It features a multi-layered middleware architecture, background data scraping using `curl_cffi`, and background schedulers for alerts, volatility monitoring, and system backups.
 
-The `teferdet/finances` bot is built using Python 3.12+ and the [aiogram 3.x](https://docs.aiogram.dev/) asynchronous framework. It is designed to be highly concurrent, resilient, and responsive to private messages, group chats, and Bot API 10.x guest queries.
+## System Overview
 
-## Core Components
-
-The system architecture is divided into the following layers:
-
-1. **Entry Point & Orchestration:**
-   - `app/__main__.py`: The primary entry point. Initializes configurations, establishes database connections, starts background services (central parser, alerts, digest, backups), and starts the Telegram bot polling loop.
-   - `app/bot.py`: Configures the Telegram `Bot` and `Dispatcher`, attaching middlewares (`i18n`, `rate_limit`, `throttle`, `group_cooldown`, `error`) and registering all feature routers.
-
-2. **Routing & Handlers (`app/handlers/`):**
-   - Instead of a monolithic structure, the bot uses `aiogram`'s Router architecture. Handlers are grouped by domain (e.g., `crypto.py`, `portfolio.py`, `alerts.py`, `group_admin.py`, `admin_groups.py`, `guest.py`).
-   - Private, group, and guest updates (`F.guest_query_id`) are filtered at the router level.
-
-3. **Repositories (`app/repositories/`):**
-   - Encapsulates database access for complex domain objects.
-   - `groups.py`: Manages group chat configurations, member tracking, settings overrides, and usage stats.
-   - `communities.py`: Handles Telegram Bot API 10.2 Community structures, linking groups under parent organizational entities.
-
-4. **Background Services & Central Parser (`app/services/`):**
-   - `parser_service.py` (`CentralParserService`): Central orchestrator for background currency refresh and on-demand conversion.
-   - `ephemeral_service.py`: Handles self-deleting message lifecycle for clean UI interactions in groups.
-   - `analytics_reporter.py`: Aggregates usage metrics for system and group administrators.
-   - Core async loops: Alert checking, volatility monitoring, weekly portfolio digests, and automated MongoDB backups.
-
-5. **Data Persistence (MongoDB & Motor):**
-   - Asynchronous MongoDB interactions via `motor`.
-   - Collections: `Users`, `Groups`, `Communities`, `Alerts`, `fiat_rates`, `current_prices`, `price_history`, `ApiKeys`, `Status`, `ProblematicSources`.
-   - Lazy data structure migrations run on-the-fly where necessary.
-
-6. **Caching Layer (`app/cache.py`):**
-   - Asynchronous in-memory cache reducing database load for `currencies_info` and temporary UI navigation state.
+The application is structured into several core layers:
+- **Bot & Dispatcher (`bot.py`)**: Initializes the aiogram `Bot` and `Dispatcher`, injecting global middlewares (Error, I18n, RateLimit, GroupCooldown) and registering all command routers.
+- **Routers (`handlers/`)**: Contain the actual logic for responding to Telegram updates (e.g., `start`, `crypto`, `portfolio`, `admin`).
+- **Services (`services/`)**: Background loops that run independently of the Telegram long-polling (parsers, alerts, digest scheduler).
+- **Database (`db.py`)**: Asynchronous MongoDB operations utilizing connection pooling.
+- **Configuration (`config.py`)**: Typified dataclasses loading data from `config/settings.json` and `config/data.json` at runtime.
 
 ## Data Flow Diagram
 
 ```mermaid
-graph TD
-    User([Telegram User / Group Admin]) --> Bot[Aiogram Dispatcher]
-    Bot --> Middlewares[Middlewares: Auth, i18n, Rate Limit, Group Cooldown, Error]
-    Middlewares --> Handlers[Domain & Admin Handlers]
+sequenceDiagram
+    participant User
+    participant Telegram
+    participant Dispatcher
+    participant Middlewares
+    participant Handler
+    participant Database
     
-    Handlers --> Repositories[Repositories: Groups, Communities]
-    Handlers --> Services[Services: CentralParser, Ephemeral, Portfolio]
+    User->>Telegram: Send command (e.g. /crypto)
+    Telegram->>Dispatcher: Webhook/Polling Update
     
-    Repositories --> DB[(MongoDB)]
-    Services --> DB
-    Services --> Cache[In-Memory Cache]
+    Dispatcher->>Middlewares: Process Update
+    Note right of Middlewares: Error Catching -> Rate Limit -> i18n Inject
     
-    subgraph Background Tasks
-        CentralParser[Central Parser Service]
-        AlertLoop[Alert Checker]
-        VolatilityLoop[Volatility Monitor]
-        DigestLoop[Weekly Digest]
-        BackupLoop[Local Backup]
-    end
+    Middlewares->>Handler: Route to crypto.py
     
-    CentralParser --> ExtAPIs[External APIs: CMC, Yahoo, fx-rate]
-    CentralParser --> DB
+    Handler->>Database: Fetch current_prices / Users data
+    Database-->>Handler: Return documents
     
-    AlertLoop --> DB
-    AlertLoop -.-> User
+    Handler->>Middlewares: Format response (localize)
+    Middlewares-->>Dispatcher: Ready Payload
     
-    VolatilityLoop --> DB
-    VolatilityLoop -.-> User
-    
-    DigestLoop --> DB
-    DigestLoop -.-> User
+    Dispatcher->>Telegram: Send Message
+    Telegram->>User: Display UI/Keyboard
 ```
 
-## System Constraints & Security
-- **Rate Limiting & Cooldowns:** Protects private and group channels from spam (`rate_limit.py`, `group_cooldown.py`).
-- **Bot API 10.x Guest Mode:** Safe single-message query evaluation for `@bot` mentions in non-member chats (`guest.py`).
-- **Cloudflare Bypass:** Uses `curl_cffi` with browser fingerprinting to scrape fiat rates securely.
-- **API Secret Encryption:** Symmetrically encrypts user exchange secrets (`Fernet`) before storing in database (`security.py`).
+## Parsing Engine (`curl_cffi`)
 
----
+The bot requires live currency and asset rates. Instead of standard `aiohttp` or `requests`, the parser service utilizes **`curl_cffi`**.
+- **Why `curl_cffi`?** It impersonates a real browser's TLS/JA3 fingerprints. Many financial data sources (like `fx-rate.net`) use Cloudflare or similar anti-bot protection. `curl_cffi` bypasses these restrictions effectively.
+- **Flow**: The parser runs as an asynchronous background loop (`run_parser_loop()`), fetching data at intervals defined in `settings.parser.update_interval_sec`.
 
-*Last updated: 2026-07-22*
+## Background Schedulers
 
+The entry point (`__main__.py`) initiates several asynchronous background tasks via `asyncio.create_task()` before starting the aiogram polling:
+
+| Task Name | Function | Interval | Description |
+|-----------|----------|----------|-------------|
+| **Parser** | `run_parser_loop()` | `parser.update_interval_sec` | Scrapes fresh fiat/crypto rates and caches them in MongoDB. |
+| **Alerts** | `run_alert_checker()` | 60 seconds | Checks if any user-defined price targets (`Alerts` collection) have been reached. |
+| **Volatility** | `run_volatility_monitor()` | 300 seconds | Analyzes `price_history` to detect sudden price spikes/drops for assets in user portfolios. |
+| **Digest** | `run_digest_scheduler()` | Scheduled | Prepares and sends scheduled analytics reports (🚧 In Progress). |
+| **Analytics** | `AnalyticsReporter.start()` | Scheduled | Background aggregation of user activity metrics. |
+| **Backup** | `run_daily_backup_loop()` | 24 hours | Performs a localized dump of the MongoDB data (if `backup_enabled` is true). |

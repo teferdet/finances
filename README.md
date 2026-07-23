@@ -73,9 +73,21 @@ finances-dev/
 
 ---
 
-## 🛠 Installation & Setup
+## 📚 Documentation
 
-For detailed instructions on prerequisites, installation, configuration, and a comprehensive guide on using the Admin Panel, please refer to the [Setup Guide](setup.md).
+The complete documentation for Finances is located in the `docs/` directory.
+
+*   **[Setup Guide](docs/setup.md)**: Installation, prerequisites, and running the bot.
+*   **[Architecture](docs/architecture.md)**: Core components, data flow, and background tasks.
+*   **[Configuration](docs/configuration.md)**: Environment setup and runtime `/admin` configuration.
+*   **[Admin Panel](docs/admin-panel.md)**: Guide to using the in-app `/admin` modules.
+*   **[Localization (i18n)](docs/i18n.md)**: How to manage translations and add languages.
+*   **[Deployment](docs/deployment.md)**: CI/CD workflows and production deployment.
+*   **[Database Schema](docs/database-schema.md)**: MongoDB collections and data structures.
+*   **[Contributing](docs/contributing.md)**: Guidelines for contributing to the project.
+*   **[FAQ & Troubleshooting](docs/faq-troubleshooting.md)**: Solutions to common issues.
+
+For a full index, see the [Documentation Index](docs/README.md).
 
 ---
 
