@@ -17,6 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initSearch();
   initThemeToggle();
   initHashRouting();
+  preloadAllDocsForSearch();
 
   // Theme Toggle
   function initThemeToggle() {
@@ -194,7 +195,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  function loadDoc(key, updateHash = true) {
+  async function loadDoc(key, updateHash = true) {
     if (!window.DOCS_DATA || !window.DOCS_DATA[key]) return;
     activeDocKey = key;
     document.body.classList.remove('sidebar-open');
@@ -207,17 +208,66 @@ document.addEventListener('DOMContentLoaded', () => {
       el.classList.toggle('active', el.getAttribute('data-key') === key);
     });
 
-    renderActiveDoc();
+    await renderActiveDoc();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   // Render Markdown Document
-  function renderActiveDoc() {
+  async function renderActiveDoc() {
     const area = document.getElementById('docs-content-area');
     if (!area || !window.DOCS_DATA[activeDocKey]) return;
 
     const doc = window.DOCS_DATA[activeDocKey];
+    
+    if (!doc.content) {
+      area.innerHTML = '<div style="padding: 3rem; text-align: center; color: var(--text-dim);">Loading documentation from GitHub...</div>';
+      try {
+        const repoUrl = `https://raw.githubusercontent.com/teferdet/finances/main/docs/${doc.file}`;
+        const response = await fetch(repoUrl);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        let text = await response.text();
+        // Remove "Back to docs index" links dynamically
+        text = text.replace(/\[←\s*Back\s+to\s+docs\s+index\]\([^)]+\)/gi, '').trim();
+        doc.content = text;
+      } catch (error) {
+        area.innerHTML = `<div style="padding: 2rem; color: #ff5555; text-align: center;">Error loading document: ${error.message}</div>`;
+        return;
+      }
+    }
+
     area.innerHTML = marked.parse(doc.content);
+
+    // Intercept markdown links to other .md files
+    area.querySelectorAll('a').forEach(a => {
+      const href = a.getAttribute('href');
+      if (href && href.endsWith('.md') && !href.startsWith('http')) {
+        a.addEventListener('click', e => {
+          e.preventDefault();
+          // e.g. "faq-troubleshooting.md" -> "faq" (if mapped) or "faq-troubleshooting"
+          let targetFile = href;
+          // Find if we have this file in DOCS_DATA
+          let matchedKey = null;
+          Object.keys(window.DOCS_DATA).forEach(k => {
+             if (window.DOCS_DATA[k].file.toLowerCase() === targetFile.toLowerCase()) {
+                 matchedKey = k;
+             }
+          });
+          
+          if (!matchedKey) {
+             // Fallback: create dynamic entry
+             matchedKey = targetFile.replace('.md', '');
+             window.DOCS_DATA[matchedKey] = {
+                title: targetFile.replace('.md', '').replace(/-/g, ' ').toUpperCase(),
+                icon: '📄',
+                category: 'Other',
+                file: targetFile
+             };
+             initSidebarNav();
+          }
+          loadDoc(matchedKey);
+        });
+      }
+    });
 
     area.querySelectorAll('table').forEach(table => {
       const wrapper = document.createElement('div');
@@ -346,16 +396,16 @@ document.addEventListener('DOMContentLoaded', () => {
       Object.keys(window.DOCS_DATA).forEach(key => {
         const doc = window.DOCS_DATA[key];
         const titleMatch = doc.title.toLowerCase().includes(query);
-        const idx = doc.content.toLowerCase().indexOf(query);
+        const idx = doc.content ? doc.content.toLowerCase().indexOf(query) : -1;
 
         if (titleMatch || idx !== -1) {
-          let snippet = doc.content;
+          let snippet = doc.content || '';
           if (idx !== -1) {
             const start = Math.max(0, idx - 35);
-            const end = Math.min(doc.content.length, idx + 80);
-            snippet = (start > 0 ? '...' : '') + doc.content.substring(start, end) + '...';
+            const end = Math.min(snippet.length, idx + 80);
+            snippet = (start > 0 ? '...' : '') + snippet.substring(start, end) + '...';
           } else {
-            snippet = doc.content.substring(0, 90) + '...';
+            snippet = snippet.substring(0, 90) + (snippet.length > 90 ? '...' : '');
           }
           matches.push({ key, title: doc.title, icon: doc.icon, snippet });
         }
@@ -387,5 +437,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function escapeHtml(str) {
     return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  function preloadAllDocsForSearch() {
+    Object.keys(window.DOCS_DATA).forEach(key => {
+      const doc = window.DOCS_DATA[key];
+      if (!doc.content) {
+        fetch(`https://raw.githubusercontent.com/teferdet/finances/main/docs/${doc.file}`)
+          .then(res => {
+            if (res.ok) return res.text();
+            throw new Error('Not found');
+          })
+          .then(text => {
+            // Remove "Back to docs index" links dynamically
+            text = text.replace(/\[←\s*Back\s+to\s+docs\s+index\]\([^)]+\)/gi, '').trim();
+            doc.content = text;
+          })
+          .catch(err => console.warn('Search preload failed for', doc.file));
+      }
+    });
   }
 });
