@@ -208,7 +208,7 @@ body {
 }
 
 .mobile-sidebar-toggle {
-  display: none;
+  display: none !important;
 }
 
 /* Page Views */
@@ -428,8 +428,13 @@ body {
   z-index: 90;
 }
 
-body.view-docs-active .docs-sidebar {
-  display: block;
+@media (min-width: 769px) {
+  body.view-docs-active .docs-sidebar {
+    display: block !important;
+  }
+  body:not(.view-docs-active) .docs-sidebar {
+    display: none !important;
+  }
 }
 
 .sidebar-group-title {
@@ -773,7 +778,7 @@ body.view-docs-active .docs-sidebar {
   }
 
   .mobile-sidebar-toggle {
-    display: flex;
+    display: flex !important;
   }
 
   .docs-viewport {
