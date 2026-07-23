@@ -13,6 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Initialize Modules
   initNavigation();
   initSidebarNav();
+  initMobileSidebar();
   initSearch();
   initThemeToggle();
   initHashRouting();
@@ -34,6 +35,30 @@ document.addEventListener('DOMContentLoaded', () => {
     if (iconSpan) {
       iconSpan.textContent = currentTheme === 'dark' ? '🌙' : '☀️';
     }
+  }
+
+  // Mobile Sidebar Drawer Controller
+  function initMobileSidebar() {
+    const toggleBtn = document.getElementById('mobile-sidebar-toggle');
+    const backdrop = document.getElementById('sidebar-backdrop');
+
+    if (toggleBtn) {
+      toggleBtn.addEventListener('click', () => {
+        document.body.classList.toggle('sidebar-open');
+      });
+    }
+
+    if (backdrop) {
+      backdrop.addEventListener('click', () => {
+        document.body.classList.remove('sidebar-open');
+      });
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && document.body.classList.contains('sidebar-open')) {
+        document.body.classList.remove('sidebar-open');
+      }
+    });
   }
 
   // Top Page View Router (Home vs Docs)
@@ -72,7 +97,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnHome = document.getElementById('nav-btn-home');
     const btnDocs = document.getElementById('nav-btn-docs');
 
+    document.body.classList.remove('sidebar-open');
+
     if (pageId === 'home') {
+      document.body.classList.remove('view-docs-active');
       viewHome?.classList.add('active');
       viewDocs?.classList.remove('active');
       btnHome?.classList.add('active');
@@ -80,6 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
       window.location.hash = '';
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
+      document.body.classList.add('view-docs-active');
       viewHome?.classList.remove('active');
       viewDocs?.classList.add('active');
       btnHome?.classList.remove('active');
@@ -112,6 +141,26 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!navContainer || !window.DOCS_DATA) return;
 
     navContainer.innerHTML = '';
+
+    // Top Navigation Group (Visible in Mobile Drawer)
+    const topNavGroup = document.createElement('div');
+    topNavGroup.className = 'sidebar-top-nav';
+    topNavGroup.innerHTML = `
+      <div class="sidebar-group-title">Navigation</div>
+      <a class="sidebar-item" id="drawer-home-link" href="#"><span>🏠</span> <span>Home Page</span></a>
+      <a class="sidebar-item" id="drawer-docs-link" href="#readme"><span>📚</span> <span>Documentation</span></a>
+    `;
+    navContainer.appendChild(topNavGroup);
+
+    topNavGroup.querySelector('#drawer-home-link')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      showPage('home');
+    });
+    topNavGroup.querySelector('#drawer-docs-link')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      showPage('docs');
+      loadDoc(activeDocKey || 'readme');
+    });
 
     const categories = {};
     Object.keys(window.DOCS_DATA).forEach(key => {
@@ -148,6 +197,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function loadDoc(key, updateHash = true) {
     if (!window.DOCS_DATA || !window.DOCS_DATA[key]) return;
     activeDocKey = key;
+    document.body.classList.remove('sidebar-open');
 
     if (updateHash) {
       window.location.hash = `#${key}`;

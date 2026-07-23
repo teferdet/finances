@@ -42,8 +42,13 @@
     </nav>
 
     <div class="header-actions">
+      <button class="icon-btn mobile-sidebar-toggle" id="mobile-sidebar-toggle" title="Toggle Documentation Menu" aria-label="Toggle Documentation Menu">
+        <span>☰</span>
+      </button>
+
       <button class="search-btn" id="search-btn" title="Search Documentation (Ctrl+K)">
-        <span>🔍 Search...</span>
+        <span class="search-icon">🔍</span>
+        <span class="search-btn-text">Search...</span>
         <kbd>Ctrl K</kbd>
       </button>
 
@@ -57,6 +62,11 @@
       </a>
     </div>
   </header>
+
+  <!-- Left Navigation Sidebar (Desktop Sidebar / Mobile Drawer) -->
+  <aside class="docs-sidebar">
+    <nav id="docs-sidebar-nav"></nav>
+  </aside>
 
   <!-- Page 1: Landing Home Page -->
   <main id="view-home" class="page-view active">
@@ -139,11 +149,6 @@
   <main id="view-docs" class="page-view">
     <div class="docs-viewport">
 
-      <!-- Left Navigation Sidebar -->
-      <aside class="docs-sidebar">
-        <nav id="docs-sidebar-nav"></nav>
-      </aside>
-
       <!-- Center Article Content Reader -->
       <section class="docs-main">
         <article class="markdown-body" id="docs-content-area"></article>
@@ -169,6 +174,9 @@
       <div class="search-results-list" id="search-results-list"></div>
     </div>
   </div>
+
+  <!-- Mobile Sidebar Backdrop Overlay -->
+  <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
 
   <!-- Scripts -->
   <script src="js/docs-data.js"></script>
