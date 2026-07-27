@@ -1,7 +1,7 @@
 # Core dependencies
 aiogram>=3.30.0
 motor>=3.7.1
-curl_cffi>=0.7.0
+curl_cffi>=0.15.0
 aiohttp>=3.9.5
 beautifulsoup4>=4.12.0
 
