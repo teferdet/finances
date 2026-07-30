@@ -2,8 +2,7 @@
 Stocks handler — /stocks command.
 """
 
-from __future__ import annotations
-
+import asyncio
 
 from aiogram import Router
 from aiogram.filters import Command
@@ -23,7 +22,7 @@ async def cmd_stocks(message: Message, i18n: I18n, lang: str) -> None:
 
     stocks_doc = await db["Crypto&Stocks"].find_one({"_id": "stocks"})
     if not stocks_doc:
-        await message.answer(str(i18n.get("stocks.not_available", lang)))
+        await message.answer(str(i18n.get("stocks.not_available", lang)), parse_mode="HTML")
         return
 
     lines: list[str] = []
@@ -35,7 +34,7 @@ async def cmd_stocks(message: Message, i18n: I18n, lang: str) -> None:
                 lines.append(f"💵 {name}: {round(float(price), 4)}{currency_sym}")
 
     if not lines:
-        await message.answer(str(i18n.get("stocks.empty_portfolio", lang)))
+        await message.answer(str(i18n.get("stocks.empty_portfolio", lang)), parse_mode="HTML")
         return
 
     update = stocks_doc.get("update", [])
@@ -43,5 +42,5 @@ async def cmd_stocks(message: Message, i18n: I18n, lang: str) -> None:
     if update and len(update) >= 2:
         header += f" ({update[0]}, {update[1]})"
 
-    text = f"{header}\n\n" + "\n".join(lines)
-    await message.answer(text, parse_mode="HTML")
+    text_out = f"{header}\n\n" + "\n".join(lines)
+    await message.answer(text_out, parse_mode="HTML")

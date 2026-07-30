@@ -64,6 +64,7 @@ def _admin_kb(i18n: I18n, lang: str, user_id: int) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     builder.button(text=t("dashboard_btn"), callback_data="admin_dashboard")
     builder.button(text=t("config"), callback_data="admin_config")
+    builder.button(text=t("features_btn"), callback_data="admin_features")
     builder.button(text=t("errors"), callback_data="admin_errors")
     builder.button(text=t("broadcast"), callback_data="admin_broadcast")
     builder.button(text=t("groups_btn"), callback_data="admin_groups")
@@ -482,6 +483,53 @@ async def cb_admin(call: CallbackQuery, i18n: I18n, lang: str, state: FSMContext
             inline_keyboard=[
                 [InlineKeyboardButton(text=parser_status, callback_data="admin_toggle_parser")],
                 [InlineKeyboardButton(text=t("parser_change_interval"), callback_data="admin_change_interval")],
+                [InlineKeyboardButton(text=t("features_btn"), callback_data="admin_features")],
+                [InlineKeyboardButton(text=t("back"), callback_data="admin_back")],
+            ]
+        )
+        try:
+            await call.message.edit_text(text, reply_markup=kb, parse_mode="HTML")
+        except Exception:
+            pass
+        return
+
+    if action == "features" or action.startswith("toggle_feature:"):
+        cfg = get_settings()
+        if action.startswith("toggle_feature:"):
+            feature_key = action.split(":", 1)[1]
+            import dataclasses
+
+            if hasattr(cfg.features, feature_key):
+                cur_val = getattr(cfg.features, feature_key)
+                new_features = dataclasses.replace(cfg.features, **{feature_key: not cur_val})
+                cfg = dataclasses.replace(cfg, features=new_features)
+                save_settings(cfg)
+                await call.answer(f"{feature_key}: {'ON' if not cur_val else 'OFF'}")
+            else:
+                await call.answer("Unknown feature", show_alert=True)
+
+        f = cfg.features
+        status_groups = "✅ ON" if f.groups_enabled else "❌ OFF"
+        status_inline = "✅ ON" if f.inline_mode_enabled else "❌ OFF"
+        status_miniapp = "✅ ON" if f.mini_app_enabled else "❌ OFF"
+
+        text = (
+            f"{t('features_title')}\n\n"
+            f"{t('feature_groups')}: <code>{status_groups}</code>\n"
+            f"{t('feature_inline')}: <code>{status_inline}</code>\n"
+            f"{t('feature_miniapp')}: <code>{status_miniapp}</code>\n\n"
+            f"{t('features_hint')}"
+        )
+
+        btn_groups = f"{t('feature_groups')}: {'✅' if f.groups_enabled else '❌'}"
+        btn_inline = f"{t('feature_inline')}: {'✅' if f.inline_mode_enabled else '❌'}"
+        btn_miniapp = f"{t('feature_miniapp')}: {'✅' if f.mini_app_enabled else '❌'}"
+
+        kb = InlineKeyboardMarkup(
+            inline_keyboard=[
+                [InlineKeyboardButton(text=btn_groups, callback_data="admin_toggle_feature:groups_enabled")],
+                [InlineKeyboardButton(text=btn_inline, callback_data="admin_toggle_feature:inline_mode_enabled")],
+                [InlineKeyboardButton(text=btn_miniapp, callback_data="admin_toggle_feature:mini_app_enabled")],
                 [InlineKeyboardButton(text=t("back"), callback_data="admin_back")],
             ]
         )

@@ -325,6 +325,12 @@
   },
   "admin": {
     "panel": "🔐 <b>Panel administrátora</b>\n\nVyberte možnost:",
+    "features_btn": "⚙️ Moduly",
+    "features_title": "⚙️ <b>Správa modulů</b>",
+    "features_hint": "<i>Kliknutím na tlačítko níže zapnete nebo vypnete příslušný modul.</i>",
+    "feature_groups": "👥 Veřejné skupiny",
+    "feature_inline": "🔍 Inline režim",
+    "feature_miniapp": "📱 Mini Aplikace",
     "access_denied": "⛔ Přístup odepřen. Pouze pro administrátory.",
     "stats": "📊 Statistiky",
     "config": "⚙️ Konfigurace",

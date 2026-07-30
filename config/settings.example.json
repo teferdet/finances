@@ -82,6 +82,8 @@
     "fernet_key": "YOUR_FERNET_KEY"
   },
   "features": {
-    "mini_app_enabled": false
+    "mini_app_enabled": false,
+    "groups_enabled": true,
+    "inline_mode_enabled": true
   }
 }

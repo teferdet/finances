@@ -10,6 +10,7 @@ from aiogram import Router
 from aiogram.types import InlineQuery, InlineQueryResultArticle, InputTextMessageContent
 
 from app.db import get_db
+from app.config import get_settings
 from app.utils.text_processing import TextProcessing
 from app.services.parser_service import convert_currencies, get_currencies_info
 from app.i18n import I18n
@@ -19,6 +20,9 @@ router = Router(name="inline_query")
 
 @router.inline_query()
 async def inline_calculator(inline_query: InlineQuery, i18n: I18n, lang: str) -> None:
+    if not get_settings().features.inline_mode_enabled:
+        return
+
     query = inline_query.query.strip()
     if not query:
         # Prompt user to type something

@@ -27,6 +27,7 @@ from app.repositories.groups import (
     upsert_group_from_chat_member,
 )
 from app.services.parser_service import convert_currencies, get_currencies_info
+from app.config import get_settings
 from app.utils.text_processing import TextProcessing
 from app.logger import get_logger
 
@@ -37,6 +38,9 @@ router = Router(name="groups")
 @router.message(F.chat.type.in_({"group", "supergroup"}))
 async def handle_group_message(message: Message, i18n: I18n, lang: str, **kwargs) -> None:
     """Process currency mentions in group messages (passive auto-conversion)."""
+    if not get_settings().features.groups_enabled:
+        return
+
     text = message.text or ""
     if not text:
         return

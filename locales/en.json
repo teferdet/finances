@@ -245,6 +245,12 @@
   "admin": {
     "panel": "🔐 <b>Administrator Control Panel</b>\n\nPlease select a module to configure:",
     "groups_btn": "📢 Groups",
+    "features_btn": "⚙️ Features",
+    "features_title": "⚙️ <b>Features Control</b>",
+    "features_hint": "<i>Click a button below to enable or disable the corresponding module.</i>",
+    "feature_groups": "👥 Public Groups",
+    "feature_inline": "🔍 Inline Mode",
+    "feature_miniapp": "📱 Mini App",
     "groups": {
       "list_title": "📢 <b>Bot Groups</b>",
       "add": "➕ Add Group",

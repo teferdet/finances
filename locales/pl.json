@@ -217,6 +217,12 @@
   },
   "admin": {
     "panel": "🔐 <b>Panel administratora</b>\n\nWybierz opcję:",
+    "features_btn": "⚙️ Moduły",
+    "features_title": "⚙️ <b>Zarządzanie modułami</b>",
+    "features_hint": "<i>Kliknij przycisk poniżej, aby włączyć lub wyłączyć odpowiedni moduł.</i>",
+    "feature_groups": "👥 Grupy publiczne",
+    "feature_inline": "🔍 Tryb inline",
+    "feature_miniapp": "📱 Mini Aplikacja",
     "access_denied": "⛔ Dostęp zabroniony. Tylko dla administratorów.",
     "stats": "📊 Statystyki",
     "config": "⚙️ Konfiguracja",

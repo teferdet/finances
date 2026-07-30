@@ -4,6 +4,7 @@ Crypto handler — /crypto command and crypto callback conversion.
 
 from __future__ import annotations
 
+import asyncio
 import re
 from time import strftime
 
@@ -54,8 +55,6 @@ async def cmd_crypto(message: Message, i18n: I18n, lang: str) -> None:
     currency = "USD"
 
     if parsed.results:
-        # Avoid picking up the command itself as a code if it wasn't valid, but TextProcessing handles that.
-        # However, TextProcessing might not detect USD if they just type `/crypto 100`
         amount = parsed.results[0].amount
         currency = parsed.results[0].code
     else:
@@ -65,10 +64,11 @@ async def cmd_crypto(message: Message, i18n: I18n, lang: str) -> None:
 
     value = await _get_crypto_data(currency, amount, message.from_user.id, i18n, lang)
     day = strftime("%d.%m.%y")
-    text = i18n.get("exchange rate.sub rate", lang)
-    text = str(text).format(day, value)
+    tmpl = i18n.get("exchange rate.sub rate", lang)
+    text_out = str(tmpl).format(day, value)
+    keypad = crypto_keypad(amount, currency)
 
-    await message.answer(text, reply_markup=crypto_keypad(amount, currency))
+    await message.answer(text_out, reply_markup=keypad, parse_mode="HTML")
 
 
 @router.callback_query(F.data.startswith("crypto "))
@@ -82,10 +82,11 @@ async def cb_crypto(call: CallbackQuery, i18n: I18n, lang: str) -> None:
 
     value = await _get_crypto_data(currency, amount, call.from_user.id, i18n, lang)
     day = strftime("%d.%m.%y")
-    text = i18n.get("exchange rate.sub rate", lang)
-    text = str(text).format(day, value)
+    tmpl = i18n.get("exchange rate.sub rate", lang)
+    text_out = str(tmpl).format(day, value)
+    keypad = crypto_keypad(amount, currency)
 
     try:
-        await call.message.edit_text(text, reply_markup=crypto_keypad(amount, currency))
+        await call.message.edit_text(text_out, reply_markup=keypad, parse_mode="HTML")
     except Exception:
         pass

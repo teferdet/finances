@@ -237,6 +237,12 @@
   },
   "admin": {
     "panel": "🔐 <b>Kontrolný Panel Administrátora</b>\n\nVyberte prosím modul na konfiguráciu:",
+    "features_btn": "⚙️ Moduly",
+    "features_title": "⚙️ <b>Správa modulov</b>",
+    "features_hint": "<i>Kliknutím na tlačidlo nižšie zapnete alebo vypnete príslušný modul.</i>",
+    "feature_groups": "👥 Verejné skupiny",
+    "feature_inline": "🔍 Inline režim",
+    "feature_miniapp": "📱 Mini Aplikácia",
     "access_denied": "⛔ Prístup odmietnutý. Táto oblasť je vyhradená pre administrátorov.",
     "stats": "📊 Globálne Štatistiky",
     "config": "⚙️ Konfigurácia Systému",

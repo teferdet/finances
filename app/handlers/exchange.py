@@ -5,6 +5,8 @@ Includes callback for alternative conversion.
 
 from __future__ import annotations
 
+import asyncio
+import re
 from time import strftime
 
 from aiogram import Router, F
@@ -43,6 +45,30 @@ async def _format_info(currencies_data: list, i18n: I18n, lang: str) -> str:
     return ", ".join(info_parts)
 
 
+async def _animate_loading_draft(bot, chat_id: int, draft_id: int, loading_text: str, task) -> None:
+    """Animate draft text smoothly while task is pending."""
+    base_text = re.sub(r"^[^\w\s]+", "", loading_text).strip().rstrip(".")
+    states = [
+        f"🔄 {base_text}...",
+        f"⏳ {base_text}.",
+        f"✨ {base_text}..",
+        f"📊 {base_text}...",
+    ]
+    idx = 0
+    while not task.done():
+        try:
+            await bot.send_message_draft(
+                chat_id=chat_id,
+                draft_id=draft_id,
+                text=states[idx % len(states)],
+                parse_mode="HTML",
+            )
+        except Exception:
+            pass
+        idx += 1
+        await asyncio.sleep(0.25)
+
+
 async def handle_exchange(message: Message, i18n: I18n, lang: str) -> None:
     """Process currency conversion for a message."""
     text = message.text or ""
@@ -70,15 +96,19 @@ async def handle_exchange(message: Message, i18n: I18n, lang: str) -> None:
     if len(codes) == 1 and not is_crypto:
         keypad = er_keypad(i18n, lang, data[0][0], data[0][1], index)
 
-    import asyncio
-
     convert_task = asyncio.create_task(convert_currencies(data, output, index))
-    done, pending = await asyncio.wait([convert_task], timeout=0.5)
+    done, pending = await asyncio.wait([convert_task], timeout=0.4)
 
-    loading_msg = None
+    was_loading = False
+    is_private = message.chat.type == "private"
+
     if not done:
+        was_loading = True
         loading_text = str(i18n.get("exchange rate.loading", lang))
-        loading_msg = await message.answer(str(loading_text))
+        if is_private:
+            asyncio.create_task(
+                _animate_loading_draft(message.bot, message.chat.id, message.message_id, loading_text, convert_task)
+            )
         await convert_task
 
     result = convert_task.result()
@@ -92,10 +122,19 @@ async def handle_exchange(message: Message, i18n: I18n, lang: str) -> None:
         template = str(er_text.get("main rate", "Rate as of {}\n{}\n\n{}"))
         text_out = template.format(day, info, result)
 
-    if loading_msg:
-        await loading_msg.edit_text(text_out, reply_markup=keypad)
-    else:
-        await message.answer(text_out, reply_markup=keypad)
+    if was_loading and is_private:
+        try:
+            await message.bot.send_message_draft(
+                chat_id=message.chat.id,
+                draft_id=message.message_id,
+                text=text_out,
+                parse_mode="HTML",
+            )
+            await asyncio.sleep(0.15)
+        except Exception:
+            pass
+
+    await message.answer(text_out, reply_markup=keypad, parse_mode="HTML")
 
 
 # ── Callback for alternative conversion ─────────────────────────────
@@ -117,17 +156,19 @@ async def cb_alternative_convert(call: CallbackQuery, i18n: I18n, lang: str) -> 
     # Flip the index
     new_index = 0 if index == 1 else 1
 
-    import asyncio
-
     convert_task = asyncio.create_task(convert_currencies([(currency, amount)], output, new_index))
-    done, pending = await asyncio.wait([convert_task], timeout=0.5)
+    done, pending = await asyncio.wait([convert_task], timeout=0.4)
+
+    was_loading = False
+    is_private = bool(call.message and call.message.chat.type == "private")
 
     if not done:
+        was_loading = True
         loading_text = str(i18n.get("exchange rate.loading", lang))
-        try:
-            await call.message.edit_text(str(loading_text), reply_markup=None)
-        except Exception:
-            pass
+        if is_private:
+            asyncio.create_task(
+                _animate_loading_draft(call.bot, call.message.chat.id, call.message.message_id, loading_text, convert_task)
+            )
         await convert_task
 
     result = convert_task.result()
@@ -151,8 +192,25 @@ async def cb_alternative_convert(call: CallbackQuery, i18n: I18n, lang: str) -> 
         text_out = template.format(day, info, result)
         keypad = er_keypad(i18n, lang, currency, amount, new_index)
 
+    if was_loading and is_private:
+        try:
+            await call.bot.send_message_draft(
+                chat_id=call.message.chat.id,
+                draft_id=call.message.message_id,
+                text=text_out,
+                parse_mode="HTML",
+            )
+            await asyncio.sleep(0.15)
+        except Exception:
+            pass
+
     try:
-        await call.message.edit_text(text_out, reply_markup=keypad)
+        await call.message.edit_text(text_out, reply_markup=keypad, parse_mode="HTML")
+    except Exception:
+        pass
+
+    try:
+        await call.message.edit_text(text_out, reply_markup=keypad, parse_mode="HTML")
     except Exception:
         pass
 

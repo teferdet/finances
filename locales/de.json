@@ -286,6 +286,12 @@
   },
   "admin": {
     "panel": "🔐 <b>Admin-Panel</b>\n\nWählen Sie eine Option:",
+    "features_btn": "⚙️ Module",
+    "features_title": "⚙️ <b>Modulsteuerung</b>",
+    "features_hint": "<i>Klicken Sie unten auf eine Schaltfläche, um das entsprechende Modul zu aktivieren oder zu deaktivieren.</i>",
+    "feature_groups": "👥 Öffentliche Gruppen",
+    "feature_inline": "🔍 Inline-Modus",
+    "feature_miniapp": "📱 Mini-App",
     "access_denied": "⛔ Zugriff verweigert. Nur für Administratoren.",
     "stats": "📊 Statistiken",
     "config": "⚙️ Konfiguration",

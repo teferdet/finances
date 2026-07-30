@@ -61,7 +61,8 @@ def create_dispatcher() -> Dispatcher:
     dp.my_chat_member.outer_middleware(I18nMiddleware())
     dp.chat_member.outer_middleware(I18nMiddleware())
 
-    dp.message.outer_middleware(GroupCooldownMiddleware())
+    if s.features.groups_enabled:
+        dp.message.outer_middleware(GroupCooldownMiddleware())
 
     rate_limit = RateLimitMiddleware(
         limit=s.security.rate_limit_requests,
@@ -86,9 +87,19 @@ def create_dispatcher() -> Dispatcher:
     dp.include_router(portability.router)
     dp.include_router(exchange.router)
     dp.include_router(guest.router)  # Handles guest_message mentions
-    dp.include_router(group_admin.router)  # /group_settings — before groups catch-all
-    dp.include_router(groups.router)
-    dp.include_router(inline_query.router)
+
+    if s.features.groups_enabled:
+        dp.include_router(group_admin.router)  # /group_settings — before groups catch-all
+        dp.include_router(groups.router)
+        log.info("Feature: groups ENABLED")
+    else:
+        log.info("Feature: groups DISABLED")
+
+    if s.features.inline_mode_enabled:
+        dp.include_router(inline_query.router)
+        log.info("Feature: inline_mode ENABLED")
+    else:
+        log.info("Feature: inline_mode DISABLED")
 
     log.info("Dispatcher configured with %d routers", len(dp.sub_routers))
     return dp

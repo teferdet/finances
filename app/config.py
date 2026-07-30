@@ -117,6 +117,8 @@ class SecuritySettings:
 @dataclass(frozen=True)
 class FeaturesSettings:
     mini_app_enabled: bool = False
+    groups_enabled: bool = True
+    inline_mode_enabled: bool = True
 
 
 @dataclass(frozen=True)

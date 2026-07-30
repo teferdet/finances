@@ -204,22 +204,23 @@ async def on_startup(bot) -> None:
         ]
         await bot.set_my_commands(commands_list_default)
 
-        # Group chats commands (for all group members)
-        group_member_commands = [
-            BotCommand(command="rate", description="Convert currency (e.g. /rate 100 USD)"),
-            BotCommand(command="crypto", description="View cryptocurrency rates"),
-            BotCommand(command="stocks", description="View stock prices"),
-            BotCommand(command="help", description="Show bot help"),
-        ]
-        await bot.set_my_commands(group_member_commands, scope=BotCommandScopeAllGroupChats())
+        # Group chats commands (only if groups feature is enabled)
+        if settings.features.groups_enabled:
+            group_member_commands = [
+                BotCommand(command="rate", description="Convert currency (e.g. /rate 100 USD)"),
+                BotCommand(command="crypto", description="View cryptocurrency rates"),
+                BotCommand(command="stocks", description="View stock prices"),
+                BotCommand(command="help", description="Show bot help"),
+            ]
+            await bot.set_my_commands(group_member_commands, scope=BotCommandScopeAllGroupChats())
 
-        # Group admin commands (visible only to chat administrators across all groups)
-        group_admin_commands = [
-            BotCommand(command="group_settings", description="Group bot settings"),
-            BotCommand(command="group_stats", description="Group usage statistics"),
-            BotCommand(command="rate", description="Convert currency (e.g. /rate 100 USD)"),
-        ]
-        await bot.set_my_commands(group_admin_commands, scope=BotCommandScopeAllChatAdministrators())
+            # Group admin commands (visible only to chat administrators across all groups)
+            group_admin_commands = [
+                BotCommand(command="group_settings", description="Group bot settings"),
+                BotCommand(command="group_stats", description="Group usage statistics"),
+                BotCommand(command="rate", description="Convert currency (e.g. /rate 100 USD)"),
+            ]
+            await bot.set_my_commands(group_admin_commands, scope=BotCommandScopeAllChatAdministrators())
 
         log.info("Bot commands and scopes set successfully")
     except Exception as exc:
