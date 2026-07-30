@@ -4,7 +4,6 @@ Crypto handler — /crypto command and crypto callback conversion.
 
 from __future__ import annotations
 
-import asyncio
 import re
 from time import strftime
 

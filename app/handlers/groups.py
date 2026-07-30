@@ -27,7 +27,6 @@ from app.repositories.groups import (
     upsert_group_from_chat_member,
 )
 from app.services.parser_service import convert_currencies, get_currencies_info
-from app.config import get_settings
 from app.utils.text_processing import TextProcessing
 from app.logger import get_logger
 

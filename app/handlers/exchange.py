@@ -167,7 +167,9 @@ async def cb_alternative_convert(call: CallbackQuery, i18n: I18n, lang: str) -> 
         loading_text = str(i18n.get("exchange rate.loading", lang))
         if is_private:
             asyncio.create_task(
-                _animate_loading_draft(call.bot, call.message.chat.id, call.message.message_id, loading_text, convert_task)
+                _animate_loading_draft(
+                    call.bot, call.message.chat.id, call.message.message_id, loading_text, convert_task
+                )
             )
         await convert_task
 
