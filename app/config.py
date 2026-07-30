@@ -122,6 +122,13 @@ class FeaturesSettings:
 
 
 @dataclass(frozen=True)
+class DraftSettings:
+    loading_threshold_sec: float = 0.05
+    animation_interval_sec: float = 0.25
+    preview_delay_sec: float = 0.15
+
+
+@dataclass(frozen=True)
 class Settings:
     bot: BotSettings
     database: DatabaseSettings
@@ -131,6 +138,7 @@ class Settings:
     parser: ParserSettings
     security: SecuritySettings
     features: FeaturesSettings
+    draft: DraftSettings = field(default_factory=DraftSettings)
 
     # ── Currency data helpers (loaded from data.json) ───────────────────
     _data_json: dict = field(default_factory=dict, repr=False)
@@ -190,6 +198,7 @@ def _build_settings(raw: dict, data_json: dict) -> Settings:
         parser=ParserSettings(**raw.get("parser", {})),
         security=SecuritySettings(**raw.get("security", {})),
         features=FeaturesSettings(**raw.get("features", {})),
+        draft=DraftSettings(**raw.get("draft", {})),
         _data_json=data_json,
     )
 

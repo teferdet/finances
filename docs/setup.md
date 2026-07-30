@@ -60,6 +60,16 @@ The bot requires a configuration file at `config/settings.json`. Here is an exam
     "rate_limit_requests": 30,
     "rate_limit_window_sec": 60,
     "fernet_key": "YOUR_FERNET_KEY" // Optional encryption key if needed
+  },
+  "features": {
+    "mini_app_enabled": false,   // Enable/disable Mini App button
+    "groups_enabled": true,       // Enable/disable group chat auto-conversions
+    "inline_mode_enabled": true   // Enable/disable Inline query mode
+  },
+  "draft": {
+    "loading_threshold_sec": 0.05,  // Delay threshold before showing draft loading animation
+    "animation_interval_sec": 0.25, // Frame interval for draft loading animation
+    "preview_delay_sec": 0.15      // Morphing preview delay before finalized answer message
   }
 }
 ```

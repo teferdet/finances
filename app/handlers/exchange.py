@@ -14,7 +14,7 @@ from aiogram.types import Message, CallbackQuery
 
 from app.db import get_db
 from app.i18n import I18n
-from app.config import get_currencies_data
+from app.config import get_currencies_data, get_settings
 from app.keyboards.inline import er_keypad
 from app.services.parser_service import convert_currencies, get_currencies_info
 from app.utils.text_processing import TextProcessing
@@ -45,7 +45,9 @@ async def _format_info(currencies_data: list, i18n: I18n, lang: str) -> str:
     return ", ".join(info_parts)
 
 
-async def _animate_loading_draft(bot, chat_id: int, draft_id: int, loading_text: str, task) -> None:
+async def _animate_loading_draft(
+    bot, chat_id: int, draft_id: int, loading_text: str, task, interval: float = 0.25
+) -> None:
     """Animate draft text smoothly while task is pending."""
     base_text = re.sub(r"^[^\w\s]+", "", loading_text).strip().rstrip(".")
     states = [
@@ -66,7 +68,7 @@ async def _animate_loading_draft(bot, chat_id: int, draft_id: int, loading_text:
         except Exception:
             pass
         idx += 1
-        await asyncio.sleep(0.25)
+        await asyncio.sleep(interval)
 
 
 async def handle_exchange(message: Message, i18n: I18n, lang: str) -> None:
@@ -96,8 +98,10 @@ async def handle_exchange(message: Message, i18n: I18n, lang: str) -> None:
     if len(codes) == 1 and not is_crypto:
         keypad = er_keypad(i18n, lang, data[0][0], data[0][1], index)
 
+    draft_cfg = get_settings().draft
+
     convert_task = asyncio.create_task(convert_currencies(data, output, index))
-    done, pending = await asyncio.wait([convert_task], timeout=0.4)
+    done, pending = await asyncio.wait([convert_task], timeout=draft_cfg.loading_threshold_sec)
 
     was_loading = False
     is_private = message.chat.type == "private"
@@ -107,7 +111,14 @@ async def handle_exchange(message: Message, i18n: I18n, lang: str) -> None:
         loading_text = str(i18n.get("exchange rate.loading", lang))
         if is_private:
             asyncio.create_task(
-                _animate_loading_draft(message.bot, message.chat.id, message.message_id, loading_text, convert_task)
+                _animate_loading_draft(
+                    message.bot,
+                    message.chat.id,
+                    message.message_id,
+                    loading_text,
+                    convert_task,
+                    interval=draft_cfg.animation_interval_sec,
+                )
             )
         await convert_task
 
@@ -130,7 +141,7 @@ async def handle_exchange(message: Message, i18n: I18n, lang: str) -> None:
                 text=text_out,
                 parse_mode="HTML",
             )
-            await asyncio.sleep(0.15)
+            await asyncio.sleep(draft_cfg.preview_delay_sec)
         except Exception:
             pass
 
@@ -156,8 +167,10 @@ async def cb_alternative_convert(call: CallbackQuery, i18n: I18n, lang: str) -> 
     # Flip the index
     new_index = 0 if index == 1 else 1
 
+    draft_cfg = get_settings().draft
+
     convert_task = asyncio.create_task(convert_currencies([(currency, amount)], output, new_index))
-    done, pending = await asyncio.wait([convert_task], timeout=0.4)
+    done, pending = await asyncio.wait([convert_task], timeout=draft_cfg.loading_threshold_sec)
 
     was_loading = False
     is_private = bool(call.message and call.message.chat.type == "private")
@@ -168,7 +181,12 @@ async def cb_alternative_convert(call: CallbackQuery, i18n: I18n, lang: str) -> 
         if is_private:
             asyncio.create_task(
                 _animate_loading_draft(
-                    call.bot, call.message.chat.id, call.message.message_id, loading_text, convert_task
+                    call.bot,
+                    call.message.chat.id,
+                    call.message.message_id,
+                    loading_text,
+                    convert_task,
+                    interval=draft_cfg.animation_interval_sec,
                 )
             )
         await convert_task
@@ -202,14 +220,9 @@ async def cb_alternative_convert(call: CallbackQuery, i18n: I18n, lang: str) -> 
                 text=text_out,
                 parse_mode="HTML",
             )
-            await asyncio.sleep(0.15)
+            await asyncio.sleep(draft_cfg.preview_delay_sec)
         except Exception:
             pass
-
-    try:
-        await call.message.edit_text(text_out, reply_markup=keypad, parse_mode="HTML")
-    except Exception:
-        pass
 
     try:
         await call.message.edit_text(text_out, reply_markup=keypad, parse_mode="HTML")

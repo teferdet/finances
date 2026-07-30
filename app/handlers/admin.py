@@ -493,7 +493,7 @@ async def cb_admin(call: CallbackQuery, i18n: I18n, lang: str, state: FSMContext
             pass
         return
 
-    if action == "features" or action.startswith("toggle_feature:"):
+    if action == "features" or action.startswith("toggle_feature:") or action == "cycle_draft_threshold":
         cfg = get_settings()
         if action.startswith("toggle_feature:"):
             feature_key = action.split(":", 1)[1]
@@ -507,8 +507,23 @@ async def cb_admin(call: CallbackQuery, i18n: I18n, lang: str, state: FSMContext
                 await call.answer(f"{feature_key}: {'ON' if not cur_val else 'OFF'}")
             else:
                 await call.answer("Unknown feature", show_alert=True)
+        elif action == "cycle_draft_threshold":
+            import dataclasses
+
+            thresholds = [0.01, 0.05, 0.1, 0.25, 0.4]
+            cur_threshold = cfg.draft.loading_threshold_sec
+            try:
+                next_idx = (thresholds.index(cur_threshold) + 1) % len(thresholds)
+            except ValueError:
+                next_idx = 0
+            new_threshold = thresholds[next_idx]
+            new_draft = dataclasses.replace(cfg.draft, loading_threshold_sec=new_threshold)
+            cfg = dataclasses.replace(cfg, draft=new_draft)
+            save_settings(cfg)
+            await call.answer(f"Draft threshold: {new_threshold}s")
 
         f = cfg.features
+        d = cfg.draft
         status_groups = "✅ ON" if f.groups_enabled else "❌ OFF"
         status_inline = "✅ ON" if f.inline_mode_enabled else "❌ OFF"
         status_miniapp = "✅ ON" if f.mini_app_enabled else "❌ OFF"
@@ -518,18 +533,22 @@ async def cb_admin(call: CallbackQuery, i18n: I18n, lang: str, state: FSMContext
             f"{t('feature_groups')}: <code>{status_groups}</code>\n"
             f"{t('feature_inline')}: <code>{status_inline}</code>\n"
             f"{t('feature_miniapp')}: <code>{status_miniapp}</code>\n\n"
+            f"⏱️ <b>Draft Loading Threshold:</b> <code>{d.loading_threshold_sec}s</code>\n"
+            f"⏱️ <b>Draft Animation Interval:</b> <code>{d.animation_interval_sec}s</code>\n\n"
             f"{t('features_hint')}"
         )
 
         btn_groups = f"{t('feature_groups')}: {'✅' if f.groups_enabled else '❌'}"
         btn_inline = f"{t('feature_inline')}: {'✅' if f.inline_mode_enabled else '❌'}"
         btn_miniapp = f"{t('feature_miniapp')}: {'✅' if f.mini_app_enabled else '❌'}"
+        btn_threshold = f"⏱️ Draft Threshold: {d.loading_threshold_sec}s"
 
         kb = InlineKeyboardMarkup(
             inline_keyboard=[
                 [InlineKeyboardButton(text=btn_groups, callback_data="admin_toggle_feature:groups_enabled")],
                 [InlineKeyboardButton(text=btn_inline, callback_data="admin_toggle_feature:inline_mode_enabled")],
                 [InlineKeyboardButton(text=btn_miniapp, callback_data="admin_toggle_feature:mini_app_enabled")],
+                [InlineKeyboardButton(text=btn_threshold, callback_data="admin_cycle_draft_threshold")],
                 [InlineKeyboardButton(text=t("back"), callback_data="admin_back")],
             ]
         )

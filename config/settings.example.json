@@ -85,5 +85,10 @@
     "mini_app_enabled": false,
     "groups_enabled": true,
     "inline_mode_enabled": true
+  },
+  "draft": {
+    "loading_threshold_sec": 0.05,
+    "animation_interval_sec": 0.25,
+    "preview_delay_sec": 0.15
   }
 }
