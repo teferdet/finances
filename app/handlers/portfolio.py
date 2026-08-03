@@ -53,6 +53,8 @@ def portfolio_keyboard(i18n: I18n, lang: str) -> InlineKeyboardMarkup:
 @router.message(Command("portfolio"))
 async def cmd_portfolio(message: Message, command: CommandObject, i18n: I18n, lang: str) -> None:
     """Manage and view portfolio. Usage: /portfolio [currency | add ... | remove ...]"""
+    from app.utils.draft import finish_initial_message_draft, process_initial_message_draft
+    import asyncio
 
     def t(k):
         return str(i18n.get(f"portfolio.{k}", lang))
@@ -65,7 +67,12 @@ async def cmd_portfolio(message: Message, command: CommandObject, i18n: I18n, la
         bc_data = (user or {}).get("BaseCurrency", ["USD"])
         default_bc = bc_data[0] if bc_data and isinstance(bc_data, list) else "USD"
 
-        await _show_portfolio(message, message.from_user.id, default_bc, i18n, lang)
+        loading_text = str(i18n.get("portfolio.loading", "Portfolio loading..."))
+        task = asyncio.create_task(_build_portfolio_text_and_kb(message.from_user.id, default_bc, i18n, lang))
+        was_loading, (text, kb) = await process_initial_message_draft(message, task, loading_text)
+
+        await finish_initial_message_draft(message, text, was_loading)
+        await message.answer(text, reply_markup=kb, parse_mode="HTML")
         return
 
     parts = args.strip().split()
@@ -189,6 +196,53 @@ def _format_pnl(pnl_abs: float | None, pnl_pct: float | None, i18n: I18n, lang: 
         return t("pnl_neutral")
 
 
+async def _build_portfolio_text_and_kb(
+    user_id: int,
+    base_currency: str,
+    i18n: I18n,
+    lang: str,
+) -> tuple[str, InlineKeyboardMarkup | None]:
+    def t(k):
+        return str(i18n.get(f"portfolio.{k}", lang))
+
+    pnl_data = await get_portfolio_with_pnl(user_id, base_currency)
+    sections = pnl_data["sections"]
+
+    if not sections:
+        return f"{t('title')}\n\n{t('empty')}\n\n{t('add_hint')}", None
+
+    base_sym = pnl_data["base_symbol"]
+    lines = [f"{t('title')} (<b>{base_currency}</b> {base_sym})\n"]
+
+    for sec in sections:
+        header_name = t(f"section_{sec['type']}")
+        lines.append(f"<b>{header_name}</b> ({sec['count']}):")
+
+        for item in sec["items"]:
+            safe_symbol = html.escape(item["symbol"])
+            amt_str = _format_number(item["amount"], 4 if item["asset_type"] in ("crypto", "stock") else 2)
+            lines.append(f"• <b>{safe_symbol}</b>: {amt_str}")
+
+            if item.get("current_val_base") is not None:
+                val_str = _format_number(item["current_val_base"])
+                lines.append(f"  └ ≈ {val_str} {base_sym}")
+
+            pnl_line = _format_pnl(item.get("pnl_abs_base"), item.get("pnl_pct"), i18n, lang)
+            lines.append(pnl_line)
+
+        tot_str = _format_number(sec["total_val_base"])
+        lines.append(f"<i>{t('subtotal')}: {tot_str} {base_sym}</i>\n")
+
+    grand_str = _format_number(pnl_data["grand_total_base"])
+    lines.append(f"💰 <b>{t('grand_total')}: {grand_str} {base_sym}</b>")
+
+    pnl_line = _format_pnl(pnl_data["grand_pnl_abs_base"], pnl_data["grand_pnl_pct"], i18n, lang)
+    lines.append(f"📊 <b>{t('total_pnl')}:</b>\n{pnl_line}")
+
+    kb = portfolio_keyboard(i18n, lang)
+    return "\n".join(lines), kb
+
+
 async def _show_portfolio(
     message: Message | CallbackQuery,
     user_id: int,
@@ -197,77 +251,7 @@ async def _show_portfolio(
     lang: str,
     is_edit: bool = False,
 ) -> None:
-    def t(k):
-        return str(i18n.get(f"portfolio.{k}", lang))
-
-    pnl_data = await get_portfolio_with_pnl(user_id, base_currency)
-    sections = pnl_data["sections"]
-
-    if not sections:
-        text = f"{t('title')}\n\n{t('empty')}\n\n{t('add_hint')}"
-        if isinstance(message, Message):
-            await message.answer(text, parse_mode="HTML")
-        else:
-            await message.message.edit_text(text, parse_mode="HTML")
-        return
-
-    rate = pnl_data["usd_to_base_rate"]
-    bc = base_currency
-
-    lines = [f"{t('title')} ({bc})", ""]
-
-    section_meta = [
-        ("crypto", t("crypto")),
-        ("stock", t("stocks")),
-        ("fiat", t("fiat")),
-    ]
-
-    for section_key, section_title in section_meta:
-        lots = sections.get(section_key)
-        if not lots:
-            continue
-
-        lines.append(f"<b>{section_title}</b>")
-        for lot in lots:
-            ticker = lot["ticker"]
-            amount = lot["amount"]
-            current_usd = lot.get("current_price_usd")
-            buy_price = lot.get("buy_price_usd")
-            value_base = lot["value_usd"] * rate
-            pnl_abs = lot.get("pnl_abs_usd")
-            pnl_pct = lot.get("pnl_pct")
-
-            # Main line: ticker, amount, value
-            if current_usd and current_usd > 0:
-                lines.append(f"• <b>{ticker}</b>: {_format_number(amount)} (≈ {_format_number(value_base)} {bc})")
-            else:
-                lines.append(f"• <b>{ticker}</b>: {_format_number(amount)} (<i>No price</i>)")
-
-            # P&L sub-line
-            if buy_price is not None and current_usd is not None:
-                pnl_abs_base = pnl_abs * rate if pnl_abs is not None else None
-                pnl_line = _format_pnl(pnl_abs_base, pnl_pct, i18n, lang)
-                lines.append(f"  {t('pnl')}: {pnl_line}")
-            elif buy_price is None:
-                lines.append(f"  <i>{t('no_buy_price')}</i>")
-
-        lines.append("")
-
-    # Total value
-    total_value_base = pnl_data["total_value_usd"] * rate
-    lines.append(t("total_value").replace("{value}", f"{_format_number(total_value_base)} {bc}"))
-
-    # Total P&L
-    total_pnl_abs = pnl_data.get("total_pnl_abs_usd")
-    total_pnl_pct = pnl_data.get("total_pnl_pct")
-    if total_pnl_abs is not None:
-        total_pnl_base = total_pnl_abs * rate
-        pnl_str = _format_pnl(total_pnl_base, total_pnl_pct, i18n, lang)
-        lines.append(t("pnl_total").replace("{value}", pnl_str))
-
-    text = "\n".join(lines)
-    kb = portfolio_keyboard(i18n, lang)
-
+    text, kb = await _build_portfolio_text_and_kb(user_id, base_currency, i18n, lang)
     if isinstance(message, Message):
         await message.answer(text, reply_markup=kb, parse_mode="HTML")
     else:

@@ -6,7 +6,6 @@ Includes callback for alternative conversion.
 from __future__ import annotations
 
 import asyncio
-import re
 from time import strftime
 
 from aiogram import Router, F
@@ -14,9 +13,13 @@ from aiogram.types import Message, CallbackQuery
 
 from app.db import get_db
 from app.i18n import I18n
-from app.config import get_currencies_data, get_settings
+from app.config import get_currencies_data
 from app.keyboards.inline import er_keypad
 from app.services.parser_service import convert_currencies, get_currencies_info
+from app.utils.draft import (
+    finish_initial_message_draft,
+    process_initial_message_draft,
+)
 from app.utils.text_processing import TextProcessing
 
 router = Router(name="exchange")
@@ -43,32 +46,6 @@ async def _format_info(currencies_data: list, i18n: I18n, lang: str) -> str:
         info_parts.append(f"{emoji} {code} {amount}{symbol}")
 
     return ", ".join(info_parts)
-
-
-async def _animate_loading_draft(
-    bot, chat_id: int, draft_id: int, loading_text: str, task, interval: float = 0.25
-) -> None:
-    """Animate draft text smoothly while task is pending."""
-    base_text = re.sub(r"^[^\w\s]+", "", loading_text).strip().rstrip(".")
-    states = [
-        f"🔄 {base_text}...",
-        f"⏳ {base_text}.",
-        f"✨ {base_text}..",
-        f"📊 {base_text}...",
-    ]
-    idx = 0
-    while not task.done():
-        try:
-            await bot.send_message_draft(
-                chat_id=chat_id,
-                draft_id=draft_id,
-                text=states[idx % len(states)],
-                parse_mode="HTML",
-            )
-        except Exception:
-            pass
-        idx += 1
-        await asyncio.sleep(interval)
 
 
 async def handle_exchange(message: Message, i18n: I18n, lang: str) -> None:
@@ -98,31 +75,10 @@ async def handle_exchange(message: Message, i18n: I18n, lang: str) -> None:
     if len(codes) == 1 and not is_crypto:
         keypad = er_keypad(i18n, lang, data[0][0], data[0][1], index)
 
-    draft_cfg = get_settings().draft
-
+    loading_text = str(i18n.get("exchange rate.loading", lang))
     convert_task = asyncio.create_task(convert_currencies(data, output, index))
-    done, pending = await asyncio.wait([convert_task], timeout=draft_cfg.loading_threshold_sec)
+    was_loading, result = await process_initial_message_draft(message, convert_task, loading_text)
 
-    was_loading = False
-    is_private = message.chat.type == "private"
-
-    if not done:
-        was_loading = True
-        loading_text = str(i18n.get("exchange rate.loading", lang))
-        if is_private:
-            asyncio.create_task(
-                _animate_loading_draft(
-                    message.bot,
-                    message.chat.id,
-                    message.message_id,
-                    loading_text,
-                    convert_task,
-                    interval=draft_cfg.animation_interval_sec,
-                )
-            )
-        await convert_task
-
-    result = convert_task.result()
     day = strftime("%d.%m.%y")
     er_text = i18n.get_section("exchange rate", lang)
 
@@ -133,18 +89,7 @@ async def handle_exchange(message: Message, i18n: I18n, lang: str) -> None:
         template = str(er_text.get("main rate", "Rate as of {}\n{}\n\n{}"))
         text_out = template.format(day, info, result)
 
-    if was_loading and is_private:
-        try:
-            await message.bot.send_message_draft(
-                chat_id=message.chat.id,
-                draft_id=message.message_id,
-                text=text_out,
-                parse_mode="HTML",
-            )
-            await asyncio.sleep(draft_cfg.preview_delay_sec)
-        except Exception:
-            pass
-
+    await finish_initial_message_draft(message, text_out, was_loading)
     await message.answer(text_out, reply_markup=keypad, parse_mode="HTML")
 
 
@@ -167,37 +112,13 @@ async def cb_alternative_convert(call: CallbackQuery, i18n: I18n, lang: str) -> 
     # Flip the index
     new_index = 0 if index == 1 else 1
 
-    draft_cfg = get_settings().draft
-
-    convert_task = asyncio.create_task(convert_currencies([(currency, amount)], output, new_index))
-    done, pending = await asyncio.wait([convert_task], timeout=draft_cfg.loading_threshold_sec)
-
-    was_loading = False
-    is_private = bool(call.message and call.message.chat.type == "private")
-
-    if not done:
-        was_loading = True
-        loading_text = str(i18n.get("exchange rate.loading", lang))
-        if is_private:
-            asyncio.create_task(
-                _animate_loading_draft(
-                    call.bot,
-                    call.message.chat.id,
-                    call.message.message_id,
-                    loading_text,
-                    convert_task,
-                    interval=draft_cfg.animation_interval_sec,
-                )
-            )
-        await convert_task
-
-    result = convert_task.result()
+    result = await convert_currencies([(currency, amount)], output, new_index)
 
     day = strftime("%d.%m.%y")
     er_text = i18n.get_section("exchange rate", lang)
 
-    if result == "server error":
-        text_out = str(er_text.get("server error", "Server error"))
+    if result in ("server error", "bad request"):
+        text_out = str(er_text.get(result, result))
         keypad = None
     else:
         all_info = await get_currencies_info()
@@ -211,18 +132,6 @@ async def cb_alternative_convert(call: CallbackQuery, i18n: I18n, lang: str) -> 
         template = str(er_text.get("main rate", "Rate as of {}\n{}\n\n{}"))
         text_out = template.format(day, info, result)
         keypad = er_keypad(i18n, lang, currency, amount, new_index)
-
-    if was_loading and is_private:
-        try:
-            await call.bot.send_message_draft(
-                chat_id=call.message.chat.id,
-                draft_id=call.message.message_id,
-                text=text_out,
-                parse_mode="HTML",
-            )
-            await asyncio.sleep(draft_cfg.preview_delay_sec)
-        except Exception:
-            pass
 
     try:
         await call.message.edit_text(text_out, reply_markup=keypad, parse_mode="HTML")

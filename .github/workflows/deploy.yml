@@ -81,7 +81,8 @@ jobs:
                 'bot': {
                     'token': os.environ.get('BOT_TOKEN', ''),
                     'admin_ids': json.loads(os.environ.get('BOT_ADMIN_IDS', '[1693890078]')),
-                    'version': 'finances v6.3.5 \\'a lot like Vegas\\''
+                    'backup_enabled': True,
+                    'version': 'finances v6.3.7 \\'a lot like Vegas\\''
                 },
                 'database': {
                     'mongo_uri': os.environ.get('MONGO_URI', ''),
@@ -108,7 +109,7 @@ jobs:
                 },
                 'parser': {
                     'auto_update': True,
-                    'update_interval_sec': 3600,
+                    'update_interval_sec': 7000,
                     'fiat_source_url': 'https://fx-rate.net',
                     'retry_attempts': 3,
                     'retry_delay_sec': 5,
@@ -129,7 +130,15 @@ jobs:
                     'fernet_key': os.environ.get('FERNET_KEY', '')
                 },
                 'features': {
-                    'mini_app_enabled': False
+                    'mini_app_enabled': False,
+                    'groups_enabled': True,
+                    'inline_mode_enabled': True
+                },
+                'draft': {
+                    'enabled': false,
+                    'loading_threshold_sec': 0.05,
+                    'animation_interval_sec': 0.25,
+                    'preview_delay_sec': 0.15
                 }
             }
             with open('$APP_DIR/config/settings.json', 'w') as f:

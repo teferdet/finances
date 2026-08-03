@@ -265,58 +265,105 @@ async def convert_currencies(
         if not base_codes:
             return "bad request"
 
-        base_docs = await collection.find({"currency": {"$in": base_codes}}, {"currency": 1, "rates": 1}).to_list(
-            length=100
-        )
-        base_map = {d["currency"]: d for d in base_docs}
+        # FIRST: Check if document for target_code exists directly in DB
+        target_doc = await collection.find_one({"currency": target_code}, {"rates": 1})
+        if target_doc and "rates" in target_doc:
+            rates = target_doc["rates"]
+            target_symbol = ""
+            for info in all_info:
+                if info["code"] == target_code:
+                    target_symbol = info.get("symbol", "")
+                    break
+            if not target_symbol:
+                target_symbol = _cd_map.get(target_code, {}).get("symbol", "")
 
-        # Fetch missing
-        for code in base_codes:
-            if code not in base_map:
-                await ensure_currency(code, force=True)
-        if any(c not in base_map for c in base_codes):
-            new_docs = await collection.find(
-                {"currency": {"$in": [c for c in base_codes if c not in base_map]}}, {"currency": 1, "rates": 1}
-            ).to_list(length=100)
-            for d in new_docs:
-                base_map[d["currency"]] = d
-
-        for code in base_codes:
-            doc = base_map.get(code)
-            if not doc or "rates" not in doc:
-                continue
-            if target_code not in doc["rates"]:
-                continue
-
-            rate_data = doc["rates"][target_code]
-            try:
-                rate = float(rate_data.get("rate", 0))
-                if rate == 0:
+            for out_name in output_currencies:
+                bcode = name_to_code.get(out_name) or out_name
+                if bcode == target_code or bcode not in rates:
                     continue
-                converted_val = amount_target * rate
-                # Smart rounding
-                if converted_val < 0.01:
-                    converted = round(converted_val, 6)
-                elif converted_val < 1:
-                    converted = round(converted_val, 4)
-                else:
-                    converted = round(converted_val, 2)
 
-                emoji = ""
-                for info in all_info:
-                    if info["code"] == code:
-                        emoji = info.get("emoji", "")
-                        break
-                # Fallback to currencies_data.json
-                if not emoji:
-                    emoji = _cd_map.get(code, {}).get("emoji", "")
+                rate_data = rates[bcode]
+                try:
+                    rev_rate = float(rate_data.get("reverse_rate", 0))
+                    if rev_rate == 0:
+                        rate_val = float(rate_data.get("rate", 0))
+                        if rate_val != 0:
+                            rev_rate = 1 / rate_val
+                    if rev_rate == 0:
+                        continue
 
-                target_symbol = rate_data.get("symbol", "")
-                if not target_symbol:
-                    target_symbol = _cd_map.get(target_code, {}).get("symbol", "")
-                results.append(f"{emoji} {code}: {converted}{target_symbol}")
-            except Exception:
-                continue
+                    converted_val = amount_target * rev_rate
+                    if converted_val < 0.01:
+                        converted = round(converted_val, 6)
+                    elif converted_val < 1:
+                        converted = round(converted_val, 4)
+                    else:
+                        converted = round(converted_val, 2)
+
+                    emoji = rate_data.get("emoji", "")
+                    if not emoji:
+                        for info in all_info:
+                            if info["code"] == bcode:
+                                emoji = info.get("emoji", "")
+                                break
+                    if not emoji:
+                        emoji = _cd_map.get(bcode, {}).get("emoji", "")
+
+                    results.append(f"{emoji} {bcode}: {converted}{target_symbol}")
+                except Exception:
+                    continue
+
+        if not results:
+            # SECOND: Fallback to querying individual base_codes documents in DB
+            base_docs = await collection.find({"currency": {"$in": base_codes}}, {"currency": 1, "rates": 1}).to_list(
+                length=100
+            )
+            base_map = {d["currency"]: d for d in base_docs}
+
+            for code in base_codes:
+                if code not in base_map:
+                    await ensure_currency(code, force=False)
+            if any(c not in base_map for c in base_codes):
+                new_docs = await collection.find(
+                    {"currency": {"$in": [c for c in base_codes if c not in base_map]}}, {"currency": 1, "rates": 1}
+                ).to_list(length=100)
+                for d in new_docs:
+                    base_map[d["currency"]] = d
+
+            for code in base_codes:
+                doc = base_map.get(code)
+                if not doc or "rates" not in doc:
+                    continue
+                if target_code not in doc["rates"]:
+                    continue
+
+                rate_data = doc["rates"][target_code]
+                try:
+                    rate = float(rate_data.get("rate", 0))
+                    if rate == 0:
+                        continue
+                    converted_val = amount_target * rate
+                    if converted_val < 0.01:
+                        converted = round(converted_val, 6)
+                    elif converted_val < 1:
+                        converted = round(converted_val, 4)
+                    else:
+                        converted = round(converted_val, 2)
+
+                    emoji = ""
+                    for info in all_info:
+                        if info["code"] == code:
+                            emoji = info.get("emoji", "")
+                            break
+                    if not emoji:
+                        emoji = _cd_map.get(code, {}).get("emoji", "")
+
+                    target_symbol = rate_data.get("symbol", "")
+                    if not target_symbol:
+                        target_symbol = _cd_map.get(target_code, {}).get("symbol", "")
+                    results.append(f"{emoji} {code}: {converted}{target_symbol}")
+                except Exception:
+                    continue
 
     if results:
         return "\n".join(results)

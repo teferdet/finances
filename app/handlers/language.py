@@ -15,11 +15,23 @@ from app.keyboards.inline import language_keyboard, LANGUAGE_INFO
 router = Router(name="language")
 
 
+async def _get_language_select_text(i18n: I18n, lang: str) -> str:
+    text = i18n.get("language.select", lang)
+    return str(text)
+
+
 @router.message(Command("language", "lang"))
 async def cmd_language(message: Message, i18n: I18n, lang: str) -> None:
-    text = i18n.get("language.select", lang)
+    from app.utils.draft import finish_initial_message_draft, process_initial_message_draft
+    import asyncio
+
+    loading_text = str(i18n.get("language.loading", "Language loading..."))
+    task = asyncio.create_task(_get_language_select_text(i18n, lang))
+    was_loading, text = await process_initial_message_draft(message, task, loading_text)
+
     kb = language_keyboard(i18n.supported)
-    await message.answer(str(text), reply_markup=kb, parse_mode="HTML")
+    await finish_initial_message_draft(message, text, was_loading)
+    await message.answer(text, reply_markup=kb, parse_mode="HTML")
 
 
 @router.callback_query(F.data.startswith("lang_set_"))

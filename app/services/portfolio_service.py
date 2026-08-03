@@ -1,89 +1,59 @@
 """
-Portfolio service — manages cost-basis lots and computes P&L.
-
-Responsibilities:
-1. Lazy migration of legacy {ticker: amount} → lot-array format
-2. CRUD for portfolio lots (add / remove / clear)
-3. Maintaining a flat `current_prices` collection for aggregation
-4. MongoDB Aggregation Pipeline that computes P&L server-side
+Portfolio service.
+Manages adding/removing assets and computing P&L.
 """
 
 from __future__ import annotations
 
+import logging
 from datetime import datetime, timezone
 from typing import Any
 
+from pymongo import UpdateOne
 from app.db import get_db, get_fiat_collection_name
-from app.logger import get_logger
+from app.config import get_currencies_data
 
-log = get_logger("portfolio.service")
-
-
-# ── Lazy migration ─────────────────────────────────────────────────
+log = logging.getLogger("portfolio")
 
 
-async def migrate_user_portfolio(user_id: int) -> bool:
-    """
-    Migrate legacy portfolio format from dict to lot-array.
-
-    Old: {"crypto": {"BTC": 0.5, "ETH": 2.0}, ...}
-    New: {"crypto": [{"ticker":"BTC","amount":0.5,"buy_price_usd":null,"buy_date":null}, ...], ...}
-
-    Returns True if migration was performed, False if already migrated or empty.
-    """
-    db = get_db()
-    user = await db["Users"].find_one({"_id": user_id}, {"portfolio": 1})
-    portfolio = (user or {}).get("portfolio")
-
-    if not portfolio:
-        return False
-
-    needs_migration = False
-    for section in ("crypto", "stock", "fiat"):
-        data = portfolio.get(section)
-        if isinstance(data, dict):
-            needs_migration = True
-            break
-
-    if not needs_migration:
-        return False
-
-    new_portfolio: dict[str, list] = {}
-    for section in ("crypto", "stock", "fiat"):
-        data = portfolio.get(section)
-        if isinstance(data, dict):
-            lots = []
-            for ticker, amount in data.items():
-                if isinstance(amount, (int, float)) and amount > 0:
-                    lots.append(
-                        {
-                            "ticker": ticker,
-                            "amount": float(amount),
-                            "buy_price_usd": None,
-                            "buy_date": None,
-                        }
-                    )
-            new_portfolio[section] = lots
-        elif isinstance(data, list):
-            # Already migrated
-            new_portfolio[section] = data
-        else:
-            new_portfolio[section] = []
-
-    await db["Users"].update_one(
-        {"_id": user_id},
-        {"$set": {"portfolio": new_portfolio}},
-    )
-    log.info("Migrated portfolio for user %d", user_id)
-    return True
+# ── Data Migration ──────────────────────────────────────────────────
 
 
 async def _ensure_migrated(user_id: int) -> None:
-    """Ensure user portfolio is in the new format."""
-    await migrate_user_portfolio(user_id)
+    """
+    Ensure the user's portfolio uses the array format.
+    Old dict format: {"BTC": amount, "ETH": amount}
+    New array format:
+      {"crypto": [{"ticker": "BTC", "amount": amount, ...}], ...}
+    """
+    db = get_db()
+    user = await db["Users"].find_one({"_id": user_id}, {"portfolio": 1, "stocks": 1})
+    if not user:
+        return
+
+    updates = {}
+
+    # Migrate old crypto dict
+    old_port = user.get("portfolio", {})
+    if isinstance(old_port, dict) and not any(k in old_port for k in ("crypto", "stock", "fiat")):
+        new_crypto = [{"ticker": k.upper(), "amount": float(v)} for k, v in old_port.items()]
+        updates["portfolio.crypto"] = new_crypto
+
+    # Migrate old stocks dict
+    old_stocks = user.get("stocks", {})
+    if isinstance(old_stocks, dict) and old_stocks:
+        new_stocks = [{"ticker": k.upper(), "amount": float(v)} for k, v in old_stocks.items()]
+        updates["portfolio.stock"] = new_stocks
+        updates["stocks"] = ""  # clear old field
+
+    if updates:
+        # If we modified portfolio.crypto/stock, make sure we aren't blowing away root
+        # This is safe because we use dotted notation in $set
+        await db["Users"].update_one({"_id": user_id}, {"$set": updates})
+        log.info("Migrated portfolio for user %s: %s", user_id, updates)
 
 
-# ── Add asset ──────────────────────────────────────────────────────
+# ── Modifying Portfolio ───────────────────────────────────────────
 
 
 async def add_asset(
@@ -94,179 +64,209 @@ async def add_asset(
     buy_price_usd: float | None = None,
 ) -> float | None:
     """
-    Add a lot to the user's portfolio.
-
-    If buy_price_usd is None, the current market price is fetched
-    automatically from cached data.
-
-    Returns the buy_price_usd actually used (useful when auto-detected).
+    Add or add to an asset in the user's portfolio.
+    If the asset already exists, it averages the cost basis (if prices are known).
+    If buy_price_usd is not provided, attempts to fetch current market price.
+    Returns the buy_price_usd that was used (or None if totally unknown).
     """
     await _ensure_migrated(user_id)
     db = get_db()
 
-    # Auto-detect price if not provided
-    if buy_price_usd is None:
-        buy_price_usd = await _get_current_usd_price(ticker)
+    ticker = ticker.upper()
+    asset_type = asset_type.lower()
+    if asset_type not in ("crypto", "stock", "fiat"):
+        asset_type = "crypto"
 
-    lot = {
-        "ticker": ticker,
-        "amount": amount,
-        "buy_price_usd": buy_price_usd,
-        "buy_date": datetime.now(timezone.utc),
-    }
+    # Fetch current price if buy_price not provided
+    used_price = buy_price_usd
+    if used_price is None:
+        if asset_type == "fiat":
+            used_price = await _get_fiat_usd_price(ticker)
+        else:
+            doc = await db["current_prices"].find_one({"_id": ticker}, {"price_usd": 1})
+            if doc and "price_usd" in doc:
+                used_price = float(doc["price_usd"])
 
+    user = await db["Users"].find_one({"_id": user_id}, {"portfolio": 1})
+    portfolio = (user or {}).get("portfolio", {})
+    section = portfolio.get(asset_type, []) if isinstance(portfolio, dict) else []
+
+    if not isinstance(section, list):
+        section = []
+
+    # Check if we already have this asset
+    existing_idx = None
+    for i, lot in enumerate(section):
+        if isinstance(lot, dict) and lot.get("ticker") == ticker:
+            existing_idx = i
+            break
+
+    if existing_idx is not None:
+        # We hold this already. Add amounts. Average the cost basis if possible.
+        old_lot = section[existing_idx]
+        old_amount = float(old_lot.get("amount", 0.0))
+        old_price = old_lot.get("buy_price_usd")
+
+        new_amount = old_amount + amount
+
+        # Average cost basis
+        if old_price is not None and used_price is not None:
+            avg_price = ((old_price * old_amount) + (used_price * amount)) / new_amount
+        elif used_price is not None:
+            # We didn't have a price before, but we do now.
+            avg_price = used_price
+        else:
+            # Still don't know the price
+            avg_price = old_price
+
+        section[existing_idx]["amount"] = new_amount
+        section[existing_idx]["buy_price_usd"] = avg_price
+        # Update date to latest addition
+        section[existing_idx]["buy_date"] = datetime.now(timezone.utc).isoformat()
+    else:
+        # Brand new asset
+        new_lot = {
+            "ticker": ticker,
+            "amount": amount,
+            "buy_price_usd": used_price,
+            "buy_date": datetime.now(timezone.utc).isoformat(),
+        }
+        section.append(new_lot)
+
+    # Save back
     await db["Users"].update_one(
         {"_id": user_id},
-        {"$push": {f"portfolio.{asset_type}": lot}},
+        {"$set": {f"portfolio.{asset_type}": section}},
         upsert=True,
     )
-
-    log.info(
-        "Added %s %s (@ %s USD) for user %d",
-        amount,
-        ticker,
-        buy_price_usd,
-        user_id,
-    )
-    return buy_price_usd
+    return used_price
 
 
-async def _get_current_usd_price(ticker: str) -> float | None:
+async def remove_asset(user_id: int, ticker: str) -> bool:
     """
-    Try to get the current USD price from the current_prices collection,
-    falling back to Crypto&Stocks raw data.
-    """
-    db = get_db()
-
-    # 1. Try flat cache first
-    doc = await db["current_prices"].find_one({"_id": ticker})
-    if doc and doc.get("price_usd"):
-        return float(doc["price_usd"])
-
-    # 2. Fallback: Crypto&Stocks
-    cs_doc = await db["Crypto&Stocks"].find_one({"_id": "crypto"}) or {}
-    if ticker in cs_doc and isinstance(cs_doc[ticker], list) and len(cs_doc[ticker]) >= 3:
-        return float(cs_doc[ticker][1])
-
-    stocks_doc = await db["Crypto&Stocks"].find_one({"_id": "stocks"}) or {}
-    if ticker in stocks_doc and isinstance(stocks_doc[ticker], (list, tuple)) and len(stocks_doc[ticker]) >= 4:
-        return float(stocks_doc[ticker][2])
-
-    return None
-
-
-# ── Remove asset ───────────────────────────────────────────────────
-
-
-async def remove_asset(
-    user_id: int,
-    ticker: str,
-    asset_type: str | None = None,
-) -> bool:
-    """
-    Remove all lots of a given ticker from the portfolio.
-    If asset_type is None, searches all sections.
-    Returns True if anything was removed.
+    Remove an asset completely from the user's portfolio.
+    Returns True if removed, False if not found.
     """
     await _ensure_migrated(user_id)
     db = get_db()
 
-    if asset_type:
-        sections = [asset_type]
-    else:
-        sections = ["crypto", "stock", "fiat"]
+    ticker = ticker.upper()
+    user = await db["Users"].find_one({"_id": user_id}, {"portfolio": 1})
+    portfolio = (user or {}).get("portfolio", {})
+    if not isinstance(portfolio, dict):
+        return False
 
     removed = False
-    for section in sections:
-        result = await db["Users"].update_one(
-            {"_id": user_id},
-            {"$pull": {f"portfolio.{section}": {"ticker": ticker}}},
-        )
-        if result.modified_count > 0:
+    updates = {}
+    for asset_type in ("crypto", "stock", "fiat"):
+        section = portfolio.get(asset_type, [])
+        if not isinstance(section, list):
+            continue
+
+        new_section = [lot for lot in section if isinstance(lot, dict) and lot.get("ticker") != ticker]
+        if len(new_section) != len(section):
             removed = True
+            updates[f"portfolio.{asset_type}"] = new_section
+
+    if updates:
+        await db["Users"].update_one({"_id": user_id}, {"$set": updates})
 
     return removed
 
 
-# ── Clear portfolio ────────────────────────────────────────────────
-
-
 async def clear_portfolio(user_id: int) -> None:
-    """Clear entire portfolio for a user."""
+    """Delete all portfolio data for a user."""
     db = get_db()
     await db["Users"].update_one(
         {"_id": user_id},
-        {"$unset": {"portfolio": ""}},
+        {"$unset": {"portfolio": "", "stocks": ""}},
     )
 
 
-# ── Current prices sync ───────────────────────────────────────────
+# ── Exchange Sync (Binance) ────────────────────────────────────────
 
 
-async def update_current_prices() -> int:
+async def sync_exchange_balances(user_id: int, balances: list[dict[str, Any]]) -> int:
     """
-    Rebuild the flat `current_prices` collection from Crypto&Stocks data.
-    Each document: { _id: "BTC", price_usd: 65000.0, updated_at: ... }
-
-    Returns count of prices updated.
+    Sync balances from an exchange. This overwrites the 'crypto' section
+    for tickers that exist in the balances list. Tickers not in the list remain.
+    Optionally, we can fetch their current prices to act as 'buy_price_usd'
+    if we don't have one, but typically exchange sync just tracks balances.
     """
+    await _ensure_migrated(user_id)
     db = get_db()
-    now = datetime.now(timezone.utc)
+
+    user = await db["Users"].find_one({"_id": user_id}, {"portfolio": 1})
+    portfolio = (user or {}).get("portfolio", {})
+    crypto_section = portfolio.get("crypto", []) if isinstance(portfolio, dict) else []
+    if not isinstance(crypto_section, list):
+        crypto_section = []
+
+    # Map current crypto by ticker
+    crypto_map = {}
+    for lot in crypto_section:
+        if isinstance(lot, dict) and "ticker" in lot:
+            crypto_map[lot["ticker"]] = lot
+
+    # Update with exchange balances
+    updated_count = 0
+    all_tickers = [b["asset"] for b in balances]
+
+    # Pre-fetch prices for new assets
+    prices_map = {}
+    if all_tickers:
+        cursor = db["current_prices"].find(
+            {"_id": {"$in": all_tickers}},
+            {"price_usd": 1},
+        )
+        async for doc in cursor:
+            prices_map[doc["_id"]] = float(doc.get("price_usd", 0))
+
+    for bal in balances:
+        ticker = bal["asset"]
+        amount = bal["free"] + bal["locked"]
+        if amount <= 0:
+            continue
+
+        if ticker in crypto_map:
+            crypto_map[ticker]["amount"] = amount
+        else:
+            crypto_map[ticker] = {
+                "ticker": ticker,
+                "amount": amount,
+                "buy_price_usd": prices_map.get(ticker),  # snapshot current price as basis
+                "buy_date": datetime.now(timezone.utc).isoformat(),
+            }
+        updated_count += 1
+
+    new_crypto_section = list(crypto_map.values())
+    await db["Users"].update_one(
+        {"_id": user_id},
+        {"$set": {"portfolio.crypto": new_crypto_section}},
+        upsert=True,
+    )
+
+    # Update current_prices with the exchange prices too if provided
+    # The balances dict might not contain price, this is handled via main parser.
+    return updated_count
+
+
+async def update_prices_from_exchange(prices: dict[str, float]) -> int:
+    """Update current_prices collection with live prices from an exchange."""
+    db = get_db()
     ops = []
-
-    # Crypto (prices in the USD entry, or top-level keyed by symbol)
-    cs_doc = await db["Crypto&Stocks"].find_one({"_id": "crypto"}) or {}
-    # The crypto doc stores data per convert_currency. The USD entries have raw prices.
-    # Structure: { "BTC": ["BTC", 65000.1234, "$"], ... } at top level (for default currency)
-    # Or per-currency: { "USD": { "BTC": ["BTC", 65000, "$"] } }
-    # Based on crypto_parser.py, the doc has {currency: {symbol: [name, price, symbol_char]}}
-    # But it also stores at top level when saved with _id. Let's handle both.
-
-    # Check for per-currency structure (e.g., cs_doc["USD"]["BTC"])
-    usd_data = cs_doc.get("USD", {})
-    if isinstance(usd_data, dict) and usd_data:
-        for symbol, data in usd_data.items():
-            if isinstance(data, list) and len(data) >= 3 and symbol != "_id":
-                ops.append(
-                    {
-                        "_id": symbol,
-                        "price_usd": float(data[1]),
-                        "updated_at": now,
-                        "source": "crypto",
-                    }
-                )
-    else:
-        # Top-level structure
-        for symbol, data in cs_doc.items():
-            if isinstance(data, list) and len(data) >= 3 and symbol not in ("_id", "update"):
-                ops.append(
-                    {
-                        "_id": symbol,
-                        "price_usd": float(data[1]),
-                        "updated_at": now,
-                        "source": "crypto",
-                    }
-                )
-
-    # Stocks
-    stocks_doc = await db["Crypto&Stocks"].find_one({"_id": "stocks"}) or {}
-    for symbol, data in stocks_doc.items():
-        if isinstance(data, (list, tuple)) and len(data) >= 4 and symbol not in ("_id", "update"):
+    for ticker, price in prices.items():
+        if price > 0:
             ops.append(
-                {
-                    "_id": symbol,
-                    "price_usd": float(data[2]),
-                    "updated_at": now,
-                    "source": "stock",
-                }
+                UpdateOne(
+                    {"_id": ticker},
+                    {"$set": {"price_usd": price, "updated_at": datetime.now(timezone.utc)}},
+                    upsert=True,
+                )
             )
 
-    # Bulk upsert
     if ops:
-        from pymongo import ReplaceOne
-
-        bulk = [ReplaceOne({"_id": doc["_id"]}, doc, upsert=True) for doc in ops]
-        result = await db["current_prices"].bulk_write(bulk, ordered=False)
+        result = await db["current_prices"].bulk_write(ops)
         log.info(
             "Updated current_prices: %d upserted, %d modified",
             result.upserted_count,
@@ -287,32 +287,7 @@ async def get_portfolio_with_pnl(
 ) -> dict[str, Any]:
     """
     Compute P&L for all portfolio positions using MongoDB aggregation.
-
-    Returns:
-    {
-        "sections": {
-            "crypto": [
-                {
-                    "ticker": "BTC", "amount": 0.5,
-                    "buy_price_usd": 60000, "buy_date": ...,
-                    "current_price_usd": 65000,
-                    "value_usd": 32500,
-                    "cost_usd": 30000,
-                    "pnl_abs_usd": 2500,
-                    "pnl_pct": 8.33,
-                },
-                ...
-            ],
-            "stock": [...],
-            "fiat": [...],
-        },
-        "total_value_usd": 100000,
-        "total_cost_usd": 90000,
-        "total_pnl_abs_usd": 10000,
-        "total_pnl_pct": 11.11,
-        "base_currency": "USD",
-        "usd_to_base_rate": 1.0,
-    }
+    Formats the data exactly as required by portfolio.py.
     """
     await _ensure_migrated(user_id)
     db = get_db()
@@ -323,14 +298,16 @@ async def get_portfolio_with_pnl(
     if not portfolio:
         return _empty_result(base_currency)
 
-    # Get USD → base_currency rate
+    # Get USD -> base_currency rate
     usd_to_base = await _get_usd_to_base_rate(base_currency)
 
-    # Build result using aggregation-style lookup
-    # We do a client-side join because the portfolio is embedded in Users,
-    # not in a separate collection, so $lookup doesn't apply directly.
-    # Instead, we batch-fetch all needed prices from current_prices.
+    # Find the base currency symbol
+    curr_data = get_currencies_data()
+    base_sym = next(
+        (c.get("symbol", base_currency) for c in curr_data if c.get("code") == base_currency), base_currency
+    )
 
+    # Build result using aggregation-style lookup
     all_tickers: set[str] = set()
     for section in ("crypto", "stock", "fiat"):
         lots = portfolio.get(section, [])
@@ -379,7 +356,6 @@ async def get_portfolio_with_pnl(
             ticker = lot.get("ticker", "")
             amount = float(lot.get("amount", 0))
             buy_price = lot.get("buy_price_usd")
-            buy_date = lot.get("buy_date")
             current_price = prices_map.get(ticker)
 
             value_usd = (current_price or 0) * amount
@@ -395,16 +371,15 @@ async def get_portfolio_with_pnl(
             if cost_usd is not None:
                 total_cost_usd += cost_usd
 
+            pnl_abs_base = (pnl_abs * usd_to_base) if pnl_abs is not None else None
+
             section_lots.append(
                 {
-                    "ticker": ticker,
+                    "symbol": ticker,
+                    "asset_type": section,
                     "amount": amount,
-                    "buy_price_usd": buy_price,
-                    "buy_date": buy_date,
-                    "current_price_usd": current_price,
-                    "value_usd": value_usd,
-                    "cost_usd": cost_usd,
-                    "pnl_abs_usd": pnl_abs,
+                    "current_val_base": value_usd * usd_to_base,
+                    "pnl_abs_base": pnl_abs_base,
                     "pnl_pct": pnl_pct,
                 }
             )
@@ -415,26 +390,48 @@ async def get_portfolio_with_pnl(
     total_pnl_abs = total_value_usd - total_cost_usd if total_cost_usd > 0 else None
     total_pnl_pct = (total_pnl_abs / total_cost_usd * 100) if (total_cost_usd and total_pnl_abs is not None) else None
 
+    # Format sections as a list for the handler
+    sections_list = []
+    for sec_name in ("crypto", "stock", "fiat"):
+        if sec_name in sections_result:
+            lots = sections_result[sec_name]
+            sec_val_base = sum(
+                (lot["current_val_base"] for lot in lots if lot.get("current_val_base") is not None), 0.0
+            )
+            sections_list.append(
+                {
+                    "type": sec_name,
+                    "count": len(lots),
+                    "items": lots,
+                    "total_val_base": sec_val_base,
+                }
+            )
+
+    grand_total_base = total_value_usd * usd_to_base
+    grand_pnl_abs_base = (total_pnl_abs * usd_to_base) if total_pnl_abs is not None else None
+
     return {
-        "sections": sections_result,
-        "total_value_usd": total_value_usd,
-        "total_cost_usd": total_cost_usd if total_cost_usd > 0 else None,
-        "total_pnl_abs_usd": total_pnl_abs,
-        "total_pnl_pct": total_pnl_pct,
+        "sections": sections_list,
         "base_currency": base_currency,
-        "usd_to_base_rate": usd_to_base,
+        "base_symbol": base_sym,
+        "grand_total_base": grand_total_base,
+        "grand_pnl_abs_base": grand_pnl_abs_base,
+        "grand_pnl_pct": total_pnl_pct,
     }
 
 
 def _empty_result(base_currency: str) -> dict[str, Any]:
+    curr_data = get_currencies_data()
+    base_sym = next(
+        (c.get("symbol", base_currency) for c in curr_data if c.get("code") == base_currency), base_currency
+    )
     return {
-        "sections": {},
-        "total_value_usd": 0,
-        "total_cost_usd": None,
-        "total_pnl_abs_usd": None,
-        "total_pnl_pct": None,
+        "sections": [],
         "base_currency": base_currency,
-        "usd_to_base_rate": 1.0,
+        "base_symbol": base_sym,
+        "grand_total_base": 0.0,
+        "grand_pnl_abs_base": None,
+        "grand_pnl_pct": None,
     }
 
 
@@ -445,55 +442,64 @@ async def _get_usd_to_base_rate(base_currency: str) -> float:
 
     db = get_db()
 
-    # Try USD → base_currency
+    # Try USD -> base_currency
     fiat_doc = await db[get_fiat_collection_name()].find_one({"currency": "USD"})
     if fiat_doc and "rates" in fiat_doc:
-        rate_info = fiat_doc["rates"].get(base_currency)
-        if rate_info:
-            try:
-                return float(rate_info.get("rate", 1.0))
-            except (ValueError, TypeError):
-                pass
+        rate_obj = fiat_doc["rates"].get(base_currency)
+        if isinstance(rate_obj, dict) and "rate" in rate_obj:
+            return float(rate_obj["rate"])
+        elif isinstance(rate_obj, (int, float)):
+            return float(rate_obj)
 
-    # Try inverse: base_currency → USD
-    fiat_doc2 = await db[get_fiat_collection_name()].find_one({"currency": base_currency})
-    if fiat_doc2 and "rates" in fiat_doc2:
-        usd_info = fiat_doc2["rates"].get("USD")
-        if usd_info:
-            try:
-                return 1.0 / float(usd_info.get("rate", 1.0))
-            except (ValueError, TypeError, ZeroDivisionError):
-                pass
+    # Fallback: cross rate
+    base_doc = await db[get_fiat_collection_name()].find_one({"currency": base_currency})
+    if base_doc and "rates" in base_doc:
+        usd_rate_obj = base_doc["rates"].get("USD")
+        if isinstance(usd_rate_obj, dict) and "rate" in usd_rate_obj:
+            if float(usd_rate_obj["rate"]) > 0:
+                return 1.0 / float(usd_rate_obj["rate"])
+        elif isinstance(usd_rate_obj, (int, float)):
+            if float(usd_rate_obj) > 0:
+                return 1.0 / float(usd_rate_obj)
 
     return 1.0
 
 
-async def _get_fiat_usd_price(currency_code: str) -> float | None:
-    """Get the USD value of 1 unit of a fiat currency."""
+async def _get_fiat_usd_price(fiat_currency: str) -> float | None:
+    """Get the price of 1 unit of fiat_currency in USD."""
+    fiat_currency = fiat_currency.upper()
+    if fiat_currency == "USD":
+        return 1.0
+
     db = get_db()
 
-    # Try: USD rates doc, look for currency_code
-    fiat_doc = await db[get_fiat_collection_name()].find_one({"currency": "USD"})
-    if fiat_doc and "rates" in fiat_doc:
-        rate_info = fiat_doc["rates"].get(currency_code)
-        if rate_info:
-            try:
-                rate = float(rate_info.get("rate", 0))
-                if rate > 0:
-                    return 1.0 / rate  # 1 unit of currency_code in USD
-            except (ValueError, TypeError, ZeroDivisionError):
-                pass
+    # We want fiat_currency -> USD
+    doc = await db[get_fiat_collection_name()].find_one({"currency": fiat_currency})
+    if doc and "rates" in doc:
+        rate_obj = doc["rates"].get("USD")
+        if isinstance(rate_obj, dict) and "rate" in rate_obj:
+            return float(rate_obj["rate"])
+        elif isinstance(rate_obj, (int, float)):
+            return float(rate_obj)
 
-    # Try inverse: currency_code rates doc, look for USD
-    fiat_doc2 = await db[get_fiat_collection_name()].find_one({"currency": currency_code})
-    if fiat_doc2 and "rates" in fiat_doc2:
-        usd_info = fiat_doc2["rates"].get("USD")
-        if usd_info:
-            try:
-                rate = float(usd_info.get("rate", 0))
-                if rate > 0:
-                    return rate  # 1 unit of currency_code = rate USD
-            except (ValueError, TypeError):
-                pass
+    # Reverse
+    usd_doc = await db[get_fiat_collection_name()].find_one({"currency": "USD"})
+    if usd_doc and "rates" in usd_doc:
+        rate_obj = usd_doc["rates"].get(fiat_currency)
+        if isinstance(rate_obj, dict) and "rate" in rate_obj:
+            if float(rate_obj["rate"]) > 0:
+                return 1.0 / float(rate_obj["rate"])
+        elif isinstance(rate_obj, (int, float)):
+            if float(rate_obj) > 0:
+                return 1.0 / float(rate_obj)
 
+    return None
+
+
+async def _get_current_usd_price(ticker: str) -> float | None:
+    """Get the current USD price of a crypto/stock asset."""
+    db = get_db()
+    doc = await db["current_prices"].find_one({"_id": ticker.upper()})
+    if doc and "price_usd" in doc:
+        return float(doc["price_usd"])
     return None

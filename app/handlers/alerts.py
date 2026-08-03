@@ -80,8 +80,25 @@ def _alert_list_kb(alerts: list[dict], i18n: I18n, lang: str) -> InlineKeyboardM
 # ── /alert command ─────────────────────────────────────────────────
 
 
+async def _get_alert_menu_text(i18n: I18n, lang: str) -> str:
+    def t(k):
+        return str(i18n.get(f"alerts.{k}", lang))
+
+    return (
+        f"{t('menu_title')}\n\n"
+        f"{t('menu_description')}\n\n"
+        f"{t('menu_how_to')}\n"
+        f"<code>/alert BTC USD below 50000</code>\n"
+        f"<code>/alert USD EUR above 0.95</code>\n\n"
+        f"{t('menu_buttons_hint')}"
+    )
+
+
 @router.message(Command("alert"))
 async def cmd_alert(message: Message, command: CommandObject, i18n: I18n, lang: str) -> None:
+    from app.utils.draft import finish_initial_message_draft, process_initial_message_draft
+    import asyncio
+
     def t(k):
         return str(i18n.get(f"alerts.{k}", lang))
 
@@ -89,14 +106,11 @@ async def cmd_alert(message: Message, command: CommandObject, i18n: I18n, lang: 
 
     if not args:
         # Show menu
-        text = (
-            f"{t('menu_title')}\n\n"
-            f"{t('menu_description')}\n\n"
-            f"{t('menu_how_to')}\n"
-            f"<code>/alert BTC USD below 50000</code>\n"
-            f"<code>/alert USD EUR above 0.95</code>\n\n"
-            f"{t('menu_buttons_hint')}"
-        )
+        loading_text = str(i18n.get("alerts.loading", "Alerts loading..."))
+        task = asyncio.create_task(_get_alert_menu_text(i18n, lang))
+        was_loading, text = await process_initial_message_draft(message, task, loading_text)
+
+        await finish_initial_message_draft(message, text, was_loading)
         await message.answer(text, reply_markup=_alert_menu_kb(i18n, lang), parse_mode="HTML")
         return
 

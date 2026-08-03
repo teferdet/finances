@@ -113,15 +113,27 @@ def _get_recent_errors(hours: int = 3) -> str:
         return ""
 
 
+async def _get_admin_panel_text(i18n: I18n, lang: str) -> str:
+    return str(i18n.get("admin.panel", lang))
+
+
 @router.message(Command("admin"))
 async def cmd_admin(message: Message, i18n: I18n, lang: str, state: FSMContext) -> None:
     await state.clear()
     if not _is_admin(message.from_user.id):
         await message.answer(str(i18n.get("admin.access_denied", lang)))
         return
-    await message.answer(
-        str(i18n.get("admin.panel", lang)), reply_markup=_admin_kb(i18n, lang, message.from_user.id), parse_mode="HTML"
-    )
+
+    from app.utils.draft import finish_initial_message_draft, process_initial_message_draft
+    import asyncio
+
+    loading_text = str(i18n.get("admin.loading", "Admin panel loading..."))
+    task = asyncio.create_task(_get_admin_panel_text(i18n, lang))
+    was_loading, text = await process_initial_message_draft(message, task, loading_text)
+
+    kb = _admin_kb(i18n, lang, message.from_user.id)
+    await finish_initial_message_draft(message, text, was_loading)
+    await message.answer(text, reply_markup=kb, parse_mode="HTML")
 
 
 @router.message(Command("ping"))

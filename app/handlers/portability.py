@@ -40,43 +40,50 @@ router = Router(name="portability")
 async def cmd_export(message: Message, i18n: I18n, lang: str) -> None:
     """Generate and send CSV with user's portfolio."""
     from app.services.portfolio_service import _ensure_migrated
+    from app.utils.draft import finish_initial_message_draft, process_initial_message_draft
 
     user_id = message.from_user.id
-    await _ensure_migrated(user_id)
+    loading_text = str(i18n.get("portability.exporting", "Exporting..."))
 
-    db = get_db()
-    user = await db["Users"].find_one({"_id": user_id}, {"portfolio": 1})
-    portfolio = (user or {}).get("portfolio", {})
+    async def _build_csv() -> tuple[bytes, int]:
+        await _ensure_migrated(user_id)
+        db = get_db()
+        user = await db["Users"].find_one({"_id": user_id}, {"portfolio": 1})
+        portfolio = (user or {}).get("portfolio", {})
 
-    count = 0
-    output = io.StringIO()
-    writer = csv.writer(output)
-    writer.writerow(["asset_type", "ticker", "amount", "buy_price_usd"])
+        count = 0
+        output = io.StringIO()
+        writer = csv.writer(output)
+        writer.writerow(["asset_type", "ticker", "amount", "buy_price_usd"])
 
-    for section in ("crypto", "stock", "fiat"):
-        lots = portfolio.get(section, [])
-        if isinstance(lots, list):
-            for lot in lots:
-                if isinstance(lot, dict):
-                    writer.writerow(
-                        [
-                            sanitize_csv_field(section),
-                            sanitize_csv_field(lot.get("ticker", "")),
-                            sanitize_csv_field(lot.get("amount", 0)),
-                            sanitize_csv_field(lot.get("buy_price_usd")),
-                        ]
-                    )
-                    count += 1
+        for section in ("crypto", "stock", "fiat"):
+            lots = portfolio.get(section, [])
+            if isinstance(lots, list):
+                for lot in lots:
+                    if isinstance(lot, dict):
+                        writer.writerow(
+                            [
+                                sanitize_csv_field(section),
+                                sanitize_csv_field(lot.get("ticker", "")),
+                                sanitize_csv_field(lot.get("amount", 0)),
+                                sanitize_csv_field(lot.get("buy_price_usd")),
+                            ]
+                        )
+                        count += 1
+        return output.getvalue().encode("utf-8"), count
+
+    task = asyncio.create_task(_build_csv())
+    was_loading, (csv_bytes, count) = await process_initial_message_draft(message, task, loading_text)
 
     if count == 0:
+        await finish_initial_message_draft(message, str(i18n.get("portfolio.empty", lang)), was_loading)
         await message.answer(str(i18n.get("portfolio.empty", lang)))
         return
 
-    csv_bytes = output.getvalue().encode("utf-8")
     file = BufferedInputFile(csv_bytes, filename="portfolio_export.csv")
-
     text = str(i18n.get("portability.export_success", lang)).format(count=count)
 
+    await finish_initial_message_draft(message, text, was_loading)
     await message.answer_document(document=file, caption=text)
 
 

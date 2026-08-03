@@ -87,6 +87,7 @@
     "inline_mode_enabled": true
   },
   "draft": {
+    "enabled": true,
     "loading_threshold_sec": 0.05,
     "animation_interval_sec": 0.25,
     "preview_delay_sec": 0.15

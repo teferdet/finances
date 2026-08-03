@@ -28,15 +28,26 @@ async def _cache_key(uid: int) -> str:
     return f"settings:{uid}"
 
 
+async def _get_settings_menu_text(uid: int, i18n: I18n, lang: str) -> str:
+    await cache.json_set(await _cache_key(uid), {})
+    text = i18n.get("settings.menu", lang)
+    return "".join(text) if isinstance(text, list) else str(text)
+
+
 @router.message(Command("settings"))
 async def cmd_settings(message: Message, i18n: I18n, lang: str) -> None:
     if message.chat.type != "private":
         await message.answer(i18n.get("settings.local error", lang))
         return
-    text = i18n.get("settings.menu", lang)
-    text = "".join(text) if isinstance(text, list) else str(text)
-    uid = message.from_user.id
-    await cache.json_set(await _cache_key(uid), {})
+
+    from app.utils.draft import finish_initial_message_draft, process_initial_message_draft
+    import asyncio
+
+    loading_text = str(i18n.get("settings.loading", "Settings loading..."))
+    task = asyncio.create_task(_get_settings_menu_text(message.from_user.id, i18n, lang))
+    was_loading, text = await process_initial_message_draft(message, task, loading_text)
+
+    await finish_initial_message_draft(message, text, was_loading)
     await message.answer(text, reply_markup=settings_menu(i18n, lang))
 
 

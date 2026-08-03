@@ -123,6 +123,7 @@ class FeaturesSettings:
 
 @dataclass(frozen=True)
 class DraftSettings:
+    enabled: bool = True  # Set to False to disable sendMessageDraft animation entirely
     loading_threshold_sec: float = 0.05
     animation_interval_sec: float = 0.25
     preview_delay_sec: float = 0.15

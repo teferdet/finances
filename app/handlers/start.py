@@ -22,32 +22,14 @@ router = Router(name="start")
 # ── /start ──────────────────────────────────────────────────────────
 
 
-@router.message(Command("start"))
-async def cmd_start(message: Message, i18n: I18n, lang: str) -> None:
-    user = message.from_user
+async def _prepare_start_menu_text(user, i18n: I18n, lang: str, is_private: bool):
     name_parts = [user.first_name]
     if user.last_name:
         name_parts.append(user.last_name)
     name = " ".join(name_parts)
 
-    # Time-of-day greeting
-    hour = int(strftime("%H"))
-    if 6 <= hour <= 12:
-        period = "morning"
-    elif 13 <= hour <= 18:
-        period = "day"
-    elif 19 <= hour <= 21:
-        period = "evening"
-    else:
-        period = "night"
-
-    time_text = i18n.get_section("time", lang)
-    hello = time_text.get(period, "Good day")
-    greeting_text = str(i18n.get("other.greeting", lang)).format(hello=hello, name=name)
-    await message.answer(greeting_text)
-
     # Menu
-    if message.chat.type == "private":
+    if is_private:
         menu_lines = i18n.get("menu.private", lang)
         kb = await get_main_keyboard(user.id)
     else:
@@ -55,7 +37,6 @@ async def cmd_start(message: Message, i18n: I18n, lang: str) -> None:
         kb = None
 
     menu_text = "".join(menu_lines) if isinstance(menu_lines, list) else str(menu_lines)
-    await message.answer(menu_text, reply_markup=kb, parse_mode="HTML")
 
     # Ensure user in DB
     db = get_db()
@@ -77,25 +58,87 @@ async def cmd_start(message: Message, i18n: I18n, lang: str) -> None:
             }
         )
 
+    return menu_text, kb
+
+
+@router.message(Command("start"))
+async def cmd_start(message: Message, i18n: I18n, lang: str) -> None:
+    from app.utils.draft import finish_initial_message_draft, process_initial_message_draft
+    import asyncio
+
+    user = message.from_user
+    name_parts = [user.first_name]
+    if user.last_name:
+        name_parts.append(user.last_name)
+    name = " ".join(name_parts)
+
+    # Time-of-day greeting as first separate message
+    hour = int(strftime("%H"))
+    if 6 <= hour <= 12:
+        period = "morning"
+    elif 13 <= hour <= 18:
+        period = "day"
+    elif 19 <= hour <= 21:
+        period = "evening"
+    else:
+        period = "night"
+
+    time_text = i18n.get_section("time", lang)
+    hello = time_text.get(period, "Good day")
+    greeting_text = str(i18n.get("other.greeting", lang)).format(hello=hello, name=name)
+
+    # 1. Send first message (greeting) immediately
+    await message.answer(greeting_text)
+
+    # 2. Process menu text as draft-animated second message
+    loading_text = str(i18n.get("start.loading", "Loading..."))
+    task = asyncio.create_task(_prepare_start_menu_text(user, i18n, lang, message.chat.type == "private"))
+    was_loading, (menu_text, kb) = await process_initial_message_draft(message, task, loading_text)
+
+    await finish_initial_message_draft(message, menu_text, was_loading)
+    await message.answer(menu_text, reply_markup=kb, parse_mode="HTML")
+
 
 # ── /help ───────────────────────────────────────────────────────────
 
 
+async def _get_help_text(i18n: I18n, lang: str) -> str:
+    text = i18n.get("other.help.main", lang)
+    return "".join(text) if isinstance(text, list) else str(text)
+
+
 @router.message(Command("help"))
 async def cmd_help(message: Message, i18n: I18n, lang: str) -> None:
-    text = i18n.get("other.help.main", lang)
-    text = "".join(text) if isinstance(text, list) else str(text)
+    from app.utils.draft import finish_initial_message_draft, process_initial_message_draft
+    import asyncio
+
+    task = asyncio.create_task(_get_help_text(i18n, lang))
+    was_loading, text = await process_initial_message_draft(message, task, str(i18n.get("help.loading", "Loading...")))
     kb = help_keyboard(i18n, lang, show_qa=True)
+
+    await finish_initial_message_draft(message, text, was_loading)
     await message.answer(text, reply_markup=kb, parse_mode="HTML")
 
 
 # ── /donate ─────────────────────────────────────────────────────────
 
 
+async def _get_donate_text(i18n: I18n, lang: str) -> str:
+    text = i18n.get("other.donate", lang)
+    return "".join(text) if isinstance(text, list) else str(text)
+
+
 @router.message(Command("donate"))
 async def cmd_donate(message: Message, i18n: I18n, lang: str) -> None:
-    text = i18n.get("other.donate", lang)
-    text = "".join(text) if isinstance(text, list) else str(text)
+    from app.utils.draft import finish_initial_message_draft, process_initial_message_draft
+    import asyncio
+
+    task = asyncio.create_task(_get_donate_text(i18n, lang))
+    was_loading, text = await process_initial_message_draft(
+        message, task, str(i18n.get("donate.loading", "Loading..."))
+    )
+
+    await finish_initial_message_draft(message, text, was_loading)
     await message.answer(text, reply_markup=donate_keyboard(), parse_mode="HTML")
 
 

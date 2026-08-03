@@ -4,6 +4,7 @@ Crypto handler — /crypto command and crypto callback conversion.
 
 from __future__ import annotations
 
+import asyncio
 import re
 from time import strftime
 
@@ -45,6 +46,7 @@ async def _get_crypto_data(currency: str, amount: float, user_id: int, i18n: I18
 
 @router.message(Command("crypto"))
 async def cmd_crypto(message: Message, i18n: I18n, lang: str) -> None:
+    from app.utils.draft import finish_initial_message_draft, process_initial_message_draft
     from app.utils.text_processing import TextProcessing
 
     text = message.text or ""
@@ -61,12 +63,16 @@ async def cmd_crypto(message: Message, i18n: I18n, lang: str) -> None:
         if nums:
             amount = float(nums[0])
 
-    value = await _get_crypto_data(currency, amount, message.from_user.id, i18n, lang)
+    loading_text = str(i18n.get("crypto.loading", "Crypto loading..."))
+    task = asyncio.create_task(_get_crypto_data(currency, amount, message.from_user.id, i18n, lang))
+    was_loading, value = await process_initial_message_draft(message, task, loading_text)
+
     day = strftime("%d.%m.%y")
     tmpl = i18n.get("exchange rate.sub rate", lang)
     text_out = str(tmpl).format(day, value)
     keypad = crypto_keypad(amount, currency)
 
+    await finish_initial_message_draft(message, text_out, was_loading)
     await message.answer(text_out, reply_markup=keypad, parse_mode="HTML")
 
 

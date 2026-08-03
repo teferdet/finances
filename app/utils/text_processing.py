@@ -1,6 +1,6 @@
 """
-Enhanced Text Processing with better parsing and validation.
-Supports more currency formats and provides detailed extraction.
+Enhanced Text Processing with better parsing, multi-language jargon/slang support,
+multiplier suffix handling, and flexible currency conversion extraction.
 """
 
 import re
@@ -30,18 +30,76 @@ class TextProcessing:
 
     Features:
     - Multi-format support (100 USD, $100, 100$, USD 100)
-    - Cryptocurrency detection
-    - Validation against known currencies
-    - Fuzzy matching for currency names
-    - Number format handling (1,000.00, 1.000,00)
-    - Standalone currency codes (defaults to 1.0)
+    - Multiplier suffix support (10k, 2.5к, 1m, 5 лямів, 100кк, 10 тис)
+    - Slang / jargon & inflections across EN, UK, PL, CS, SK, DE, FR, RU
+    - Dynamic currency and cryptocurrency loading from currencies_data.json
+    - Unicode word boundary matching for Cyrillic and Latin script
+    - Flexible currency conversion request extraction
+    - Standalone currency detection (defaults amount to 1.0)
     """
 
     # Dynamic currency data - loaded from currencies_data.json
     _currencies_data_loaded = False
     _fiat_codes_from_file = set()
+    _crypto_codes_from_file = set()
     _alias_map_from_file = {}
     _symbol_map_from_file = {}
+    _sorted_aliases_cache = None
+    _alias_regex_pattern_cache = None
+
+    # Unicode word boundaries for scripts including Cyrillic & Latin
+    BOUND_L = r"(?<![a-zA-Z0-9а-яА-ЯіІїЇєЄґҐ_])"
+    BOUND_R = r"(?![a-zA-Z0-9а-яА-ЯіІїЇєЄґҐ_])"
+
+    # Multiplier suffixes mapping
+    MULTIPLIER_MAP = {
+        # Thousands
+        "K": 1_000,
+        "К": 1_000,
+        "KILO": 1_000,
+        "КИЛО": 1_000,
+        "ТИС": 1_000,
+        "ТИЩ": 1_000,
+        "ТЫС": 1_000,
+        "ТИСЯЧ": 1_000,
+        "ТЫСЯЧ": 1_000,
+        "ТИСЯЧІ": 1_000,
+        "ТЫСЯЧИ": 1_000,
+        # Millions
+        "KK": 1_000_000,
+        "КК": 1_000_000,
+        "M": 1_000_000,
+        "М": 1_000_000,
+        "МЛН": 1_000_000,
+        "ЛЯМ": 1_000_000,
+        "ЛЯМИ": 1_000_000,
+        "ЛЯМІВ": 1_000_000,
+        "ЛЯМІВИ": 1_000_000,
+        "ЛЯМОВ": 1_000_000,
+        "МІЛЬЙОН": 1_000_000,
+        "МІЛЬЙОНИ": 1_000_000,
+        "МІЛЬЙОНІВ": 1_000_000,
+        "МИЛЛИОН": 1_000_000,
+        "МИЛЛИОНЫ": 1_000_000,
+        "МИЛЛИОНОВ": 1_000_000,
+        # Billions
+        "B": 1_000_000_000,
+        "Б": 1_000_000_000,
+        "МЛРД": 1_000_000_000,
+        "МІЛЬЯРД": 1_000_000_000,
+        "МІЛЬЯРДИ": 1_000_000_000,
+        "МІЛЬЯРДІВ": 1_000_000_000,
+        "МИЛЛИАРД": 1_000_000_000,
+        "МИЛЛИАРДЫ": 1_000_000_000,
+        "МИЛЛИАРДОВ": 1_000_000_000,
+    }
+
+    # Regex multiplier suffix group pattern (case-insensitive via re.IGNORECASE)
+    MULT_PAT = (
+        r"(?:\s*(?:kk|кк|k|к|kilo|кило|тис|тищ|тыс|тисяч|тисячі|тысячи|"
+        r"m|м|млн|лям|лями|лямов|ляміви|лямів|мільйон|мільйони|мільйонів|миллион|миллионы|миллионов|"
+        r"b|б|млрд|мільярд|мільярди|мільярдів|миллиард|миллиарды|миллиардов))?"
+    )
 
     @classmethod
     def _load_currencies_from_file(cls):
@@ -50,7 +108,6 @@ class TextProcessing:
             return
 
         try:
-            # From app/utils -> app -> project_root
             current_dir = os.path.dirname(os.path.abspath(__file__))
             project_root = os.path.dirname(os.path.dirname(current_dir))
             path = os.path.join(project_root, "config", "currencies_data.json")
@@ -61,97 +118,39 @@ class TextProcessing:
             for currency in data:
                 code = currency.get("code", "").upper()
                 if code:
-                    cls._fiat_codes_from_file.add(code)
+                    if code in cls.CRYPTO_CODES or currency.get("is_crypto", False):
+                        cls._crypto_codes_from_file.add(code)
+                    else:
+                        cls._fiat_codes_from_file.add(code)
 
                     # Add text aliases
                     for alias in currency.get("text", []):
-                        cls._alias_map_from_file[alias.upper()] = code
+                        alias_clean = alias.strip().upper()
+                        if alias_clean:
+                            cls._alias_map_from_file[alias_clean] = code
 
                     # Add symbol mapping
                     symbol = currency.get("symbol", "")
-                    if symbol and len(symbol) <= 3:
+                    if symbol and len(symbol) <= 4:
                         cls._symbol_map_from_file[symbol] = code
 
             cls._currencies_data_loaded = True
         except Exception as e:
             print(f"Warning: Could not load currencies_data.json: {e}")
 
-    # Fallback hardcoded codes (used if file not loaded)
+    # Fallback hardcoded codes
     FIAT_CODES = {
-        "USD",
-        "EUR",
-        "GBP",
-        "UAH",
-        "PLN",
-        "CZK",
-        "CHF",
-        "JPY",
-        "CNY",
-        "CAD",
-        "AUD",
-        "NZD",
-        "SEK",
-        "NOK",
-        "DKK",
-        "RUB",
-        "TRY",
-        "INR",
-        "BRL",
-        "MXN",
-        "ZAR",
-        "SGD",
-        "HKD",
-        "KRW",
-        "THB",
-        "IDR",
-        "MYR",
-        "PHP",
-        "VND",
-        "EGP",
-        "AED",
-        "SAR",
-        "ILS",
-        "RON",
-        "BGN",
-        "HUF",
-        "ISK",
-        "ARS",
-        "CLP",
-        "COP",
-        "PEN",
-        "TWD",
-        "GEL",
-        "KZT",
-        "MDL",
-        "AMD",
-        "AZN",
-        "BYN",
-        "KGS",
-        "TJS",
-        "TMT",
-        "UZS",
-        "XOF",
+        "USD", "EUR", "GBP", "UAH", "PLN", "CZK", "CHF", "JPY", "CNY", "CAD",
+        "AUD", "NZD", "SEK", "NOK", "DKK", "RUB", "TRY", "INR", "BRL", "MXN",
+        "ZAR", "SGD", "HKD", "KRW", "THB", "IDR", "MYR", "PHP", "VND", "EGP",
+        "AED", "SAR", "ILS", "RON", "BGN", "HUF", "ISK", "ARS", "CLP", "COP",
+        "PEN", "TWD", "GEL", "KZT", "MDL", "AMD", "AZN", "BYN", "KGS", "TJS",
+        "TMT", "UZS", "XOF",
     }
 
     CRYPTO_CODES = {
-        "BTC",
-        "ETH",
-        "USDT",
-        "BNB",
-        "SOL",
-        "USDC",
-        "XRP",
-        "DOGE",
-        "TON",
-        "ADA",
-        "AVAX",
-        "SHIB",
-        "DOT",
-        "LINK",
-        "TRX",
-        "MATIC",
-        "LTC",
-        "UNI",
+        "BTC", "ETH", "USDT", "BNB", "SOL", "USDC", "XRP", "DOGE", "TON",
+        "ADA", "AVAX", "SHIB", "DOT", "LINK", "TRX", "MATIC", "LTC", "UNI",
     }
 
     # Symbol to currency mapping (fallback)
@@ -166,6 +165,8 @@ class TextProcessing:
         "₿": "BTC",
         "Ξ": "ETH",
         "₾": "GEL",
+        "₮": "USDT",
+        "Ð": "DOGE",
     }
 
     # Common Aliases (fallback - file takes priority)
@@ -194,6 +195,8 @@ class TextProcessing:
         "ДОЛАРІВ": "USD",
         "БАКСІВ": "USD",
         "БАКС": "USD",
+        "БАКСИ": "USD",
+        "ЗЕЛЕНІ": "USD",
         "ЄВРО": "EUR",
         "ГРИВНЯ": "UAH",
         "ГРИВНІ": "UAH",
@@ -205,6 +208,12 @@ class TextProcessing:
         "ЗЛОТИХ": "PLN",
         "ЗЛ": "PLN",
         "ЛАРІ": "GEL",
+        "БІТОК": "BTC",
+        "БІТКОЇН": "BTC",
+        "ЕФІР": "ETH",
+        "КЕФІР": "ETH",
+        "ТЕЗЕР": "USDT",
+        "ЮСДТ": "USDT",
         # Russian
         "ДОЛЛАР": "USD",
         "ДОЛЛАРОВ": "USD",
@@ -212,31 +221,14 @@ class TextProcessing:
         "РУБЛЕЙ": "RUB",
         "РУБ": "RUB",
         "ЛАРИ": "GEL",
+        "БИТОК": "BTC",
+        "ЭФИР": "ETH",
     }
 
-    # Conversion keywords (triggers conversion detection)
+    # Conversion keywords
     CONVERSION_KEYWORDS = {
-        # Ukrainian
-        "В",
-        "НА",
-        "ДО",
-        # English
-        "TO",
-        "INTO",
-        "IN",
-        # Symbols
-        "→",
-        "->",
-        "=>",
+        "В", "НА", "ДО", "ВІД", "TO", "INTO", "IN", "FOR", "→", "->", "=>", "="
     }
-
-    # Number parsing patterns
-    NUMBER_PATTERNS = [
-        r"(\d{1,3}(?:[,\s]\d{3})*(?:\.\d+)?)",  # 1,000.50
-        r"(\d{1,3}(?:\.\d{3})*(?:,\d+)?)",  # 1.000,50 (European)
-        r"(\d+(?:\.\d+)?)",  # 1000.50
-        r"(\d+(?:,\d+)?)",  # 1000,50
-    ]
 
     def __init__(self, text: str = ""):
         """
@@ -245,7 +237,6 @@ class TextProcessing:
         Args:
             text: Text to process
         """
-        # Load currencies from file on first use
         self._load_currencies_from_file()
 
         self.original_text = text
@@ -263,7 +254,6 @@ class TextProcessing:
             return self._currencies_data
 
         try:
-            # From app/utils -> app -> project_root
             base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
             path = os.path.join(base_dir, "config", "currencies_data.json")
 
@@ -274,9 +264,37 @@ class TextProcessing:
         except Exception:
             return {}
 
+    @classmethod
+    def _get_sorted_aliases(cls) -> List[Tuple[str, str]]:
+        """Get all aliases sorted by length descending to match composite phrases first."""
+        if cls._sorted_aliases_cache is not None:
+            return cls._sorted_aliases_cache
+
+        all_aliases = cls.ALIAS_MAP.copy()
+        if cls._alias_map_from_file:
+            all_aliases.update(cls._alias_map_from_file)
+
+        cls._sorted_aliases_cache = sorted(all_aliases.items(), key=lambda x: len(x[0]), reverse=True)
+        return cls._sorted_aliases_cache
+
+    @classmethod
+    def _get_alias_regex_pattern(cls) -> str:
+        """Get combined regex pattern of all aliases for high performance parsing."""
+        if cls._alias_regex_pattern_cache is not None:
+            return cls._alias_regex_pattern_cache
+
+        aliases = [a for a, c in cls._get_sorted_aliases()]
+        cls._alias_regex_pattern_cache = "|".join(re.escape(a) for a in aliases)
+        return cls._alias_regex_pattern_cache
+
+    def _is_crypto(self, code: str) -> bool:
+        """Check if currency code is a cryptocurrency."""
+        code_upper = code.upper()
+        return code_upper in self.CRYPTO_CODES or code_upper in self._crypto_codes_from_file
+
     def _parse(self) -> None:
         """Parse text and extract currencies."""
-        # First try to detect conversion requests ("100 USD to UAH")
+        # First try to detect conversion requests ("10k баксів в грн", "100 USD to UAH")
         self._parse_conversion_request()
 
         # If no conversion found, try standard parsing
@@ -284,43 +302,40 @@ class TextProcessing:
             self._parse_code_amount()
             self._parse_symbol_amount()
             self._parse_amount_code()
-
-            # Parse aliases (e.g., "100 dollars")
             self._parse_alias_amount()
-
-            # Catch standalone codes (e.g., "USD")
             self._parse_standalone_codes()
-
-            # Catch standalone aliases (e.g., "dollar")
             self._parse_standalone_aliases()
 
         # Deduplicate results based on span and code
         unique_results = {}
         for res in self.results:
             key = (res.span, res.code)
-            # If overlap with existing better confidence match, skip?
-            # For now just strict deduplication
             if key not in unique_results:
                 unique_results[key] = res
 
         self.results = list(unique_results.values())
-
-        # Populate codes list
         self.codes = list(set(r.code for r in self.results))
 
     def _resolve_currency(self, text: str) -> Optional[str]:
         """Resolve currency code from text (code, symbol, or alias)."""
-        text_upper = text.upper().strip()
+        if not text:
+            return None
+        text_clean = text.strip()
+        text_upper = text_clean.upper()
 
-        # Check dynamic fiat codes from file first
-        if self._fiat_codes_from_file and text_upper in self._fiat_codes_from_file:
+        # Check fallback symbols first for core symbols ($ -> USD, € -> EUR, etc.)
+        if text_clean in self.SYMBOL_MAP:
+            return self.SYMBOL_MAP[text_clean]
+
+        # Check dynamic codes from file
+        if text_upper in self._fiat_codes_from_file or text_upper in self._crypto_codes_from_file:
             return text_upper
 
-        # Check if it's a direct code (fallback)
+        # Check direct fallback codes
         if text_upper in self.FIAT_CODES or text_upper in self.CRYPTO_CODES:
             return text_upper
 
-        # Check dynamic aliases from file first
+        # Check dynamic aliases from file
         if self._alias_map_from_file and text_upper in self._alias_map_from_file:
             return self._alias_map_from_file[text_upper]
 
@@ -329,12 +344,8 @@ class TextProcessing:
             return self.ALIAS_MAP[text_upper]
 
         # Check dynamic symbols from file
-        if self._symbol_map_from_file and text in self._symbol_map_from_file:
-            return self._symbol_map_from_file[text]
-
-        # Check fallback symbols
-        if text in self.SYMBOL_MAP:
-            return self.SYMBOL_MAP[text]
+        if self._symbol_map_from_file and text_clean in self._symbol_map_from_file:
+            return self._symbol_map_from_file[text_clean]
 
         return None
 
@@ -342,25 +353,26 @@ class TextProcessing:
         """
         Parse conversion requests like:
         - "100 USD to UAH" / "100 USD в UAH"
-        - "100 долларів в гривні"
+        - "10k баксів в грн" / "5 лямів євро -> $"
+        - "100$ -> ₴" / "100$ в євро"
         - "скільки буде 100 EUR в гривнях"
         - "конвертувати 50$ в євро"
-        - "50€ -> ₴"
         """
         text = self.text
         original = self.original_text
 
+        KEYWORD_PAT = r"(?:(?<![a-zA-Z0-9а-яА-ЯіІїЇєЄґҐ_])(?:В|НА|ДО|ВІД|TO|INTO|IN|FOR)|→|->|=>|=)"
+
         # Patterns for conversion requests
         conversion_patterns = [
-            # Amount + Currency + keyword + Target Currency
-            # "100 USD to UAH", "100 долларів в гривні"
-            r"(\d+(?:[,.\s]\d+)?)\s*([A-ZА-ЯІЇЄҐ$€£₴¥₿]+)\s*(?:В|НА|ДО|TO|INTO|IN|→|->|=>)\s*([A-ZА-ЯІЇЄҐ$€£₴¥₿]+)",
-            # "скільки буде 100 USD в UAH" / "сколько будет 100 долларов в гривнах"
-            r"(?:СКІЛЬКИ|СКОЛЬКО|HOW\s+MUCH)(?:\s+БУДЕ|\s+БУДЕТ|\s+IS)?\s*(\d+(?:[,.\s]\d+)?)\s*([A-ZА-ЯІЇЄҐ$€£₴¥₿]+)\s*(?:В|НА|ДО|TO|INTO|IN)\s*([A-ZА-ЯІЇЄҐ$€£₴¥₿]+)",
-            # "конвертувати 100 USD в UAH" / "обменять 100 долларов на гривны"
-            r"(?:КОНВЕРТ|CONVERT|ОБМІН|ОБМЕН|CHANGE)(?:\w*)\s*(\d+(?:[,.\s]\d+)?)\s*([A-ZА-ЯІЇЄҐ$€£₴¥₿]+)\s*(?:В|НА|ДО|TO|INTO|IN)\s*([A-ZА-ЯІЇЄҐ$€£₴¥₿]+)",
-            # Symbol before amount: "$100 to UAH"
-            r"([$€£₴¥₿])\s*(\d+(?:[,.\s]\d+)?)\s*(?:В|НА|ДО|TO|INTO|IN|→|->|=>)\s*([A-ZА-ЯІЇЄҐ$€£₴¥₿]+)",
+            # Amount + Currency/Alias + Keyword + Target Currency/Alias
+            r"(\d[\d,.]*" + self.MULT_PAT + r")\s*([A-ZА-ЯІЇЄҐ$€£₴¥₿a-zA-Zа-яА-ЯіІїЇєЄґҐ]+)\s*" + KEYWORD_PAT + r"\s*([A-ZА-ЯІЇЄҐ$€£₴¥₿a-zA-Zа-яА-ЯіІїЇєЄґҐ]+)",
+            # "скільки буде 100 USD в UAH"
+            r"(?:СКІЛЬКИ|СКОЛЬКО|HOW\s+MUCH)(?:\s+БУДЕ|\s+БУДЕТ|\s+IS)?\s*(\d[\d,.]*" + self.MULT_PAT + r")\s*([A-ZА-ЯІЇЄҐ$€£₴¥₿a-zA-Zа-яА-ЯіІїЇєЄґҐ]+)\s*" + KEYWORD_PAT + r"\s*([A-ZА-ЯІЇЄҐ$€£₴¥₿a-zA-Zа-яА-ЯіІїЇєЄґҐ]+)",
+            # "конвертувати 100 USD в UAH"
+            r"(?:КОНВЕРТ|CONVERT|ОБМІН|ОБМЕН|CHANGE)(?:\w*)\s*(\d[\d,.]*" + self.MULT_PAT + r")\s*([A-ZА-ЯІЇЄҐ$€£₴¥₿a-zA-Zа-яА-ЯіІїЇєЄґҐ]+)\s*" + KEYWORD_PAT + r"\s*([A-ZА-ЯІЇЄҐ$€£₴¥₿a-zA-Zа-яА-ЯіІїЇєЄґҐ]+)",
+            # Symbol before amount: "$100 to UAH", "$10k in EUR"
+            r"([$€£₴¥₿])\s*(\d[\d,.]*" + self.MULT_PAT + r")\s*" + KEYWORD_PAT + r"\s*([A-ZА-ЯІЇЄҐ$€£₴¥₿a-zA-Zа-яА-ЯіІїЇєЄґҐ]+)",
         ]
 
         for pattern in conversion_patterns:
@@ -368,22 +380,19 @@ class TextProcessing:
             for match in matches:
                 groups = match.groups()
 
-                # Handle different group configurations
                 if len(groups) == 3:
-                    # Check if first group is a symbol (like $)
                     if groups[0] in self.SYMBOL_MAP:
-                        # Pattern: symbol, amount, target
+                        # Symbol before amount
                         source_code = self.SYMBOL_MAP[groups[0]]
                         amount = self._parse_number(groups[1])
                         target_text = groups[2]
                     else:
-                        # Pattern: amount, source, target
                         amount = self._parse_number(groups[0])
                         source_text = groups[1]
                         target_text = groups[2]
                         source_code = self._resolve_currency(source_text)
 
-                    if amount is None:
+                    if amount is None or amount <= 0:
                         continue
 
                     target_code = self._resolve_currency(target_text)
@@ -393,7 +402,7 @@ class TextProcessing:
                             ParsedCurrency(
                                 code=source_code,
                                 amount=amount,
-                                is_crypto=source_code in self.CRYPTO_CODES,
+                                is_crypto=self._is_crypto(source_code),
                                 original_text=match.group(0),
                                 span=match.span(),
                                 confidence=0.95,
@@ -402,19 +411,17 @@ class TextProcessing:
                         )
                         return  # Found a conversion, stop looking
 
-        # Also check for simple arrow patterns with symbols
+        # Arrow patterns with symbols ("100$ → ₴" or "$100 -> €")
         arrow_patterns = [
-            # "100$ → ₴" or "$100 -> €"
-            r"([$€£₴¥₿]?)(\d+(?:[,.\s]\d+)?)([$€£₴¥₿]?)\s*(?:→|->|=>|=)\s*([$€£₴¥₿])",
+            r"([$€£₴¥₿]?)(\d[\d,.]*" + self.MULT_PAT + r")([$€£₴¥₿]?)\s*(?:→|->|=>|=)\s*([$€£₴¥₿])",
         ]
 
         for pattern in arrow_patterns:
-            matches = re.finditer(pattern, original)
+            matches = re.finditer(pattern, original, re.IGNORECASE)
             for match in matches:
                 groups = match.groups()
                 pre_symbol, amount_str, post_symbol, target_symbol = groups
 
-                # Determine source currency from pre or post symbol
                 source_symbol = pre_symbol if pre_symbol else post_symbol
                 if not source_symbol or source_symbol not in self.SYMBOL_MAP:
                     continue
@@ -422,7 +429,7 @@ class TextProcessing:
                     continue
 
                 amount = self._parse_number(amount_str)
-                if amount is None:
+                if amount is None or amount <= 0:
                     continue
 
                 source_code = self.SYMBOL_MAP[source_symbol]
@@ -434,7 +441,7 @@ class TextProcessing:
                             code=source_code,
                             amount=amount,
                             symbol=source_symbol,
-                            is_crypto=source_code in self.CRYPTO_CODES,
+                            is_crypto=self._is_crypto(source_code),
                             original_text=match.group(0),
                             span=match.span(),
                             confidence=0.9,
@@ -460,160 +467,188 @@ class TextProcessing:
         return None
 
     def _parse_number(self, text: str) -> Optional[float]:
-        """Parse a number from various formats."""
-        text = text.strip()
+        """Parse a number from various formats, supporting multiplier suffixes (k, m, b, лям, млн, etc.)."""
+        if not text:
+            return None
+        text_clean = text.strip()
+        text_upper = text_clean.upper()
 
-        # Remove spaces
-        text = text.replace(" ", "")
+        multiplier = 1.0
+        # Check multiplier suffix sorted by length descending
+        for suffix, mult in sorted(self.MULTIPLIER_MAP.items(), key=lambda x: len(x[0]), reverse=True):
+            if text_upper.endswith(suffix):
+                prefix = text_clean[:-len(suffix)].strip()
+                if prefix and any(c.isdigit() for c in prefix):
+                    multiplier = mult
+                    text_clean = prefix
+                    break
 
-        # Determine format (1,234.56 vs 1.234,56)
-        if "," in text and "." in text:
-            # Check which is the decimal separator
-            if text.rfind(",") > text.rfind("."):
-                # European format: 1.234,56
-                text = text.replace(".", "").replace(",", ".")
+        # Remove spaces in numeric part
+        text_clean = text_clean.replace(" ", "")
+
+        # Determine decimal/thousand separator (1,234.56 vs 1.234,56)
+        if "," in text_clean and "." in text_clean:
+            if text_clean.rfind(",") > text_clean.rfind("."):
+                text_clean = text_clean.replace(".", "").replace(",", ".")
             else:
-                # US format: 1,234.56
-                text = text.replace(",", "")
-        elif "," in text:
-            # Could be thousand separator or decimal
-            parts = text.split(",")
+                text_clean = text_clean.replace(",", "")
+        elif "," in text_clean:
+            parts = text_clean.split(",")
             if len(parts) == 2 and len(parts[1]) <= 2:
-                # Likely decimal (100,50)
-                text = text.replace(",", ".")
+                text_clean = text_clean.replace(",", ".")
             else:
-                # Likely thousands (1,000)
-                text = text.replace(",", "")
+                text_clean = text_clean.replace(",", "")
 
         try:
-            return float(text)
+            val = float(text_clean)
+            return val * multiplier
         except ValueError:
             return None
 
     def _parse_code_amount(self) -> None:
-        """Parse patterns like 'USD 100' or 'USD100'."""
-        pattern = r"([A-Z]{3})\s*(\d[\d,.\s]*)"
+        """Parse patterns like 'USD 100' or 'USD 10k'."""
+        pattern = r"([A-Z]{3})\s*(\d[\d,.]*" + self.MULT_PAT + r")"
 
-        for match in re.finditer(pattern, self.text):
-            code = match.group(1)
+        for match in re.finditer(pattern, self.text, re.IGNORECASE):
+            code = match.group(1).upper()
             amount_str = match.group(2)
 
             if self._is_valid_currency(code):
                 amount = self._parse_number(amount_str)
-                if amount is not None:
+                if amount is not None and amount > 0:
                     self.results.append(
                         ParsedCurrency(
                             code=code,
                             amount=amount,
-                            is_crypto=code in self.CRYPTO_CODES,
+                            is_crypto=self._is_crypto(code),
                             original_text=match.group(0),
                             span=match.span(),
                         )
                     )
 
     def _parse_amount_code(self) -> None:
-        """Parse patterns like '100 USD' or '100USD'."""
-        pattern = r"(\d[\d,.\s]*)\s*([A-Z]{3})"
+        """Parse patterns like '100 USD' or '10k USD'."""
+        pattern = self.BOUND_L + r"(\d[\d,.]*" + self.MULT_PAT + r")\s*([A-Z]{3})" + self.BOUND_R
 
-        for match in re.finditer(pattern, self.text):
+        for match in re.finditer(pattern, self.text, re.IGNORECASE):
             amount_str = match.group(1)
-            code = match.group(2)
+            code = match.group(2).upper()
 
             if self._is_valid_currency(code):
                 amount = self._parse_number(amount_str)
-                if amount is not None:
+                if amount is not None and amount > 0:
                     self.results.append(
                         ParsedCurrency(
                             code=code,
                             amount=amount,
-                            is_crypto=code in self.CRYPTO_CODES,
+                            is_crypto=self._is_crypto(code),
                             original_text=match.group(0),
                             span=match.span(),
                         )
                     )
 
     def _parse_symbol_amount(self) -> None:
-        """Parse patterns like '$100' or '€50'."""
+        """Parse patterns like '$100', '€50', '$10k'."""
         for symbol, code in self.SYMBOL_MAP.items():
             # Symbol before amount: $100
-            pattern1 = re.escape(symbol) + r"\s*(\d[\d,.\s]*)"
-            for match in re.finditer(pattern1, self.original_text):
+            pattern1 = re.escape(symbol) + r"\s*(\d[\d,.]*" + self.MULT_PAT + r")"
+            for match in re.finditer(pattern1, self.original_text, re.IGNORECASE):
                 amount = self._parse_number(match.group(1))
-                if amount is not None:
+                if amount is not None and amount > 0:
                     self.results.append(
                         ParsedCurrency(
                             code=code,
                             amount=amount,
                             symbol=symbol,
-                            is_crypto=code in self.CRYPTO_CODES,
+                            is_crypto=self._is_crypto(code),
                             original_text=match.group(0),
                             span=match.span(),
                         )
                     )
 
             # Symbol after amount: 100$
-            pattern2 = r"(\d[\d,.\s]*)\s*" + re.escape(symbol)
-            for match in re.finditer(pattern2, self.original_text):
+            pattern2 = r"(\d[\d,.]*" + self.MULT_PAT + r")\s*" + re.escape(symbol)
+            for match in re.finditer(pattern2, self.original_text, re.IGNORECASE):
                 amount = self._parse_number(match.group(1))
-                if amount is not None:
+                if amount is not None and amount > 0:
                     self.results.append(
                         ParsedCurrency(
                             code=code,
                             amount=amount,
                             symbol=symbol,
-                            is_crypto=code in self.CRYPTO_CODES,
+                            is_crypto=self._is_crypto(code),
                             original_text=match.group(0),
                             span=match.span(),
                         )
                     )
 
     def _parse_alias_amount(self) -> None:
-        """Parse aliases like '100 dollars' or 'dollars 100'."""
-        # Merge maps for iteration
-        all_aliases = self.ALIAS_MAP.copy()
-        if self._alias_map_from_file:
-            all_aliases.update(self._alias_map_from_file)
+        """Parse aliases like '100 dollars', '10k баксів', '5 лямів євро'."""
+        matched_spans = [r.span for r in self.results]
+        alias_pattern = self._get_alias_regex_pattern()
 
-        # Keep track of matched spans to prevent overlaps within alias parsing
-        matched_spans = []
+        # Amount before alias: 100 dollars, 10k баксів
+        pattern1 = (
+            self.BOUND_L
+            + r"(\d[\d,.]*"
+            + self.MULT_PAT
+            + r")\s*"
+            + self.BOUND_L
+            + r"("
+            + alias_pattern
+            + r")"
+            + self.BOUND_R
+        )
+        for match in re.finditer(pattern1, self.text, re.IGNORECASE):
+            span = match.span()
+            if any(max(span[0], s[0]) < min(span[1], s[1]) for s in matched_spans):
+                continue
 
-        for alias, code in all_aliases.items():
-            # Amount before alias: 100 dollars
-            pattern1 = r"(\d[\d,.\s]*)\s*" + re.escape(alias)
-            for match in re.finditer(pattern1, self.text):
-                span = match.span()
-                # Check overlap
-                if any(max(span[0], s[0]) < min(span[1], s[1]) for s in matched_spans):
-                    continue
-
-                amount = self._parse_number(match.group(1))
-                if amount is not None:
+            amount_str = match.group(1)
+            alias_matched = match.group(2)
+            code = self._resolve_currency(alias_matched)
+            if code:
+                amount = self._parse_number(amount_str)
+                if amount is not None and amount > 0:
                     self.results.append(
                         ParsedCurrency(
                             code=code,
                             amount=amount,
-                            is_crypto=code in self.CRYPTO_CODES,
+                            is_crypto=self._is_crypto(code),
                             original_text=match.group(0),
                             span=span,
                         )
                     )
                     matched_spans.append(span)
 
-            # Alias before amount: dollars 100
-            pattern2 = re.escape(alias) + r"\s*(\d[\d,.\s]*)"
-            for match in re.finditer(pattern2, self.text):
-                span = match.span()
-                # Check overlap
-                if any(max(span[0], s[0]) < min(span[1], s[1]) for s in matched_spans):
-                    continue
+        # Alias before amount: dollars 100
+        pattern2 = (
+            self.BOUND_L
+            + r"("
+            + alias_pattern
+            + r")"
+            + self.BOUND_R
+            + r"\s*(\d[\d,.]*"
+            + self.MULT_PAT
+            + r")"
+            + self.BOUND_R
+        )
+        for match in re.finditer(pattern2, self.text, re.IGNORECASE):
+            span = match.span()
+            if any(max(span[0], s[0]) < min(span[1], s[1]) for s in matched_spans):
+                continue
 
-                amount = self._parse_number(match.group(1))
-                if amount is not None:
+            alias_matched = match.group(1)
+            amount_str = match.group(2)
+            code = self._resolve_currency(alias_matched)
+            if code:
+                amount = self._parse_number(amount_str)
+                if amount is not None and amount > 0:
                     self.results.append(
                         ParsedCurrency(
                             code=code,
                             amount=amount,
-                            is_crypto=code in self.CRYPTO_CODES,
+                            is_crypto=self._is_crypto(code),
                             original_text=match.group(0),
                             span=span,
                         )
@@ -621,31 +656,24 @@ class TextProcessing:
                     matched_spans.append(span)
 
     def _parse_standalone_aliases(self) -> None:
-        """Parse standalone aliases like 'dollar' (default to 1.0)."""
-        # Collect existing spans
+        """Parse standalone aliases like 'dollar', 'бакси', 'євро' (default to 1.0)."""
         existing_spans = [r.span for r in self.results]
+        alias_pattern = self._get_alias_regex_pattern()
+        pattern = self.BOUND_L + r"(" + alias_pattern + r")" + self.BOUND_R
 
-        # Merge maps
-        all_aliases = self.ALIAS_MAP.copy()
-        if self._alias_map_from_file:
-            all_aliases.update(self._alias_map_from_file)
+        for match in re.finditer(pattern, self.text, re.IGNORECASE):
+            span = match.span()
+            is_overlap = any(max(span[0], s[0]) < min(span[1], s[1]) for s in existing_spans)
 
-        # Check for each alias as a whole word
-        for alias, code in all_aliases.items():
-            pattern = r"\b" + re.escape(alias) + r"\b"
-
-            for match in re.finditer(pattern, self.text):
-                span = match.span()
-
-                # Check overlap
-                is_overlap = any(max(span[0], s[0]) < min(span[1], s[1]) for s in existing_spans)
-
-                if not is_overlap:
+            if not is_overlap:
+                alias_matched = match.group(1)
+                code = self._resolve_currency(alias_matched)
+                if code:
                     self.results.append(
                         ParsedCurrency(
                             code=code,
                             amount=1.0,
-                            is_crypto=code in self.CRYPTO_CODES,
+                            is_crypto=self._is_crypto(code),
                             original_text=match.group(0),
                             span=span,
                         )
@@ -654,17 +682,13 @@ class TextProcessing:
 
     def _parse_standalone_codes(self) -> None:
         """Parse standalone codes like 'EUR' (default to 1.0)."""
-        # Collect existing spans to avoid overlap
         existing_spans = [r.span for r in self.results]
+        pattern = self.BOUND_L + r"([A-Z]{3})" + self.BOUND_R
 
-        # Match any 3-letter word that is a valid currency
-        pattern = r"\b([A-Z]{3})\b"
-
-        for match in re.finditer(pattern, self.text):
-            code = match.group(1)
+        for match in re.finditer(pattern, self.text, re.IGNORECASE):
+            code = match.group(1).upper()
             span = match.span()
 
-            # Check overlap
             is_overlap = any(max(span[0], s[0]) < min(span[1], s[1]) for s in existing_spans)
 
             if not is_overlap and self._is_valid_currency(code):
@@ -672,19 +696,21 @@ class TextProcessing:
                     ParsedCurrency(
                         code=code,
                         amount=1.0,
-                        is_crypto=code in self.CRYPTO_CODES,
+                        is_crypto=self._is_crypto(code),
                         original_text=match.group(0),
                         span=span,
                     )
                 )
+                existing_spans.append(span)
 
     def _is_valid_currency(self, code: str) -> bool:
         """Check if code is a valid currency."""
-        # Check dynamic codes from file first
-        if self._fiat_codes_from_file and code in self._fiat_codes_from_file:
+        code_upper = code.upper()
+        if self._fiat_codes_from_file and code_upper in self._fiat_codes_from_file:
             return True
-        # Fallback to hardcoded
-        return code in self.FIAT_CODES or code in self.CRYPTO_CODES
+        if self._crypto_codes_from_file and code_upper in self._crypto_codes_from_file:
+            return True
+        return code_upper in self.FIAT_CODES or code_upper in self.CRYPTO_CODES
 
     def get_results(self) -> List[Tuple[str, float]]:
         """
@@ -768,9 +794,7 @@ class TextValidator:
     @staticmethod
     def sanitize_input(text: str) -> str:
         """Sanitize user input."""
-        # Remove control characters
         text = re.sub(r"[\x00-\x1f\x7f-\x9f]", "", text)
-        # Limit length
         text = text[:500]
         return text.strip()
 
