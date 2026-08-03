@@ -140,17 +140,80 @@ class TextProcessing:
 
     # Fallback hardcoded codes
     FIAT_CODES = {
-        "USD", "EUR", "GBP", "UAH", "PLN", "CZK", "CHF", "JPY", "CNY", "CAD",
-        "AUD", "NZD", "SEK", "NOK", "DKK", "RUB", "TRY", "INR", "BRL", "MXN",
-        "ZAR", "SGD", "HKD", "KRW", "THB", "IDR", "MYR", "PHP", "VND", "EGP",
-        "AED", "SAR", "ILS", "RON", "BGN", "HUF", "ISK", "ARS", "CLP", "COP",
-        "PEN", "TWD", "GEL", "KZT", "MDL", "AMD", "AZN", "BYN", "KGS", "TJS",
-        "TMT", "UZS", "XOF",
+        "USD",
+        "EUR",
+        "GBP",
+        "UAH",
+        "PLN",
+        "CZK",
+        "CHF",
+        "JPY",
+        "CNY",
+        "CAD",
+        "AUD",
+        "NZD",
+        "SEK",
+        "NOK",
+        "DKK",
+        "RUB",
+        "TRY",
+        "INR",
+        "BRL",
+        "MXN",
+        "ZAR",
+        "SGD",
+        "HKD",
+        "KRW",
+        "THB",
+        "IDR",
+        "MYR",
+        "PHP",
+        "VND",
+        "EGP",
+        "AED",
+        "SAR",
+        "ILS",
+        "RON",
+        "BGN",
+        "HUF",
+        "ISK",
+        "ARS",
+        "CLP",
+        "COP",
+        "PEN",
+        "TWD",
+        "GEL",
+        "KZT",
+        "MDL",
+        "AMD",
+        "AZN",
+        "BYN",
+        "KGS",
+        "TJS",
+        "TMT",
+        "UZS",
+        "XOF",
     }
 
     CRYPTO_CODES = {
-        "BTC", "ETH", "USDT", "BNB", "SOL", "USDC", "XRP", "DOGE", "TON",
-        "ADA", "AVAX", "SHIB", "DOT", "LINK", "TRX", "MATIC", "LTC", "UNI",
+        "BTC",
+        "ETH",
+        "USDT",
+        "BNB",
+        "SOL",
+        "USDC",
+        "XRP",
+        "DOGE",
+        "TON",
+        "ADA",
+        "AVAX",
+        "SHIB",
+        "DOT",
+        "LINK",
+        "TRX",
+        "MATIC",
+        "LTC",
+        "UNI",
     }
 
     # Symbol to currency mapping (fallback)
@@ -226,9 +289,7 @@ class TextProcessing:
     }
 
     # Conversion keywords
-    CONVERSION_KEYWORDS = {
-        "В", "НА", "ДО", "ВІД", "TO", "INTO", "IN", "FOR", "→", "->", "=>", "="
-    }
+    CONVERSION_KEYWORDS = {"В", "НА", "ДО", "ВІД", "TO", "INTO", "IN", "FOR", "→", "->", "=>", "="}
 
     def __init__(self, text: str = ""):
         """
@@ -366,13 +427,29 @@ class TextProcessing:
         # Patterns for conversion requests
         conversion_patterns = [
             # Amount + Currency/Alias + Keyword + Target Currency/Alias
-            r"(\d[\d,.]*" + self.MULT_PAT + r")\s*([A-ZА-ЯІЇЄҐ$€£₴¥₿a-zA-Zа-яА-ЯіІїЇєЄґҐ]+)\s*" + KEYWORD_PAT + r"\s*([A-ZА-ЯІЇЄҐ$€£₴¥₿a-zA-Zа-яА-ЯіІїЇєЄґҐ]+)",
+            r"(\d[\d,.]*"
+            + self.MULT_PAT
+            + r")\s*([A-ZА-ЯІЇЄҐ$€£₴¥₿a-zA-Zа-яА-ЯіІїЇєЄґҐ]+)\s*"
+            + KEYWORD_PAT
+            + r"\s*([A-ZА-ЯІЇЄҐ$€£₴¥₿a-zA-Zа-яА-ЯіІїЇєЄґҐ]+)",
             # "скільки буде 100 USD в UAH"
-            r"(?:СКІЛЬКИ|СКОЛЬКО|HOW\s+MUCH)(?:\s+БУДЕ|\s+БУДЕТ|\s+IS)?\s*(\d[\d,.]*" + self.MULT_PAT + r")\s*([A-ZА-ЯІЇЄҐ$€£₴¥₿a-zA-Zа-яА-ЯіІїЇєЄґҐ]+)\s*" + KEYWORD_PAT + r"\s*([A-ZА-ЯІЇЄҐ$€£₴¥₿a-zA-Zа-яА-ЯіІїЇєЄґҐ]+)",
+            r"(?:СКІЛЬКИ|СКОЛЬКО|HOW\s+MUCH)(?:\s+БУДЕ|\s+БУДЕТ|\s+IS)?\s*(\d[\d,.]*"
+            + self.MULT_PAT
+            + r")\s*([A-ZА-ЯІЇЄҐ$€£₴¥₿a-zA-Zа-яА-ЯіІїЇєЄґҐ]+)\s*"
+            + KEYWORD_PAT
+            + r"\s*([A-ZА-ЯІЇЄҐ$€£₴¥₿a-zA-Zа-яА-ЯіІїЇєЄґҐ]+)",
             # "конвертувати 100 USD в UAH"
-            r"(?:КОНВЕРТ|CONVERT|ОБМІН|ОБМЕН|CHANGE)(?:\w*)\s*(\d[\d,.]*" + self.MULT_PAT + r")\s*([A-ZА-ЯІЇЄҐ$€£₴¥₿a-zA-Zа-яА-ЯіІїЇєЄґҐ]+)\s*" + KEYWORD_PAT + r"\s*([A-ZА-ЯІЇЄҐ$€£₴¥₿a-zA-Zа-яА-ЯіІїЇєЄґҐ]+)",
+            r"(?:КОНВЕРТ|CONVERT|ОБМІН|ОБМЕН|CHANGE)(?:\w*)\s*(\d[\d,.]*"
+            + self.MULT_PAT
+            + r")\s*([A-ZА-ЯІЇЄҐ$€£₴¥₿a-zA-Zа-яА-ЯіІїЇєЄґҐ]+)\s*"
+            + KEYWORD_PAT
+            + r"\s*([A-ZА-ЯІЇЄҐ$€£₴¥₿a-zA-Zа-яА-ЯіІїЇєЄґҐ]+)",
             # Symbol before amount: "$100 to UAH", "$10k in EUR"
-            r"([$€£₴¥₿])\s*(\d[\d,.]*" + self.MULT_PAT + r")\s*" + KEYWORD_PAT + r"\s*([A-ZА-ЯІЇЄҐ$€£₴¥₿a-zA-Zа-яА-ЯіІїЇєЄґҐ]+)",
+            r"([$€£₴¥₿])\s*(\d[\d,.]*"
+            + self.MULT_PAT
+            + r")\s*"
+            + KEYWORD_PAT
+            + r"\s*([A-ZА-ЯІЇЄҐ$€£₴¥₿a-zA-Zа-яА-ЯіІїЇєЄґҐ]+)",
         ]
 
         for pattern in conversion_patterns:
@@ -477,7 +554,7 @@ class TextProcessing:
         # Check multiplier suffix sorted by length descending
         for suffix, mult in sorted(self.MULTIPLIER_MAP.items(), key=lambda x: len(x[0]), reverse=True):
             if text_upper.endswith(suffix):
-                prefix = text_clean[:-len(suffix)].strip()
+                prefix = text_clean[: -len(suffix)].strip()
                 if prefix and any(c.isdigit() for c in prefix):
                     multiplier = mult
                     text_clean = prefix

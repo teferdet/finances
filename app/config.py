@@ -181,7 +181,15 @@ class Settings:
         return self._data_json.get("default_stocks", ["AAPL", "MSFT", "GOOG", "AMZN", "NVDA"])
 
 
-# ── Loader ──────────────────────────────────────────────────────────────
+from dataclasses import dataclass, field, fields
+
+
+def _from_dict(cls, data: dict):
+    if not isinstance(data, dict):
+        return cls()
+    known_fields = {f.name for f in fields(cls)}
+    filtered = {k: v for k, v in data.items() if k in known_fields}
+    return cls(**filtered)
 
 
 def _load_json(path: Path) -> dict:
@@ -191,15 +199,15 @@ def _load_json(path: Path) -> dict:
 
 def _build_settings(raw: dict, data_json: dict) -> Settings:
     return Settings(
-        bot=BotSettings(**raw.get("bot", {})),
-        database=DatabaseSettings(**raw.get("database", {})),
-        api_keys=ApiKeysSettings(**raw.get("api_keys", {})),
-        urls=UrlsSettings(**raw.get("urls", {})),
-        i18n=I18nSettings(**raw.get("i18n", {})),
-        parser=ParserSettings(**raw.get("parser", {})),
-        security=SecuritySettings(**raw.get("security", {})),
-        features=FeaturesSettings(**raw.get("features", {})),
-        draft=DraftSettings(**raw.get("draft", {})),
+        bot=_from_dict(BotSettings, raw.get("bot", {})),
+        database=_from_dict(DatabaseSettings, raw.get("database", {})),
+        api_keys=_from_dict(ApiKeysSettings, raw.get("api_keys", {})),
+        urls=_from_dict(UrlsSettings, raw.get("urls", {})),
+        i18n=_from_dict(I18nSettings, raw.get("i18n", {})),
+        parser=_from_dict(ParserSettings, raw.get("parser", {})),
+        security=_from_dict(SecuritySettings, raw.get("security", {})),
+        features=_from_dict(FeaturesSettings, raw.get("features", {})),
+        draft=_from_dict(DraftSettings, raw.get("draft", {})),
         _data_json=data_json,
     )
 

@@ -72,9 +72,6 @@ jobs:
             APP_DIR="/home/ubuntu/finances"
 
             echo "🔐 Generating settings.json from secrets..."
-            cat > "$APP_DIR/config/settings.json" << 'SETTINGS_EOF'
-            SETTINGS_EOF
-
             python3 -c "
             import json, os
             settings = {
