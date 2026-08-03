@@ -135,7 +135,7 @@ jobs:
                     'inline_mode_enabled': True
                 },
                 'draft': {
-                    'enabled': false,
+                    'enabled': False,
                     'loading_threshold_sec': 0.05,
                     'animation_interval_sec': 0.25,
                     'preview_delay_sec': 0.15
