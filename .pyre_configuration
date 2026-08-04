@@ -1,0 +1,13 @@
+{
+  "site_package_search_strategy": "pep561",
+  "source_directories": [
+    {"root": "app", "subdirectory": "."}
+  ],
+  "exclude": [
+    ".*tests/.*",
+    ".*\\.venv/.*",
+    ".*\\.ruff_cache/.*",
+    ".*\\.pytest_cache/.*"
+  ],
+  "strict": false
+}

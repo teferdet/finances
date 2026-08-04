@@ -1,0 +1,47 @@
+name: CodeQL Analysis
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '0 9 * * 1'  # Every Monday at 9:00 UTC
+
+permissions:
+  actions: read
+  contents: read
+  security-events: write
+
+jobs:
+  analyze:
+    name: Analyze Python
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: ['python']
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v5
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          queries: security-extended
+          # security-extended includes additional security queries
+          # beyond the default set, catching more edge cases
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+        # For Python, this step analyzes the source code without
+        # actually building — it traces imports and data flow
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: '/language:${{ matrix.language }}'
+          # Results are uploaded as SARIF to GitHub Security tab

@@ -1,0 +1,33 @@
+name: Pyre Type Check
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  pyre:
+    name: Pyre / Pysa Analysis
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    # Pyre may produce false positives on dynamically-typed code,
+    # so we don't block merges on failures
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v5
+
+      - name: Run Pysa (Taint Analysis)
+        uses: facebook/pysa-action@main
+        with:
+          repo-directory: './'
+          # Pysa performs taint analysis — tracking data flow from
+          # user-controlled sources (Telegram messages) to dangerous
+          # sinks (database queries, API calls, file operations)
+          #
+          # Results are automatically uploaded as SARIF to Security tab

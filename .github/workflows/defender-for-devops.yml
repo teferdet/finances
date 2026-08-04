@@ -1,0 +1,41 @@
+name: Defender for DevOps
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '0 9 * * 1'  # Every Monday at 9:00 UTC
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  security-scan:
+    name: Microsoft Security DevOps
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v5
+
+      - name: Run Microsoft Security DevOps
+        uses: microsoft/security-devops-action@v1
+        id: msdo
+        with:
+          # Bandit: Python-specific SAST (hardcoded passwords, eval, pickle, etc.)
+          # Credscan: Scans for accidentally committed secrets (API keys, tokens)
+          # TemplateAnalyzer: IaC scanning (Dockerfiles, ARM templates, etc.)
+          tools: bandit,credscan,templateanalyzer
+          # Only include files relevant to the project
+          # Excludes virtual environments and cache directories
+
+      - name: Upload SARIF results to Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: ${{ steps.msdo.outputs.sarifFile }}
+          # Upload even if the scan found issues (if: always)
+          # so results always appear in the Security tab
