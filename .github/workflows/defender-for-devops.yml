@@ -26,11 +26,10 @@ jobs:
         id: msdo
         with:
           # Bandit: Python-specific SAST (hardcoded passwords, eval, pickle, etc.)
-          # Credscan: Scans for accidentally committed secrets (API keys, tokens)
-          # TemplateAnalyzer: IaC scanning (Dockerfiles, ARM templates, etc.)
-          tools: bandit,credscan,templateanalyzer
-          # Only include files relevant to the project
-          # Excludes virtual environments and cache directories
+          # Note: Credscan removed — requires .NET 6.0 (EOL), and GitHub's
+          # built-in Secret Scanning covers this better for public repos.
+          # TemplateAnalyzer removed — no IaC files in this project.
+          tools: bandit
 
       - name: Upload SARIF results to Security tab
         uses: github/codeql-action/upload-sarif@v3

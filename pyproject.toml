@@ -12,3 +12,9 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "app/handlers/*" = ["F841"]  # unused variables in handlers (often used for side effects)
+
+[tool.bandit]
+skips = [
+    "B110",   # try_except_pass — standard pattern in aiogram for non-critical ops
+    "B112",   # try_except_continue — same rationale as B110
+]

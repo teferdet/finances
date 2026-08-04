@@ -37,7 +37,7 @@ router = Router(name="guest")
 
 def _short_id(seed: str) -> str:
     """Generate a deterministic short ID for InlineQueryResult."""
-    return hashlib.md5(seed.encode()).hexdigest()[:8]
+    return hashlib.md5(seed.encode(), usedforsecurity=False).hexdigest()[:8]
 
 
 async def _build_currency_response(text: str, i18n: I18n, lang: str) -> str | None:
