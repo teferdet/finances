@@ -27,6 +27,7 @@ from app.services.portfolio_service import (
     clear_portfolio,
     get_portfolio_with_pnl,
 )
+from app.utils.sparkline import generate_sparkline
 
 router = Router(name="portfolio")
 
@@ -169,17 +170,21 @@ async def cmd_portfolio(message: Message, command: CommandObject, i18n: I18n, la
 # ── Portfolio display with P&L ─────────────────────────────────────
 
 
-def _format_number(value: float, decimals: int = 2) -> str:
-    """Format a number with thousands separators."""
+def _format_number(value: float, decimals: int = 2, fmt: str = "commas") -> str:
+    """Format a number with thousands separators (commas or spaces)."""
     if abs(value) >= 1:
-        return f"{value:,.{decimals}f}"
+        res = f"{value:,.{decimals}f}"
     elif abs(value) >= 0.01:
-        return f"{value:,.4f}"
+        res = f"{value:,.4f}"
     else:
-        return f"{value:,.6f}"
+        res = f"{value:,.6f}"
+
+    if fmt == "spaces":
+        res = res.replace(",", " ")
+    return res
 
 
-def _format_pnl(pnl_abs: float | None, pnl_pct: float | None, i18n: I18n, lang: str) -> str:
+def _format_pnl(pnl_abs: float | None, pnl_pct: float | None, i18n: I18n, lang: str, fmt: str = "commas") -> str:
     """Format P&L line with emoji indicator."""
 
     def t(k):
@@ -189,9 +194,9 @@ def _format_pnl(pnl_abs: float | None, pnl_pct: float | None, i18n: I18n, lang: 
         return f"  <i>{t('no_buy_price')}</i>"
 
     if pnl_abs > 0:
-        return t("pnl_positive").replace("{abs}", f"+{_format_number(pnl_abs)}").replace("{pct}", f"{pnl_pct:+.2f}")
+        return t("pnl_positive").replace("{abs}", f"+{_format_number(pnl_abs, fmt=fmt)}").replace("{pct}", f"{pnl_pct:+.2f}")
     elif pnl_abs < 0:
-        return t("pnl_negative").replace("{abs}", f"{_format_number(pnl_abs)}").replace("{pct}", f"{pnl_pct:.2f}")
+        return t("pnl_negative").replace("{abs}", f"{_format_number(pnl_abs, fmt=fmt)}").replace("{pct}", f"{pnl_pct:.2f}")
     else:
         return t("pnl_neutral")
 
@@ -204,6 +209,11 @@ async def _build_portfolio_text_and_kb(
 ) -> tuple[str, InlineKeyboardMarkup | None]:
     def t(k):
         return str(i18n.get(f"portfolio.{k}", lang))
+
+    db = get_db()
+    user_doc = await db["Users"].find_one({"_id": user_id}, {"NumberFormat": 1, "PortfolioView": 1})
+    num_fmt = (user_doc or {}).get("NumberFormat", "commas")
+    view_mode = (user_doc or {}).get("PortfolioView", "detailed")
 
     pnl_data = await get_portfolio_with_pnl(user_id, base_currency)
     sections = pnl_data["sections"]
@@ -220,23 +230,32 @@ async def _build_portfolio_text_and_kb(
 
         for item in sec["items"]:
             safe_symbol = html.escape(item["symbol"])
-            amt_str = _format_number(item["amount"], 4 if item["asset_type"] in ("crypto", "stock") else 2)
-            lines.append(f"• <b>{safe_symbol}</b>: {amt_str}")
+            amt_str = _format_number(item["amount"], 4 if item["asset_type"] in ("crypto", "stock") else 2, fmt=num_fmt)
+            pnl_pct = item.get("pnl_pct")
+            sparkline = f" {generate_sparkline(pnl_pct)}" if pnl_pct is not None else ""
 
-            if item.get("current_val_base") is not None:
-                val_str = _format_number(item["current_val_base"])
-                lines.append(f"  └ ≈ {val_str} {base_sym}")
+            if view_mode == "compact":
+                val_str = _format_number(item["current_val_base"], fmt=num_fmt) if item.get("current_val_base") is not None else ""
+                pnl_str = f" | {pnl_pct:+.2f}%" if pnl_pct is not None else ""
+                if val_str:
+                    lines.append(f"• <b>{safe_symbol}</b>: {amt_str}{sparkline} (≈ {val_str} {base_sym}{pnl_str})")
+                else:
+                    lines.append(f"• <b>{safe_symbol}</b>: {amt_str}{sparkline}")
+            else:
+                lines.append(f"• <b>{safe_symbol}</b>: {amt_str}{sparkline}")
+                if item.get("current_val_base") is not None:
+                    val_str = _format_number(item["current_val_base"], fmt=num_fmt)
+                    lines.append(f"  └ ≈ {val_str} {base_sym}")
+                pnl_line = _format_pnl(item.get("pnl_abs_base"), item.get("pnl_pct"), i18n, lang, fmt=num_fmt)
+                lines.append(pnl_line)
 
-            pnl_line = _format_pnl(item.get("pnl_abs_base"), item.get("pnl_pct"), i18n, lang)
-            lines.append(pnl_line)
-
-        tot_str = _format_number(sec["total_val_base"])
+        tot_str = _format_number(sec["total_val_base"], fmt=num_fmt)
         lines.append(f"<i>{t('subtotal')}: {tot_str} {base_sym}</i>\n")
 
-    grand_str = _format_number(pnl_data["grand_total_base"])
+    grand_str = _format_number(pnl_data["grand_total_base"], fmt=num_fmt)
     lines.append(f"💰 <b>{t('grand_total')}: {grand_str} {base_sym}</b>")
 
-    pnl_line = _format_pnl(pnl_data["grand_pnl_abs_base"], pnl_data["grand_pnl_pct"], i18n, lang)
+    pnl_line = _format_pnl(pnl_data["grand_pnl_abs_base"], pnl_data["grand_pnl_pct"], i18n, lang, fmt=num_fmt)
     lines.append(f"📊 <b>{t('total_pnl')}:</b>\n{pnl_line}")
 
     kb = portfolio_keyboard(i18n, lang)

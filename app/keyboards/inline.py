@@ -50,8 +50,22 @@ def crypto_keypad(amount: float, active_currency: str = "USD") -> InlineKeyboard
 # ── Settings ────────────────────────────────────────────────────────
 
 
-def settings_menu(i18n: I18n, lang: str) -> InlineKeyboardMarkup:
+def settings_menu(
+    i18n: I18n,
+    lang: str,
+    rate_mode: str = "direct",
+    view_mode: str = "detailed",
+    digest: bool = True,
+    num_fmt: str = "commas",
+    volatility: int = 5,
+) -> InlineKeyboardMarkup:
     s = i18n.get_section("keyboard.settings", lang)
+    rate_text = s.get("rate_mode_reverse", "🔄 Rate: Reverse") if rate_mode == "reverse" else s.get("rate_mode_direct", "🔄 Rate: Direct")
+    view_text = s.get("view_compact", "📊 View: Compact") if view_mode == "compact" else s.get("view_detailed", "📊 View: Detailed")
+    digest_text = s.get("digest_on", "📅 Digest: ON") if digest else s.get("digest_off", "📅 Digest: OFF")
+    fmt_text = s.get("fmt_spaces", "🔢 Format: 1 000") if num_fmt == "spaces" else s.get("fmt_commas", "🔢 Format: 1,000")
+    vol_text = s.get("vol_off", "🔔 Volatility: OFF") if volatility == 0 else f"🔔 Volatility: {volatility}%"
+
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
@@ -69,11 +83,22 @@ def settings_menu(i18n: I18n, lang: str) -> InlineKeyboardMarkup:
                 InlineKeyboardButton(text=s.get("big_buttons", "📏 Big Buttons"), callback_data="toggle_big_buttons"),
             ],
             [
-                InlineKeyboardButton(text=s.get("groups", "👥 Groups"), callback_data="groups"),
+                InlineKeyboardButton(text=rate_text, callback_data="toggle_rate_mode"),
+                InlineKeyboardButton(text=view_text, callback_data="toggle_portfolio_view"),
+            ],
+            [
+                InlineKeyboardButton(text=digest_text, callback_data="toggle_digest"),
+                InlineKeyboardButton(text=fmt_text, callback_data="toggle_number_format"),
+            ],
+            [
+                InlineKeyboardButton(text=vol_text, callback_data="toggle_volatility"),
                 InlineKeyboardButton(text=s.get("language", "🌐 Language"), callback_data="settings_language"),
             ],
             [
+                InlineKeyboardButton(text=s.get("groups", "👥 Groups"), callback_data="groups"),
                 InlineKeyboardButton(text=s.get("my_data", "📋 My Data"), callback_data="my_data_view"),
+            ],
+            [
                 InlineKeyboardButton(text=s.get("about", "ℹ️ About"), callback_data="about"),
             ],
         ]

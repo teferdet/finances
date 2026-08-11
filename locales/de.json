@@ -20,7 +20,16 @@
       "about": "ℹ️ Über",
       "main_menu": "📱 Hauptmenü",
       "base_currency": "💱 Standardwährung",
-      "big_buttons": "📏 Big Buttons"
+      "big_buttons": "📏 Big Buttons",
+      "rate_mode_direct": "🔄 Kurs: Direkt",
+      "rate_mode_reverse": "🔄 Kurs: Umgekehrt",
+      "view_detailed": "📊 Ansicht: Detailliert",
+      "view_compact": "📊 Ansicht: Kompakt",
+      "digest_on": "📅 Digest: AN",
+      "digest_off": "📅 Digest: AUS",
+      "fmt_commas": "🔢 Format: 1,000",
+      "fmt_spaces": "🔢 Format: 1 000",
+      "vol_off": "🔔 Volatilität: AUS"
     },
     "help": {
       "q&a": "💬 Fragen\\Antworten",
@@ -82,9 +91,23 @@
   },
   "settings": {
     "menu": [
-      "⚙️ Einstellungen, wählen Sie die benötigte Option:\n\n",
-      "🤖 Bot — ändern Sie die Liste der Währungen für Fiat, Kryptowährungen und Aktien\n",
-      "👥 Gruppen — ändern Sie die Listen der Währungen für die Umrechnung und zu verarbeitenden Währungen."
+      "⚙️ <b>Einstellungen Dashboard</b>\n\n",
+      "Bitte wählen Sie den Bereich aus, den Sie konfigurieren möchten:\n\n",
+      "💶 <b>Fiat-Währungen</b> — Standardwährungen für die Umrechnung auswählen.\n",
+      "💵 <b>Kryptowährungen</b> — Digitale Währungen auswählen.\n",
+      "📑 <b>Aktien</b> — Zu verfolgende Aktien auswählen.\n",
+      "📱 <b>Hauptmenü</b> — Schnellzugriffstasten konfigurieren.\n",
+      "💱 <b>Standardwährung</b> — Hauptwährung für das Portfolio festlegen.\n",
+      "📏 <b>Große Tasten</b> — Größe der Tastaturtasten umschalten.\n",
+      "🔄 <b>Kursmodus</b> — Standard-Kursmodus auswählen (Direkt oder Umgekehrt).\n",
+      "📊 <b>Portfolioansicht</b> — Zwischen Detailliert und Kompakt wechseln.\n",
+      "📅 <b>Wöchentlicher Digest</b> — Wöchentliche Portfolio-Zusammenfassung aktivieren/deaktivieren.\n",
+      "🔢 <b>Zahlenformat</b> — Tausendertrennzeichen umschalten (1,000 vs 1 000).\n",
+      "🔔 <b>Volatilitätswarnungen</b> — Schwellenwert für Kursschwankungen festlegen (3%, 5%, 10%, AUS).\n",
+      "🌐 <b>Spracheinstellungen</b> — Oberflächensprache ändern.\n",
+      "👥 <b>Gruppeneinstellungen</b> — Bot-Verhalten in Gruppenchats verwalten.\n",
+      "📋 <b>Meine Daten</b> — Persönliche Daten anzeigen oder zurücksetzen.\n",
+      "ℹ️ <b>Über den Bot</b> — Zusätzliche Informationen und Kontakt."
     ],
     "choose group": "👥 Wählen Sie die zu bearbeitende Gruppe:",
     "input": "✍️ Wählen Sie die benötigten Währungen und bestätigen Sie sie!",
@@ -121,7 +144,17 @@
     "current_selected": "<b>Currently selected:</b> {items}",
     "current_selected_none": "<b>Currently selected:</b> <i>none</i>",
     "error group list": "😢 Sieht so aus, als ob Sie noch keine Gruppen verwalten, in denen ich Mitglied bin.",
-    "loading": "⚙️ Einstellungen werden geladen..."
+    "loading": "⚙️ Einstellungen werden geladen...",
+    "rate_mode_direct_toast": "🔄 Standard-Wechselkursmodus auf Direkt gesetzt (z. B. USD: 44,85₴)",
+    "rate_mode_reverse_toast": "🔄 Standard-Wechselkursmodus auf Umgekehrt gesetzt (z. B. USD: 0,0223$)",
+    "portfolio_view_compact_toast": "📊 Portfolioansicht auf Kompakt gesetzt",
+    "portfolio_view_detailed_toast": "📊 Portfolioansicht auf Detailliert gesetzt",
+    "digest_enabled_toast": "📅 Wöchentlicher Portfolio-Digest aktiviert",
+    "digest_disabled_toast": "📅 Wöchentlicher Portfolio-Digest deaktiviert",
+    "num_fmt_spaces_toast": "🔢 Zahlenformat auf 1 000 gesetzt",
+    "num_fmt_commas_toast": "🔢 Zahlenformat auf 1,000 gesetzt",
+    "volatility_off_toast": "🔔 Volatilitätswarnungen deaktiviert",
+    "volatility_set_toast": "🔔 Volatilitätsschwelle auf {pct}% gesetzt"
   },
   "language": {
     "select": "🌐 Wählen Sie Ihre bevorzugte Sprache:",
@@ -148,11 +181,21 @@
     ],
     "help": {
       "main": [
-        "<b>Erklärung der Bot-Funktionen:</b>\n\n",
-        "📊 Wechselkurse — geben Sie eine beliebige Währung der Welt ein und erhalten Sie den aktuellen Kurs.\n",
-        "💵 Kryptowährungen — verwenden Sie den Befehl /crypto, um Kryptowährungskurse zu erhalten.\n",
-        "📑 Unternehmensaktien — sehen Sie sich die Aktien der Unternehmen an, die Sie benötigen.\n\n",
-        "Wenn Sie einen Fehler oder ein Problem finden, kontaktieren Sie mich!"
+        "📖 <b>Vollständiges Benutzerhandbuch & Funktionen von Finances Bot</b>\n\n",
+        "Ihr All-in-One-Assistent für Währungsumrechnungen, Portfolio-Tracking und Preisalarme.\n\n",
+        "💱 <b>1. Umrechnung & Rechner:</b>\n",
+        "• <b>Sofort-Umrechnung:</b> Schreiben Sie einfach <code>100 USD</code>, <code>50 EUR</code> oder <code>0.5 BTC</code>.\n",
+        "• 🧾 /calc — <b>Massenrechner:</b> Summiert Ausgaben in mehreren Währungen. Bsp: <code>/calc 100 USD Hotel, 45 EUR Abendessen</code>.\n",
+        "• 📊 <b>Inline-Modus:</b> Geben Sie <code>@fStatisticsBot 100 USD</code> in jedem Chat ein!\n\n",
+        "💼 <b>2. Portfolio & P&L:</b>\n",
+        "• 💼 /portfolio — Verfolgen Sie Krypto, Aktien & Fiat mit automatischem P&L und Sparkline-Diagrammen <code>[ ▂▃▅▇█]</code>.\n\n",
+        "🔔 <b>3. Alarme & Volatilität:</b>\n",
+        "• 🔔 /alert — Preisalarme erstellen (z.B. <code>BTC USD below 50000</code>).\n\n",
+        "⚙️ <b>4. Einstellungen:</b>\n",
+        "• ⚙️ /settings — Kursmodus, Ansicht (Detailliert/Kompakt), wöchentlicher Digest, Zahlenformat.\n",
+        "• 📋 /my_data — Daten und Einstellungen anzeigen.\n\n",
+        "👥 <b>5. Gruppen-Chats:</b>\n",
+        "• /rate 100 USD — Umrechnung in Gruppen  •  /group_settings — Gruppen-Einstellungen für Admins."
       ],
       "q&a": [
         "💬 Fragen und Antworten:\n\n",
@@ -494,7 +537,8 @@
     "help": "ℹ️ Diese Hilfe",
     "export": "📤 Portfolio exportieren",
     "import": "📥 Portfolio importieren",
-    "my_data": "📋 View My Data & Settings"
+    "my_data": "📋 Meine Daten & Einstellungen",
+    "calc": "🧾 Ausgaben-Massenrechner"
   },
   "portability": {
     "export_success": "✅ Successfully exported {count} assets.",

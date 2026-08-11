@@ -28,6 +28,40 @@ async def _cache_key(uid: int) -> str:
     return f"settings:{uid}"
 
 
+async def _get_user_prefs(uid: int) -> dict:
+    db = get_db()
+    user = await db["Users"].find_one(
+        {"_id": uid},
+        {
+            "RateMode": 1,
+            "PortfolioView": 1,
+            "WeeklyDigest": 1,
+            "NumberFormat": 1,
+            "VolatilityThreshold": 1,
+        },
+    )
+    u = user or {}
+    return {
+        "rate_mode": u.get("RateMode", "direct"),
+        "view_mode": u.get("PortfolioView", "detailed"),
+        "digest": u.get("WeeklyDigest", True),
+        "num_fmt": u.get("NumberFormat", "commas"),
+        "volatility": u.get("VolatilityThreshold", 5),
+    }
+
+
+def _render_settings_kb(i18n: I18n, lang: str, prefs: dict):
+    return settings_menu(
+        i18n,
+        lang,
+        rate_mode=prefs["rate_mode"],
+        view_mode=prefs["view_mode"],
+        digest=prefs["digest"],
+        num_fmt=prefs["num_fmt"],
+        volatility=prefs["volatility"],
+    )
+
+
 async def _get_settings_menu_text(uid: int, i18n: I18n, lang: str) -> str:
     await cache.json_set(await _cache_key(uid), {})
     text = i18n.get("settings.menu", lang)
@@ -43,20 +77,157 @@ async def cmd_settings(message: Message, i18n: I18n, lang: str) -> None:
     from app.utils.draft import finish_initial_message_draft, process_initial_message_draft
     import asyncio
 
+    uid = message.from_user.id
     loading_text = str(i18n.get("settings.loading", "Settings loading..."))
-    task = asyncio.create_task(_get_settings_menu_text(message.from_user.id, i18n, lang))
+    task = asyncio.create_task(_get_settings_menu_text(uid, i18n, lang))
     was_loading, text = await process_initial_message_draft(message, task, loading_text)
 
+    prefs = await _get_user_prefs(uid)
     await finish_initial_message_draft(message, text, was_loading)
-    await message.answer(text, reply_markup=settings_menu(i18n, lang))
+    await message.answer(text, reply_markup=_render_settings_kb(i18n, lang, prefs))
 
 
 @router.callback_query(F.data == "menu")
 async def cb_menu(call: CallbackQuery, i18n: I18n, lang: str) -> None:
+    uid = call.from_user.id
     text = i18n.get("settings.menu", lang)
     text = "".join(text) if isinstance(text, list) else str(text)
-    await cache.json_set(await _cache_key(call.from_user.id), {})
-    await call.message.edit_text(text, reply_markup=settings_menu(i18n, lang))
+    await cache.json_set(await _cache_key(uid), {})
+    prefs = await _get_user_prefs(uid)
+    await call.message.edit_text(text, reply_markup=_render_settings_kb(i18n, lang, prefs))
+
+
+@router.callback_query(F.data == "toggle_rate_mode")
+async def cb_toggle_rate_mode(call: CallbackQuery, i18n: I18n, lang: str) -> None:
+    uid = call.from_user.id
+    db = get_db()
+    prefs = await _get_user_prefs(uid)
+    new_mode = "reverse" if prefs["rate_mode"] == "direct" else "direct"
+    await db["Users"].update_one({"_id": uid}, {"$set": {"RateMode": new_mode}})
+    prefs["rate_mode"] = new_mode
+
+    msg = str(
+        i18n.get(
+            f"settings.rate_mode_{new_mode}_toast",
+            lang,
+            default=f"🔄 Default rate mode set to {new_mode.title()}",
+        )
+    )
+    await call.answer(msg, show_alert=False)
+    text = i18n.get("settings.menu", lang)
+    text = "".join(text) if isinstance(text, list) else str(text)
+    try:
+        await call.message.edit_text(text, reply_markup=_render_settings_kb(i18n, lang, prefs))
+    except TelegramBadRequest:
+        pass
+
+
+@router.callback_query(F.data == "toggle_portfolio_view")
+async def cb_toggle_portfolio_view(call: CallbackQuery, i18n: I18n, lang: str) -> None:
+    uid = call.from_user.id
+    db = get_db()
+    prefs = await _get_user_prefs(uid)
+    new_view = "compact" if prefs["view_mode"] == "detailed" else "detailed"
+    await db["Users"].update_one({"_id": uid}, {"$set": {"PortfolioView": new_view}})
+    prefs["view_mode"] = new_view
+
+    msg = str(
+        i18n.get(
+            f"settings.portfolio_view_{new_view}_toast",
+            lang,
+            default=f"📊 Portfolio view mode set to {new_view.title()}",
+        )
+    )
+    await call.answer(msg, show_alert=False)
+    text = i18n.get("settings.menu", lang)
+    text = "".join(text) if isinstance(text, list) else str(text)
+    try:
+        await call.message.edit_text(text, reply_markup=_render_settings_kb(i18n, lang, prefs))
+    except TelegramBadRequest:
+        pass
+
+
+@router.callback_query(F.data == "toggle_digest")
+async def cb_toggle_digest(call: CallbackQuery, i18n: I18n, lang: str) -> None:
+    uid = call.from_user.id
+    db = get_db()
+    prefs = await _get_user_prefs(uid)
+    new_digest = not prefs["digest"]
+    await db["Users"].update_one({"_id": uid}, {"$set": {"WeeklyDigest": new_digest}})
+    prefs["digest"] = new_digest
+
+    status_str = "enabled" if new_digest else "disabled"
+    msg = str(
+        i18n.get(
+            f"settings.digest_{status_str}_toast",
+            lang,
+            default=f"📅 Weekly portfolio digest {status_str}",
+        )
+    )
+    await call.answer(msg, show_alert=False)
+    text = i18n.get("settings.menu", lang)
+    text = "".join(text) if isinstance(text, list) else str(text)
+    try:
+        await call.message.edit_text(text, reply_markup=_render_settings_kb(i18n, lang, prefs))
+    except TelegramBadRequest:
+        pass
+
+
+@router.callback_query(F.data == "toggle_number_format")
+async def cb_toggle_number_format(call: CallbackQuery, i18n: I18n, lang: str) -> None:
+    uid = call.from_user.id
+    db = get_db()
+    prefs = await _get_user_prefs(uid)
+    new_fmt = "spaces" if prefs["num_fmt"] == "commas" else "commas"
+    await db["Users"].update_one({"_id": uid}, {"$set": {"NumberFormat": new_fmt}})
+    prefs["num_fmt"] = new_fmt
+
+    msg = str(
+        i18n.get(
+            f"settings.num_fmt_{new_fmt}_toast",
+            lang,
+            default=f"🔢 Number format set to {'1 000' if new_fmt == 'spaces' else '1,000'}",
+        )
+    )
+    await call.answer(msg, show_alert=False)
+    text = i18n.get("settings.menu", lang)
+    text = "".join(text) if isinstance(text, list) else str(text)
+    try:
+        await call.message.edit_text(text, reply_markup=_render_settings_kb(i18n, lang, prefs))
+    except TelegramBadRequest:
+        pass
+
+
+@router.callback_query(F.data == "toggle_volatility")
+async def cb_toggle_volatility(call: CallbackQuery, i18n: I18n, lang: str) -> None:
+    uid = call.from_user.id
+    db = get_db()
+    prefs = await _get_user_prefs(uid)
+
+    # Cycle: 5% -> 10% -> 3% -> 0% (OFF) -> 5%
+    cycle_map = {5: 10, 10: 3, 3: 0, 0: 5}
+    new_vol = cycle_map.get(prefs["volatility"], 5)
+    await db["Users"].update_one({"_id": uid}, {"$set": {"VolatilityThreshold": new_vol}})
+    prefs["volatility"] = new_vol
+
+    if new_vol == 0:
+        msg = str(i18n.get("settings.volatility_off_toast", lang, default="🔔 Volatility alerts disabled"))
+    else:
+        msg = str(
+            i18n.get(
+                "settings.volatility_set_toast",
+                lang,
+                default=f"🔔 Volatility threshold set to {new_vol}%",
+            ).format(pct=new_vol)
+        )
+
+    await call.answer(msg, show_alert=False)
+    text = i18n.get("settings.menu", lang)
+    text = "".join(text) if isinstance(text, list) else str(text)
+    try:
+        await call.message.edit_text(text, reply_markup=_render_settings_kb(i18n, lang, prefs))
+    except TelegramBadRequest:
+        pass
 
 
 @router.callback_query(F.data == "about")

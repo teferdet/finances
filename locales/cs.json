@@ -20,7 +20,16 @@
       "about": "ℹ️ O botovi",
       "main_menu": "📱 Hlavní menu",
       "base_currency": "💱 Výchozí měna",
-      "big_buttons": "📏 Big Buttons"
+      "big_buttons": "📏 Big Buttons",
+      "rate_mode_direct": "🔄 Kurz: Přímý",
+      "rate_mode_reverse": "🔄 Kurz: Inverzní",
+      "view_detailed": "📊 Zobrazení: Detailní",
+      "view_compact": "📊 Zobrazení: Kompaktní",
+      "digest_on": "📅 Souhrn: ZAP",
+      "digest_off": "📅 Souhrn: VYP",
+      "fmt_commas": "🔢 Formát: 1,000",
+      "fmt_spaces": "🔢 Formát: 1 000",
+      "vol_off": "🔔 Volatilita: VYP"
     },
     "help": {
       "q&a": "💬 Otázky\\Odpovědi",
@@ -82,9 +91,23 @@
   },
   "settings": {
     "menu": [
-      "⚙️ Nastavení, vyberte potřebnou možnost:\n\n",
-      "🤖 Bot — změňte seznam měn pro převod fiat, kryptoměn a akcií\n",
-      "👥 Skupiny — změňte seznamy měn pro převod a měn ke zpracování."
+      "⚙️ <b>Panely Nastavení</b>\n\n",
+      "Vyberte sekci, kterou chcete nakonfigurovat:\n\n",
+      "💶 <b>Fiat Měny</b> — Vyberte standardní měny pro převod.\n",
+      "💵 <b>Kryptoměny</b> — Vyberte digitální měny.\n",
+      "📑 <b>Akcie</b> — Vyberte akcie ke sledování.\n",
+      "📱 <b>Hlavní Menu</b> — Nakonfigurujte tlačítka rychlého přístupu.\n",
+      "💱 <b>Výchozí Měna</b> — Nastavte hlavní měnu pro portfolio.\n",
+      "📏 <b>Velká Tlačítka</b> — Přepněte velikost tlačítek klávesnice.\n",
+      "🔄 <b>Režim Kurzu</b> — Vyberte výchozí režim kurzu (Přímý nebo Inverzní).\n",
+      "📊 <b>Zobrazení Portfolia</b> — Přepínejte mezi Detailním a Kompaktním rozvržením.\n",
+      "📅 <b>Týdenní Souhrn</b> — Povolte nebo zakažte týdenní souhrn portfolia.\n",
+      "🔢 <b>Formát Čísel</b> — Přepněte styl oddělovače (1,000 vs 1 000).\n",
+      "🔔 <b>Upozornění na Volatilitu</b> — Nastavte práh výkyvů cen (3%, 5%, 10%, VYP).\n",
+      "🌐 <b>Nastavení Jazyka</b> — Změňte jazyk rozhraní.\n",
+      "👥 <b>Nastavení Skupin</b> — Spravujte chování bota ve skupinách.\n",
+      "📋 <b>Moje Data</b> — Zobrazte nebo resetujte své osobní údaje.\n",
+      "ℹ️ <b>O Botovi</b> — Další informace a kontakt."
     ],
     "choose group": "👥 Vyberte skupinu k úpravě:",
     "input": "✍️ Vyberte potřebné měny a potvrďte je!",
@@ -121,7 +144,17 @@
     "current_selected": "<b>Currently selected:</b> {items}",
     "current_selected_none": "<b>Currently selected:</b> <i>none</i>",
     "error group list": "😢 Vypadá to, že zatím nespravujete žádné skupiny, ve kterých jsem.",
-    "loading": "⚙️ Načítání nastavení..."
+    "loading": "⚙️ Načítání nastavení...",
+    "rate_mode_direct_toast": "🔄 Výchozí režim měnového kurzu nastaven na Přímý (např. USD: 44.85₴)",
+    "rate_mode_reverse_toast": "🔄 Výchozí režim měnového kurzu nastaven na Inverzní (např. USD: 0.0223$)",
+    "portfolio_view_compact_toast": "📊 Zobrazení portfolia nastaveno na Kompaktní",
+    "portfolio_view_detailed_toast": "📊 Zobrazení portfolia nastaveno na Detailní",
+    "digest_enabled_toast": "📅 Týdenní souhrn portfolia zapnut",
+    "digest_disabled_toast": "📅 Týdenní souhrn portfolia vypnut",
+    "num_fmt_spaces_toast": "🔢 Formát čísel nastaven na 1 000",
+    "num_fmt_commas_toast": "🔢 Formát čísel nastaven na 1,000",
+    "volatility_off_toast": "🔔 Upozornění na volatilitu vypnuta",
+    "volatility_set_toast": "🔔 Prahová hodnota volatility nastavena na {pct}%"
   },
   "language": {
     "select": "🌐 Vyberte svůj preferovaný jazyk:",
@@ -148,11 +181,21 @@
     ],
     "help": {
       "main": [
-        "<b>Vysvětlení funkcí bota:</b>\n\n",
-        "📊 Směnné kurzy — zadejte jakoukoli měnu na světě a získejte aktuální kurz.\n",
-        "💵 Kryptoměny — použijte příkaz /crypto pro získání kurzů kryptoměn.\n",
-        "📑 Akcie společností — prohlédněte si akcie společností, které potřebujete.\n\n",
-        "Pokud najdete chybu nebo problém, kontaktujte mě!"
+        "📖 <b>Kompletní uživatelská příručka a funkce bota Finances</b>\n\n",
+        "Váš všestranný pomocník pro převod měn, sledování portfolia a cenová upozornění.\n\n",
+        "💱 <b>1. Převod a Kalkulátor:</b>\n",
+        "• <b>Okamžitý převod:</b> Stačí napsat <code>100 USD</code>, <code>50 EUR</code> nebo <code>0.5 BTC</code>.\n",
+        "• 🧾 /calc — <b>Kalkulátor výdajů:</b> Součet výdajů v různých měnách. Př: <code>/calc 100 USD hotel, 45 EUR večeře</code>.\n",
+        "• 📊 <b>Režim Inline:</b> Napište <code>@fStatisticsBot 100 USD</code> v jakémkoliv chatu!\n\n",
+        "💼 <b>2. Portfolio a P&L:</b>\n",
+        "• 💼 /portfolio — Sledujte krypto, akcie a měny s automatickým P&L a grafikou <code>[ ▂▃▅▇█]</code>.\n\n",
+        "🔔 <b>3. Upozornění a Volatilita:</b>\n",
+        "• 🔔 /alert — Nastavení cenových upozornění (např. <code>BTC USD below 50000</code>).\n\n",
+        "⚙️ <b>4. Nastavení:</b>\n",
+        "• ⚙️ /settings — Režim kurzu, zobrazení (Detailní/Kompaktní), týdenní souhrn, formát čísel.\n",
+        "• 📋 /my_data — Zobrazit vaše data a nastavení.\n\n",
+        "👥 <b>5. Skupiny:</b>\n",
+        "• /rate 100 USD — Převod ve skupině  •  /group_settings — Nastavení skupiny pro správce."
       ],
       "q&a": [
         "💬 Otázky a odpovědi:\n\n",
@@ -533,7 +576,8 @@
     "help": "ℹ️ Tato nápověda",
     "export": "📤 Exportovat portfolio",
     "import": "📥 Importovat portfolio",
-    "my_data": "📋 View My Data & Settings"
+    "my_data": "📋 Moje data a nastavení",
+    "calc": "🧾 Kalkulátor hromadných výdajů"
   },
   "portability": {
     "export_success": "✅ Successfully exported {count} assets.",

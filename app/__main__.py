@@ -172,17 +172,16 @@ async def on_startup(bot) -> None:
         for lang in i18n.supported:
             commands_list = [
                 BotCommand(command="start", description=i18n.get("commands.start", lang)),
+                BotCommand(command="portfolio", description=i18n.get("commands.portfolio", lang)),
+                BotCommand(command="calc", description=i18n.get("commands.calc", lang)),
                 BotCommand(command="crypto", description=i18n.get("commands.crypto", lang)),
                 BotCommand(command="stocks", description=i18n.get("commands.stocks", lang)),
-                BotCommand(
-                    command="portfolio",
-                    description=i18n.get("commands.portfolio", lang),
-                ),
+                BotCommand(command="alert", description=i18n.get("commands.alert", lang)),
+                BotCommand(command="my_data", description=i18n.get("commands.my_data", lang)),
+                BotCommand(command="settings", description=i18n.get("commands.settings", lang)),
                 BotCommand(command="export", description=i18n.get("commands.export", lang)),
                 BotCommand(command="import", description=i18n.get("commands.import", lang)),
-                BotCommand(command="alert", description=i18n.get("commands.alert", lang)),
                 BotCommand(command="donate", description=i18n.get("commands.donate", lang)),
-                BotCommand(command="settings", description=i18n.get("commands.settings", lang)),
                 BotCommand(command="privacy", description=i18n.get("commands.privacy", lang)),
                 BotCommand(command="help", description=i18n.get("commands.help", lang)),
             ]
@@ -191,14 +190,16 @@ async def on_startup(bot) -> None:
         # Default fallback
         commands_list_default = [
             BotCommand(command="start", description=i18n.get("commands.start", "en")),
+            BotCommand(command="portfolio", description=i18n.get("commands.portfolio", "en")),
+            BotCommand(command="calc", description=i18n.get("commands.calc", "en")),
             BotCommand(command="crypto", description=i18n.get("commands.crypto", "en")),
             BotCommand(command="stocks", description=i18n.get("commands.stocks", "en")),
-            BotCommand(command="portfolio", description=i18n.get("commands.portfolio", "en")),
+            BotCommand(command="alert", description=i18n.get("commands.alert", "en")),
+            BotCommand(command="my_data", description=i18n.get("commands.my_data", "en")),
+            BotCommand(command="settings", description=i18n.get("commands.settings", "en")),
             BotCommand(command="export", description=i18n.get("commands.export", "en")),
             BotCommand(command="import", description=i18n.get("commands.import", "en")),
-            BotCommand(command="alert", description=i18n.get("commands.alert", "en")),
             BotCommand(command="donate", description=i18n.get("commands.donate", "en")),
-            BotCommand(command="settings", description=i18n.get("commands.settings", "en")),
             BotCommand(command="privacy", description=i18n.get("commands.privacy", "en")),
             BotCommand(command="help", description=i18n.get("commands.help", "en")),
         ]

@@ -39,13 +39,15 @@ async def inline_calculator(inline_query: InlineQuery, i18n: I18n, lang: str) ->
     db = get_db()
 
     # Try to get user's fiat output preferences
-    user = await db["Users"].find_one({"_id": user_id}, {"Fiat currency": 1})
+    user = await db["Users"].find_one({"_id": user_id}, {"Fiat currency": 1, "RateMode": 1})
     output = (user or {}).get("Fiat currency", [])
+    rate_mode = (user or {}).get("RateMode", "direct")
     if not output:
         output = ["USD", "EUR", "UAH", "GBP", "PLN"]
 
     codes = parsed.get_codes()
-    index = 0 if any(c in ["BTC", "ETH"] for c in codes) else 1
+    is_crypto = any(c in ["BTC", "ETH"] for c in codes)
+    index = 0 if (is_crypto or rate_mode == "reverse") else 1
 
     import asyncio
 

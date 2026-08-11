@@ -18,11 +18,15 @@ from app.i18n import I18n
 router = Router(name="my_data")
 
 
-def _format_list(items: list | None, fallback: str = "—") -> str:
-    """Format a list of items into a comma-separated string."""
+def _format_list(items: list | str | None, fallback: str = "—") -> str:
+    """Format a list or string of items into a comma-separated string."""
     if not items:
         return fallback
-    return ", ".join(str(i) for i in items)
+    if isinstance(items, str):
+        return items
+    if isinstance(items, list):
+        return ", ".join(str(i) for i in items) if items else fallback
+    return str(items)
 
 
 @router.callback_query(F.data == "my_data_view")
@@ -65,6 +69,15 @@ async def cb_my_data_view(call: CallbackQuery, i18n: I18n, lang: str) -> None:
     stocks = user.get("Stocks", [])
     main_menu = user.get("MainMenu", [])
     base_currency = user.get("BaseCurrency", "")
+    rate_mode = user.get("RateMode", "direct")
+    rate_mode_label = md.get("rate_mode_direct", "Direct") if rate_mode == "direct" else md.get("rate_mode_reverse", "Reverse")
+    view_mode = user.get("PortfolioView", "detailed")
+    view_label = md.get("view_compact", "Compact") if view_mode == "compact" else md.get("view_detailed", "Detailed")
+    digest = user.get("WeeklyDigest", True)
+    num_fmt = user.get("NumberFormat", "commas")
+    num_fmt_label = "1 000" if num_fmt == "spaces" else "1,000"
+    volatility = user.get("VolatilityThreshold", 5)
+    vol_label = "OFF" if volatility == 0 else f"{volatility}%"
     big_buttons = user.get("BigButtons", False)
 
     lines = [
@@ -80,7 +93,12 @@ async def cb_my_data_view(call: CallbackQuery, i18n: I18n, lang: str) -> None:
         f"{md.get('crypto', '💵 Crypto')}: {_format_list(crypto, default_text)}",
         f"{md.get('stocks_label', '📑 Stocks')}: {_format_list(stocks, default_text)}",
         f"{md.get('main_menu', '📱 Main Menu')}: {_format_list(main_menu, default_text)}",
-        f"{md.get('base_currency', '💱 Base Currency')}: <b>{base_currency or default_text}</b>",
+        f"{md.get('base_currency', '💱 Base Currency')}: <b>{_format_list(base_currency, default_text)}</b>",
+        f"{md.get('rate_mode', '🔄 Rate Mode')}: <b>{rate_mode_label}</b>",
+        f"{md.get('view_mode', '📊 Portfolio View')}: <b>{view_label}</b>",
+        f"{md.get('digest', '📅 Weekly Digest')}: <b>{yes_text if digest else no_text}</b>",
+        f"{md.get('num_fmt', '🔢 Number Format')}: <b>{num_fmt_label}</b>",
+        f"{md.get('volatility', '🔔 Volatility Threshold')}: <b>{vol_label}</b>",
         f"{md.get('big_buttons', '📏 Big Buttons')}: {yes_text if big_buttons else no_text}",
         "",
         f"{md.get('groups_count', '👥 Groups')}: <b>{groups_count}</b>",

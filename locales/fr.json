@@ -20,7 +20,16 @@
       "about": "ℹ️ À propos",
       "main_menu": "📱 Menu principal",
       "base_currency": "💱 Devise par défaut",
-      "big_buttons": "📏 Big Buttons"
+      "big_buttons": "📏 Big Buttons",
+      "rate_mode_direct": "🔄 Taux : Direct",
+      "rate_mode_reverse": "🔄 Taux : Inversé",
+      "view_detailed": "📊 Vue: Détaillée",
+      "view_compact": "📊 Vue: Compacte",
+      "digest_on": "📅 Digest: ACTIF",
+      "digest_off": "📅 Digest: INACTIF",
+      "fmt_commas": "🔢 Format: 1,000",
+      "fmt_spaces": "🔢 Format: 1 000",
+      "vol_off": "🔔 Volatilité: INACTIF"
     },
     "help": {
       "q&a": "💬 Questions\\Réponses",
@@ -82,9 +91,23 @@
   },
   "settings": {
     "menu": [
-      "⚙️ Paramètres, choisissez l'option dont vous avez besoin:\n\n",
-      "🤖 Bot — modifiez la liste des devises pour fiat, cryptomonnaies et actions\n",
-      "👥 Groupes — modifiez les listes de devises pour la conversion et les devises à traiter."
+      "⚙️ <b>Tableau de bord des paramètres</b>\n\n",
+      "Veuillez sélectionner la section que vous souhaitez configurer :\n\n",
+      "💶 <b>Devises Fiat</b> — Sélectionner les devises pour la conversion.\n",
+      "💵 <b>Cryptomonnaies</b> — Sélectionner les devises numériques.\n",
+      "📑 <b>Actions</b> — Sélectionner les actions à suivre.\n",
+      "📱 <b>Menu Principal</b> — Configurer vos boutons d'accès rapide.\n",
+      "💱 <b>Devise par défaut</b> — Définir votre devise principale pour le portefeuille.\n",
+      "📏 <b>Grands Boutons</b> — Basculer la taille des boutons du clavier.\n",
+      "🔄 <b>Mode de Taux</b> — Choisir le mode de taux par défaut (Direct ou Inversé).\n",
+      "📊 <b>Affichage du portefeuille</b> — Basculer entre Détaillé et Compact.\n",
+      "📅 <b>Synthèse hebdomadaire</b> — Activer ou désactiver la synthèse du portefeuille.\n",
+      "🔢 <b>Format des nombres</b> — Choisir le séparateur des milliers (1,000 ou 1 000).\n",
+      "🔔 <b>Alertes de volatilité</b> — Définir le seuil de variation (3%, 5%, 10%, INACTIF).\n",
+      "🌐 <b>Paramètres de Langue</b> — Changer la langue de l'interface.\n",
+      "👥 <b>Paramètres de Groupe</b> — Gérer le comportement du bot dans vos groupes.\n",
+      "📋 <b>Mes Données</b> — Afficher ou réinitialiser vos données personnelles.\n",
+      "ℹ️ <b>À propos du Bot</b> — Informations supplémentaires et contact."
     ],
     "choose group": "👥 Choisissez le groupe à modifier:",
     "input": "✍️ Choisissez les devises dont vous avez besoin et confirmez-les!",
@@ -121,7 +144,17 @@
     "current_selected": "<b>Currently selected:</b> {items}",
     "current_selected_none": "<b>Currently selected:</b> <i>none</i>",
     "error group list": "😢 Il semble que vous n'administrez encore aucun groupe dans lequel je suis.",
-    "loading": "⚙️ Chargement des paramètres..."
+    "loading": "⚙️ Chargement des paramètres...",
+    "rate_mode_direct_toast": "🔄 Mode de taux de change par défaut défini sur Direct (ex. USD : 44,85₴)",
+    "rate_mode_reverse_toast": "🔄 Mode de taux de change par défaut défini sur Inversé (ex. USD : 0,0223$)",
+    "portfolio_view_compact_toast": "📊 Affichage du portefeuille défini sur Compact",
+    "portfolio_view_detailed_toast": "📊 Affichage du portefeuille défini sur Détaillé",
+    "digest_enabled_toast": "📅 Récapitulatif hebdomadaire activé",
+    "digest_disabled_toast": "📅 Récapitulatif hebdomadaire désactivé",
+    "num_fmt_spaces_toast": "🔢 Format de nombre défini sur 1 000",
+    "num_fmt_commas_toast": "🔢 Format de nombre défini sur 1,000",
+    "volatility_off_toast": "🔔 Alerts de volatilité désactivées",
+    "volatility_set_toast": "🔔 Seuil de volatilité défini à {pct}%"
   },
   "language": {
     "select": "🌐 Choisissez votre langue préférée:",
@@ -148,11 +181,21 @@
     ],
     "help": {
       "main": [
-        "<b>Explication des fonctions du bot:</b>\n\n",
-        "📊 Taux de change — entrez n'importe quelle devise du monde et obtenez le taux actuel.\n",
-        "💵 Cryptomonnaies — utilisez la commande /crypto pour obtenir les taux des cryptomonnaies.\n",
-        "📑 Actions d'entreprises — consultez les actions des entreprises dont vous avez besoin.\n\n",
-        "Si vous trouvez une erreur ou un problème, contactez-moi!"
+        "📖 <b>Guide complet de l'utilisateur & fonctionnalités du bot Finances</b>\n\n",
+        "Votre assistant tout-en-un pour la conversion de devises, le suivi de portefeuille et les alertes.\n\n",
+        "💱 <b>1. Conversion & Calculateur:</b>\n",
+        "• <b>Conversion instantanée:</b> Tapez simplement <code>100 USD</code>, <code>50 EUR</code> ou <code>0.5 BTC</code>.\n",
+        "• 🧾 /calc — <b>Calculateur en lot:</b> Somme de plusieurs dépenses. Ex: <code>/calc 100 USD hôtel, 45 EUR dîner</code>.\n",
+        "• 📊 <b>Mode Inline:</b> Tapez <code>@fStatisticsBot 100 USD</code> dans n'importe quel chat !\n\n",
+        "💼 <b>2. Portefeuille & P&L:</b>\n",
+        "• 💼 /portfolio — Suivez vos cryptos, actions et devises avec calcul P&L et sparklines <code>[ ▂▃▅▇█]</code>.\n\n",
+        "🔔 <b>3. Alertes & Volatilité:</b>\n",
+        "• 🔔 /alert — Définir des alertes de prix (ex: <code>BTC USD below 50000</code>).\n\n",
+        "⚙️ <b>4. Paramètres:</b>\n",
+        "• ⚙️ /settings — Mode de taux, vue (Détaillée/Compacte), récapitulatif hebdo, format des nombres.\n",
+        "• 📋 /my_data — Afficher vos données et paramètres.\n\n",
+        "👥 <b>5. Groupes:</b>\n",
+        "• /rate 100 USD — Conversion dans le groupe  •  /group_settings — Paramètres de groupe."
       ],
       "q&a": [
         "💬 Questions et réponses:\n\n",
@@ -494,7 +537,8 @@
     "help": "ℹ️ Cette aide",
     "export": "📤 Exporter le portefeuille",
     "import": "📥 Importer le portefeuille",
-    "my_data": "📋 View My Data & Settings"
+    "my_data": "📋 Mes données et paramètres",
+    "calc": "🧾 Calculateur de dépenses en lot"
   },
   "portability": {
     "export_success": "✅ Successfully exported {count} assets.",

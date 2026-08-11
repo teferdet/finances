@@ -20,7 +20,16 @@
       "about": "ℹ️ O bocie",
       "main_menu": "📱 Menu główne",
       "base_currency": "💱 Default Currency",
-      "big_buttons": "📏 Big Buttons"
+      "big_buttons": "📏 Big Buttons",
+      "rate_mode_direct": "🔄 Kurs: Prosty",
+      "rate_mode_reverse": "🔄 Kurs: Odwrotny",
+      "view_detailed": "📊 Widok: Szczegółowy",
+      "view_compact": "📊 Widok: Kompaktowy",
+      "digest_on": "📅 Podsumowanie: WŁ",
+      "digest_off": "📅 Podsumowanie: WYŁ",
+      "fmt_commas": "🔢 Format: 1,000",
+      "fmt_spaces": "🔢 Format: 1 000",
+      "vol_off": "🔔 Zmienność: WYŁ"
     },
     "help": {
       "q&a": "💬 Pytania\\Odpowiedzi",
@@ -85,9 +94,23 @@
   },
   "settings": {
     "menu": [
-      "⚙️ Ustawienia, wybierz odpowiednią opcję:\n\n",
-      "🤖 Bot — zmień listę walut do przeliczania dla walut fiducjarnych, kryptowalut oraz akcji spółek\n",
-      "👥 Grupy — zmień listy walut do przeliczania oraz walut do obsługi. "
+      "⚙️ <b>Panel Ustawień</b>\n\n",
+      "Wybierz sekcję, którą chcesz skonfigurować:\n\n",
+      "💶 <b>Waluty Fiat</b> — Wybierz standardowe waluty do przeliczania.\n",
+      "💵 <b>Kryptowaluty</b> — Wybierz cyfrowe waluty.\n",
+      "📑 <b>Akcje spółek</b> — Wybierz akcje do śledzenia.\n",
+      "📱 <b>Menu Główne</b> — Skonfiguruj przyciski szybkiego dostępu.\n",
+      "💱 <b>Waluta Domyślna</b> — Ustaw główną walutę dla portfela.\n",
+      "📏 <b>Duże Przyciski</b> — Przełącz rozmiar przycisków klawiatury.\n",
+      "🔄 <b>Tryb Kursu</b> — Wybierz domyślny tryb kursu (Prosty lub Odwrotny).\n",
+      "📊 <b>Widok Portfela</b> — Przełączaj między widokiem Szczegółowym i Kompaktowym.\n",
+      "📅 <b>Podsumowanie Tygodniowe</b> — Włącz lub wyłącz cotygodniowe podsumowanie.\n",
+      "🔢 <b>Format Liczb</b> — Wybierz separator tysięcy (1,000 lub 1 000).\n",
+      "🔔 <b>Alerty Zmienności</b> — Ustaw próg powiadomień o wahaniach (3%, 5%, 10%, WYŁ).\n",
+      "🌐 <b>Ustawienia Języka</b> — Zmień język interfejsu.\n",
+      "👥 <b>Ustawienia Grup</b> — Zarządzaj zachowaniem bota w grupach.\n",
+      "📋 <b>Moje Dane</b> — Wyświetl lub zresetuj swoje dane osobowe.\n",
+      "ℹ️ <b>O Bocie</b> — Dodatkowe informacje i kontakt."
     ],
     "choose group": "👥 Wybierz grupę do edycji:",
     "input": "✍️ Wybierz potrzebne ci waluty i potwierdź je!:",
@@ -124,7 +147,17 @@
     "error group list": "😢 Wygląda na to, że nie administrujesz jeszcze żadną grupą, w której jestem.",
     "loading": "⚙️ Ładowanie ustawień...",
     "language": "🌐 Wybierz język",
-    "language changed": "✅ Język został zmieniony pomyślnie!"
+    "language changed": "✅ Język został zmieniony pomyślnie!",
+    "rate_mode_direct_toast": "🔄 Domyślny tryb kursu walut ustawiony na Prosty (np. USD: 44.85₴)",
+    "rate_mode_reverse_toast": "🔄 Domyślny tryb kursu walut ustawiony na Odwrotny (np. USD: 0.0831zł)",
+    "portfolio_view_compact_toast": "📊 Widok portfela ustawiono na Kompaktowy",
+    "portfolio_view_detailed_toast": "📊 Widok portfela ustawiono na Szczegółowy",
+    "digest_enabled_toast": "📅 Tygodniowe podsumowanie włączone",
+    "digest_disabled_toast": "📅 Tygodniowe podsumowanie wyłączone",
+    "num_fmt_spaces_toast": "🔢 Format liczb ustawiono na 1 000",
+    "num_fmt_commas_toast": "🔢 Format liczb ustawiono na 1,000",
+    "volatility_off_toast": "🔔 Powiadomienia o zmienności wyłączone",
+    "volatility_set_toast": "🔔 Próg zmienności ustawiono na {pct}%"
   },
   "other": {
     "donate": [
@@ -136,13 +169,21 @@
     ],
     "help": {
       "main": [
-        "<b>Wyjaśnienie funkcji bota:</b>\n\n",
-        "📊 Kursy walut — wpisz dowolną walutę świata i otrzymaj aktualny kurs. Napisz walutę, którą chcesz przeliczyć w dowolnym formacie oraz opcjonalnie kwotę.",
-        "Albo przeliczaj* waluty od razu kilka, wpisując kilka walut w jednej wiadomości!\n",
-        "💵 Kryptowaluta — użyj komendy /crypto, aby otrzymać kurs kryptowalut do sześciu walut fiducjarnych (hrywna, dolar, euro, funt, korona, złoty) i przelicz ją* na żądaną kwotę.\n",
-        "📑 Akcje spółek — sprawdź interesujące cię akcje spółek.\n\n",
-        "Jeśli znalazłeś błąd lub masz problem, skontaktuj się ze mną!\n\n",
-        "<i>* — aby przeliczyć, wpisz kwotę cyframi</i>"
+        "📖 <b>Pełny przewodnik i funkcje bota Finances</b>\n\n",
+        "Twój wszechstronny asystent do przeliczania walut, śledzenia portfela i alertów cenowych.\n\n",
+        "💱 <b>1. Przeliczanie i Kalkulator:</b>\n",
+        "• <b>Natychmiastowe przeliczanie:</b> Wpisz po prostu <code>100 USD</code>, <code>50 EUR</code> lub <code>0.5 BTC</code>.\n",
+        "• 🧾 /calc — <b>Kalkulator wydatków:</b> Sumuj wydatki w różnych walutach. Przykład: <code>/calc 100 USD hotel, 45 EUR kolacja</code>.\n",
+        "• 📊 <b>Tryb Inline:</b> Wpisz <code>@fStatisticsBot 100 USD</code> w dowolnym czacie!\n\n",
+        "💼 <b>2. Portfel i P&L:</b>\n",
+        "• 💼 /portfolio — Śledź krypto, akcje i waluty z automatycznym P&L i wykresami sparkline <code>[ ▂▃▅▇█]</code>.\n\n",
+        "🔔 <b>3. Alerty i Zmienność:</b>\n",
+        "• 🔔 /alert — Twórz alerty cenowe (np. <code>BTC USD below 50000</code>).\n\n",
+        "⚙️ <b>4. Ustawienia:</b>\n",
+        "• ⚙️ /settings — Tryb kursu, widok (Szczegółowy/Kompaktowy), tygodniowe podsumowanie, format liczb.\n",
+        "• 📋 /my_data — Wyświetl swoje dane i ustawienia.\n\n",
+        "👥 <b>5. Grupy:</b>\n",
+        "• /rate 100 USD — Przeliczanie w grupie  •  /group_settings — Ustawienia grupy dla adminów."
       ],
       "q&a": [
         "💬 Pytania i odpowiedzi:\n\n",
@@ -520,7 +561,8 @@
     "help": "ℹ️ Ta pomoc",
     "export": "📤 Eksportuj portfolio",
     "import": "📥 Importuj portfolio",
-    "my_data": "📋 View My Data & Settings"
+    "my_data": "📋 Moje dane i ustawienia",
+    "calc": "🧾 Kalkulator wydatków z listy"
   },
   "language": {
     "select": "🌐 Wybierz preferowany język:",

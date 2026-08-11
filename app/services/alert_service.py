@@ -397,7 +397,7 @@ async def _check_volatility() -> None:
                     {"portfolio.stock.ticker": {"$in": ticker_list}},
                 ]
             },
-            {"_id": 1, "portfolio": 1, "volatility_threshold_pct": 1, "Language": 1},
+            {"_id": 1, "portfolio": 1, "volatility_threshold_pct": 1, "VolatilityThreshold": 1, "Language": 1},
         )
         .to_list(length=5000)
     )
@@ -409,7 +409,12 @@ async def _check_volatility() -> None:
     notifications: list[tuple[int, str]] = []
 
     for user in users:
-        threshold = user.get("volatility_threshold_pct", 5.0)
+        v_thresh = user.get("VolatilityThreshold")
+        if v_thresh is None:
+            v_thresh = user.get("volatility_threshold_pct", 5.0)
+        threshold = float(v_thresh)
+        if threshold <= 0:
+            continue  # User disabled volatility notifications
         lang = user.get("Language") or "en"
 
         def t(k, _lang=lang):

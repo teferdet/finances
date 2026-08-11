@@ -96,7 +96,10 @@ async def _send_weekly_digest() -> None:
     users = (
         await db["Users"]
         .find(
-            {"portfolio": {"$exists": True, "$ne": {}}},
+            {
+                "portfolio": {"$exists": True, "$ne": {}},
+                "WeeklyDigest": {"$ne": False},
+            },
             {"_id": 1, "portfolio": 1, "BaseCurrency": 1, "Name": 1},
         )
         .to_list(length=10000)
