@@ -107,10 +107,22 @@ async def fetch_stocks() -> Optional[dict]:
         log.info("[Stocks] Saved to MongoDB")
 
         # Sync flat price cache for portfolio P&L
+        # Build {ticker: price_usd} from stocks_data (each entry is (symbol, symbol, price, currency_sym))
         try:
-            from app.services.portfolio_service import update_current_prices
+            from app.services.portfolio_service import update_prices_from_exchange
 
-            await update_current_prices()
+            prices_map: dict[str, float] = {}
+            for ticker, entry in stocks_data.items():
+                if ticker == "update":
+                    continue
+                if isinstance(entry, (list, tuple)) and len(entry) >= 3:
+                    try:
+                        prices_map[str(ticker)] = float(entry[2])
+                    except (TypeError, ValueError):
+                        pass
+            if prices_map:
+                await update_prices_from_exchange(prices_map)
+                log.debug("[Stocks] Synced %d prices to current_prices", len(prices_map))
         except Exception as exc:
             log.warning("[Stocks] Failed to sync current_prices: %s", exc)
     except Exception as exc:

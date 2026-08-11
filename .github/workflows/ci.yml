@@ -23,8 +23,10 @@ jobs:
           python-version: '3.12'
           cache: 'pip'
 
-      - name: Install linting tools
-        run: pip install ruff
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install ruff pytest
 
       - name: Ruff lint
         run: ruff check app/ --output-format=github

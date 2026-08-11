@@ -274,6 +274,10 @@ async def main() -> None:
         backup_task = asyncio.create_task(run_daily_backup_loop(settings.database.mongo_uri))
         background_tasks.append(("backup_scheduler", backup_task))
 
+    from app.cache import run_cache_cleanup_loop
+    cache_task = asyncio.create_task(run_cache_cleanup_loop())
+    background_tasks.append(("cache_cleanup", cache_task))
+
     if "--debug" in sys.argv or "debug" in sys.argv:
         from app.debug_cli import run_debug_cli
 

@@ -88,3 +88,18 @@ class MemoryCache:
 
 # ── Module-level singleton ──────────────────────────────────────────
 cache = MemoryCache()
+
+
+async def run_cache_cleanup_loop(interval: int = 900) -> None:
+    """Background task to periodically purge expired cache entries (default: every 15 min)."""
+    log.info("Started memory cache background cleanup loop (interval: %ds)", interval)
+    while True:
+        try:
+            await asyncio.sleep(interval)
+            await cache.cleanup_expired()
+        except asyncio.CancelledError:
+            log.info("Cache cleanup loop stopped")
+            break
+        except Exception as exc:
+            log.warning("Error in cache cleanup loop: %s", exc)
+

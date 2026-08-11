@@ -76,25 +76,27 @@ class I18n:
         self,
         key: str,
         lang: str | None = None,
+        default: Any = None,
         **kwargs: Any,
     ) -> Any:
         """
         Get translated value by dot-path key.
 
-        Falls back: requested lang → default lang → key itself.
-        If the result is a string, format it with kwargs.
+        Falls back: requested lang → default lang → default argument (if given) → key string.
+        If the result is a string and kwargs are provided, formats it.
         """
-        lang = lang if lang in self._data else self.default_lang
-        value = self._resolve(self._data.get(lang, {}), key)
+        requested_lang = lang if lang in self._data else self.default_lang
+        value = self._resolve(self._data.get(requested_lang, {}), key)
 
-        # Fallback to default
-        if value is None and lang != self.default_lang:
+        # Fallback to default language
+        if value is None and requested_lang != self.default_lang:
             value = self._resolve(self._data.get(self.default_lang, {}), key)
 
+        # Last resort: use provided default or key itself
         if value is None:
-            return key  # return raw key as last resort
+            value = default if default is not None else key
 
-        # Format strings
+        # Format strings if kwargs provided
         if isinstance(value, str) and kwargs:
             try:
                 value = value.format(**kwargs)

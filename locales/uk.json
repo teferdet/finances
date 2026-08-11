@@ -30,7 +30,8 @@
     "other": "✨ Інші функції",
     "reverse_rate": "🔄 Зворотній курс",
     "direct_rate": "🔄 Прямий курс",
-    "delete": "🗑 Видалити повідомлення"
+    "delete": "🗑 Видалити повідомлення",
+    "error": "Помилка завантаження меню"
   },
   "time": {
     "morning": "Доброго ранку ☀️",
@@ -127,7 +128,10 @@
     "big_buttons_on": "📏 Великі кнопки <b>увімкнено</b>! Кнопки клавіатури стануть більшими.",
     "big_buttons_off": "📏 Великі кнопки <b>вимкнено</b>. Кнопки клавіатури матимуть стандартний розмір.",
     "current_selected": "<b>Поточний список:</b> {items}",
-    "current_selected_none": "<b>Поточний список:</b> <i>не обрано</i>"
+    "current_selected_none": "<b>Поточний список:</b> <i>не обрано</i>",
+    "loading": "⚙️ Завантаження налаштувань...",
+    "language": "🌐 Обрати мову",
+    "language changed": "✅ Мову успішно змінено!"
   },
   "other": {
     "donate": [
@@ -242,7 +246,8 @@
     "digest_no_history": "<i>Weekly comparison will be available next week.</i>",
     "digest_top_gainer": "🏆 Top Gainer: <b>{ticker}</b> ({pct}%)",
     "digest_top_decliner": "🏆 Top Decliner: <b>{ticker}</b> ({pct}%)",
-    "digest_next": "<i>Next digest: next Sunday at {hour}:00 UTC</i>"
+    "digest_next": "<i>Next digest: next Sunday at {hour}:00 UTC</i>",
+    "loading": "🔔 Завантаження сповіщень..."
   },
   "admin": {
     "panel": "🔐 <b>Панель керування адміністратора</b>\n\nБудь ласка, виберіть модуль для налаштування:",
@@ -422,7 +427,8 @@
     "errors_auth_failed": "⛔ Double authorization failed.",
     "restart_success": "✅ <b>Bot successfully restarted!</b>",
     "main_menu": "⬅️ Main Menu",
-    "broadcast_not_found": "Розсилка вже відправлена або не знайдена."
+    "broadcast_not_found": "Розсилка вже відправлена або не знайдена.",
+    "loading": "⚡ Завантаження адмін-панелі..."
   },
   "portfolio": {
     "title": "💼 <b>Ваше Портфоліо Інвестицій</b>",
@@ -468,7 +474,14 @@
     "error_loading": "❌ Не вдалося завантажити дані вашого портфоліо: {error}",
     "btn_change_base": "💱 Змінити валюту",
     "btn_back": "◀️ Назад",
-    "select_base_title": "Оберіть базову валюту для портфоліо:"
+    "select_base_title": "Оберіть базову валюту для портфоліо:",
+    "section_crypto": "🪙 <b>Криптовалютні активи</b>",
+    "section_stock": "📈 <b>Акції компаній</b>",
+    "section_fiat": "💵 <b>Фіатні валюти</b>",
+    "subtotal": "Підсумок",
+    "grand_total": "Загальний підсумок",
+    "total_pnl": "Загальний P&L",
+    "loading": "⏳ Завантаження портфоліо..."
   },
   "commands": {
     "start": "🏠 Відкрити Головне Меню",
@@ -492,12 +505,16 @@
     "importing": "⏳ Завантаження та перевірка даних...",
     "invalid_format": "❌ Файл має неправильний формат або відсутні потрібні стовпці (asset_type, ticker, amount).",
     "import_result": "✅ <b>Імпорт завершено!</b>\n\nУспішно додано: <b>{success}</b>\nПропущено (невалідних): <b>{error}</b>",
-    "parse_error": "❌ Сталася помилка під час обробки файлу. Переконайтеся, що це коректний CSV."
+    "parse_error": "❌ Сталася помилка під час обробки файлу. Переконайтеся, що це коректний CSV.",
+    "cooldown": "⏳ Будь ласка, зачекайте кілька секунд перед повторним виконанням цієї операції.",
+    "exporting": "📥 Експорт портфоліо..."
   },
   "language": {
     "select": "🌐 <b>Оберіть вашу улюблену мову:</b>",
     "changed": "✅ Вашу мову успішно змінено на <b>{language}</b>!",
-    "unknown": "Невідома мова"
+    "unknown": "Невідома мова",
+    "loading": "🌐 Завантаження мов...",
+    "current": "Поточна мова"
   },
   "exchange": {
     "btn_bind": "💱 прив'язати біржу",
@@ -518,7 +535,8 @@
   "stocks": {
     "not_available": "📈 Дані по акціям поки недоступні. Спробуйте пізніше.",
     "empty_portfolio": "📈 Немає акцій у портфоліо. Налаштуйте їх у /settings.",
-    "header": "📈 <b>Ринок Акцій</b>"
+    "header": "📈 <b>Ринок Акцій</b>",
+    "loading": "📊 Завантаження котирувань акцій..."
   },
   "my_data": {
     "title": "📋 <b>Ваші дані та налаштування</b>",
@@ -564,12 +582,14 @@
     "regular_users": "👤 Звичайні",
     "by_language": "🌐 За мовою:",
     "target_all": "📢 Всі користувачі",
-    "target_lang": "🌐 Тільки {lang} ({count})"
+    "target_lang": "🌐 Тільки {lang} ({count})",
+    "not_found": "❌ Кампанію розсилки не знайдено"
   },
   "crypto": {
     "no_data": "Немає даних по криптовалютах",
     "not_found": "Немає даних для {currency}",
-    "empty": "Валюти не обрані"
+    "empty": "Валюти не обрані",
+    "loading": "🪙 Завантаження курсів криптовалют..."
   },
   "guest": {
     "conversion_title": "💱 Currency Conversion",
@@ -607,5 +627,28 @@
     "view_admins": "👥 Переглянути адмінів",
     "close": "✖️ Закрити",
     "back": "◀️ Назад"
+  },
+  "donate": {
+    "loading": "💖 Завантаження сторінки донатів..."
+  },
+  "help": {
+    "loading": "❓ Завантаження довідки..."
+  },
+  "start": {
+    "loading": "🚀 Завантаження меню..."
+  },
+  "comparison": {
+    "title": "📊 Порівняння валют",
+    "base": "Базова валюта",
+    "rate": "Курс обміну"
+  },
+  "privacy": {
+    "title": "🔒 Політика конфіденційності",
+    "data_collection": "Інформація про збір даних",
+    "data_delete": "Видалити мої дані",
+    "data_export": "Експортувати мої дані",
+    "delete_confirm": "Підтвердити видалення даних",
+    "delete_success": "Ваші дані успішно видалено",
+    "export_confirm": "Підтвердити експорт даних"
   }
 }

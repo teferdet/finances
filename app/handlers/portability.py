@@ -36,6 +36,19 @@ from app.services.portfolio_service import (
 router = Router(name="portability")
 
 
+from app.cache import cache
+
+COOLDOWN_SEC = 10
+
+
+async def _is_on_cooldown(user_id: int, action: str) -> bool:
+    key = f"cooldown:{action}:{user_id}"
+    if await cache.exists(key):
+        return True
+    await cache.set(key, True, ttl=COOLDOWN_SEC)
+    return False
+
+
 @router.message(Command("export"))
 async def cmd_export(message: Message, i18n: I18n, lang: str) -> None:
     """Generate and send CSV with user's portfolio."""
@@ -43,6 +56,17 @@ async def cmd_export(message: Message, i18n: I18n, lang: str) -> None:
     from app.utils.draft import finish_initial_message_draft, process_initial_message_draft
 
     user_id = message.from_user.id
+    if await _is_on_cooldown(user_id, "export"):
+        cooldown_msg = str(
+            i18n.get(
+                "portability.cooldown",
+                lang,
+                default="⏳ Please wait a few seconds before exporting again.",
+            )
+        )
+        await message.answer(cooldown_msg)
+        return
+
     loading_text = str(i18n.get("portability.exporting", "Exporting..."))
 
     async def _build_csv() -> tuple[bytes, int]:
@@ -103,6 +127,18 @@ async def handle_document_import(message: Message, i18n: I18n, lang: str) -> Non
 
     if doc.mime_type not in ("text/csv", "application/csv") and not (doc.file_name and doc.file_name.endswith(".csv")):
         # Not a CSV, ignore
+        return
+
+    user_id = message.from_user.id
+    if await _is_on_cooldown(user_id, "import"):
+        cooldown_msg = str(
+            i18n.get(
+                "portability.cooldown",
+                lang,
+                default="⏳ Please wait a few seconds before importing again.",
+            )
+        )
+        await message.answer(cooldown_msg)
         return
 
     # Check size limit (max 2 MB)

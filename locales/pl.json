@@ -30,7 +30,8 @@
     "other": "Inne",
     "delete": "🗑 Usuń",
     "reverse_rate": "🔄 Reverse rate",
-    "direct_rate": "🔄 Direct rate"
+    "direct_rate": "🔄 Direct rate",
+    "error": "Błąd ładowania menu"
   },
   "time": {
     "morning": "Dzień dobry",
@@ -79,7 +80,8 @@
     "bad request": "😖 Niepoprawnie wpisana waluta!",
     "warning": "☝️ Aby przeliczyć, wpisz kwotę",
     "warning info": "☝️ Aby przeliczyć, musisz wpisać kwotę przeliczenia. Na przykład: \"PLN 11\", \"GBP 57\" itp...",
-    "choose error": "🔁 Waluta nie została wpisana, spróbuj ponownie"
+    "choose error": "🔁 Waluta nie została wpisana, spróbuj ponownie",
+    "all_currencies": "Wszystkie waluty"
   },
   "settings": {
     "menu": [
@@ -119,7 +121,10 @@
     "big_buttons_off": "📏 Big buttons are now <b>disabled</b>. Keyboard buttons will appear in standard size.",
     "current_selected": "<b>Currently selected:</b> {items}",
     "current_selected_none": "<b>Currently selected:</b> <i>none</i>",
-    "error group list": "😢 Wygląda na to, że nie administrujesz jeszcze żadną grupą, w której jestem."
+    "error group list": "😢 Wygląda na to, że nie administrujesz jeszcze żadną grupą, w której jestem.",
+    "loading": "⚙️ Ładowanie ustawień...",
+    "language": "🌐 Wybierz język",
+    "language changed": "✅ Język został zmieniony pomyślnie!"
   },
   "other": {
     "donate": [
@@ -393,7 +398,8 @@
       "add_link_prompt": "Wyslij link do grupy lub username (np. https://t.me/...). Bot musi byc czlonkiem grupy.",
       "invalid_link": "❌ Nie udalo sie przetworzyc linku lub nazwy uzytkownika."
     },
-    "groups_btn": "📢 Grupy"
+    "groups_btn": "📢 Grupy",
+    "loading": "⚡ Ładowanie panelu admina..."
   },
   "alerts": {
     "menu_title": "🔔 <b>Alerty cenowe</b>",
@@ -445,7 +451,8 @@
     "digest_no_history": "<i>Weekly comparison will be available next week.</i>",
     "digest_top_gainer": "🏆 Top Gainer: <b>{ticker}</b> ({pct}%)",
     "digest_top_decliner": "🏆 Top Decliner: <b>{ticker}</b> ({pct}%)",
-    "digest_next": "<i>Next digest: next Sunday at {hour}:00 UTC</i>"
+    "digest_next": "<i>Next digest: next Sunday at {hour}:00 UTC</i>",
+    "loading": "🔔 Ładowanie powiadomień..."
   },
   "portfolio": {
     "title": "💼 <b>Twój portfel</b>",
@@ -491,7 +498,14 @@
     "error_loading": "❌ Błąd ładowania portfela: {error}",
     "btn_change_base": "💱 Change Currency",
     "btn_back": "◀️ Back",
-    "select_base_title": "Select a base currency for your portfolio:"
+    "select_base_title": "Select a base currency for your portfolio:",
+    "section_crypto": "🪙 <b>Kryptowaluty</b>",
+    "section_stock": "📈 <b>Akcje spółek</b>",
+    "section_fiat": "💵 <b>Waluty fiat</b>",
+    "subtotal": "Suma cząstkowa",
+    "grand_total": "Suma całkowita",
+    "total_pnl": "Całkowity P&L",
+    "loading": "⏳ Ładowanie portfela..."
   },
   "commands": {
     "start": "🏠 Menu główne",
@@ -511,7 +525,9 @@
   "language": {
     "select": "🌐 Wybierz preferowany język:",
     "changed": "✅ Język zmieniono na {language}",
-    "unknown": "Unknown language"
+    "unknown": "Unknown language",
+    "loading": "🌐 Ładowanie języków...",
+    "current": "Bieżący język"
   },
   "portability": {
     "export_success": "✅ Successfully exported {count} assets.",
@@ -520,12 +536,15 @@
     "importing": "⏳ Parsing and validating data...",
     "invalid_format": "❌ Invalid file format. Required columns: asset_type, ticker, amount.",
     "import_result": "✅ Import completed!\nSuccessfully added: {success}\nErrors (skipped): {error}",
-    "parse_error": "❌ An error occurred while parsing the file. Make sure it's a valid CSV."
+    "parse_error": "❌ An error occurred while parsing the file. Make sure it's a valid CSV.",
+    "cooldown": "⏳ Odczekaj kilka sekund przed ponownym wykonaniem tej operacji.",
+    "exporting": "📥 Eksportowanie portfela..."
   },
   "stocks": {
     "not_available": "📈 Stock data is not available yet. Try again later.",
     "empty_portfolio": "📈 No stocks in your portfolio. Configure them in /settings.",
-    "header": "📈 <b>Stock Market</b>"
+    "header": "📈 <b>Stock Market</b>",
+    "loading": "📊 Ładowanie kursów akcji..."
   },
   "exchange": {
     "btn_bind": "💱 Bind Exchange",
@@ -587,12 +606,14 @@
     "regular_users": "👤 Regular",
     "by_language": "🌐 By language:",
     "target_all": "📢 All users",
-    "target_lang": "🌐 {lang} only ({count})"
+    "target_lang": "🌐 {lang} only ({count})",
+    "not_found": "❌ Nie znaleziono kampanii"
   },
   "crypto": {
     "no_data": "No crypto data available",
     "not_found": "No data for {currency}",
-    "empty": "No currencies selected"
+    "empty": "No currencies selected",
+    "loading": "🪙 Ładowanie kursów kryptowalut..."
   },
   "guest": {
     "conversion_title": "💱 Currency Conversion",
@@ -630,5 +651,28 @@
     "view_admins": "👥 Wyświetl adminów",
     "close": "✖️ Zamknij",
     "back": "◀️ Powrót"
+  },
+  "donate": {
+    "loading": "💖 Ładowanie strony darowizn..."
+  },
+  "help": {
+    "loading": "❓ Ładowanie pomocy..."
+  },
+  "start": {
+    "loading": "🚀 Ładowanie menu..."
+  },
+  "comparison": {
+    "title": "📊 Porównanie walut",
+    "base": "Waluta bazowa",
+    "rate": "Kurs wymiany"
+  },
+  "privacy": {
+    "title": "🔒 Polityka prywatności",
+    "data_collection": "Informacje o zbieraniu danych",
+    "data_delete": "Usuń moje dane",
+    "data_export": "Eksportuj moje dane",
+    "delete_confirm": "Potwierdź usunięcie danych",
+    "delete_success": "Twoje dane zostały usunięte",
+    "export_confirm": "Potwierdź eksport danych"
   }
 }

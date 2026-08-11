@@ -77,7 +77,8 @@
     "bad request": "😖 Nesprávně napsaná měna!",
     "warning": "☝️ Pro převod přidejte částku",
     "warning info": "☝️ Pro převod je třeba přidat částku k převodu. Například: \"usd 11\", \"eur 57\" atd...",
-    "choose error": "🔁 Měna nebyla napsána, zkuste to znovu"
+    "choose error": "🔁 Měna nebyla napsána, zkuste to znovu",
+    "all_currencies": "Všechny měny"
   },
   "settings": {
     "menu": [
@@ -119,13 +120,15 @@
     "big_buttons_off": "📏 Big buttons are now <b>disabled</b>. Keyboard buttons will appear in standard size.",
     "current_selected": "<b>Currently selected:</b> {items}",
     "current_selected_none": "<b>Currently selected:</b> <i>none</i>",
-    "error group list": "😢 Vypadá to, že zatím nespravujete žádné skupiny, ve kterých jsem."
+    "error group list": "😢 Vypadá to, že zatím nespravujete žádné skupiny, ve kterých jsem.",
+    "loading": "⚙️ Načítání nastavení..."
   },
   "language": {
     "select": "🌐 Vyberte svůj preferovaný jazyk:",
     "changed": "✅ Jazyk byl úspěšně změněn na {language}",
     "current": "Aktuální jazyk: {language}",
-    "unknown": "Unknown language"
+    "unknown": "Unknown language",
+    "loading": "🌐 Načítání jazyků..."
   },
   "privacy": {
     "title": "🔐 Ochrana osobních údajů",
@@ -275,7 +278,8 @@
     "digest_no_history": "<i>Weekly comparison will be available next week.</i>",
     "digest_top_gainer": "🏆 Top Gainer: <b>{ticker}</b> ({pct}%)",
     "digest_top_decliner": "🏆 Top Decliner: <b>{ticker}</b> ({pct}%)",
-    "digest_next": "<i>Next digest: next Sunday at {hour}:00 UTC</i>"
+    "digest_next": "<i>Next digest: next Sunday at {hour}:00 UTC</i>",
+    "loading": "🔔 Načítání upozornění..."
   },
   "portfolio": {
     "title": "💼 <b>Vaše portfolio</b>",
@@ -321,7 +325,14 @@
     "error_loading": "❌ Chyba načítání portfolia: {error}",
     "btn_change_base": "💱 Change Currency",
     "btn_back": "◀️ Back",
-    "select_base_title": "Select a base currency for your portfolio:"
+    "select_base_title": "Select a base currency for your portfolio:",
+    "section_crypto": "🪙 <b>Kryptoměnové aktivum</b>",
+    "section_stock": "📈 <b>Akciové majetky</b>",
+    "section_fiat": "💵 <b>Fiat měny</b>",
+    "subtotal": "Mezisoučet",
+    "grand_total": "Celkový součet",
+    "total_pnl": "Celkový P&L",
+    "loading": "⏳ Načítání portfolia..."
   },
   "admin": {
     "panel": "🔐 <b>Panel administrátora</b>\n\nVyberte možnost:",
@@ -501,7 +512,8 @@
       "add_link_prompt": "Poslete odkaz na skupinu nebo username (napr. https://t.me/...). Bot musi byt uz clenem skupiny.",
       "invalid_link": "❌ Nepodarilo se zpracovat odkaz nebo uzivatelske jmeno."
     },
-    "groups_btn": "📢 Skupiny"
+    "groups_btn": "📢 Skupiny",
+    "loading": "⚡ Načítání admin panelu..."
   },
   "comparison": {
     "title": "📊 Porovnání měn",
@@ -530,12 +542,15 @@
     "importing": "⏳ Parsing and validating data...",
     "invalid_format": "❌ Invalid file format. Required columns: asset_type, ticker, amount.",
     "import_result": "✅ Import completed!\nSuccessfully added: {success}\nErrors (skipped): {error}",
-    "parse_error": "❌ An error occurred while parsing the file. Make sure it's a valid CSV."
+    "parse_error": "❌ An error occurred while parsing the file. Make sure it's a valid CSV.",
+    "cooldown": "⏳ Počkejte prosím několik sekund před opakovaným provedením akce.",
+    "exporting": "📥 Exportování portfolia..."
   },
   "stocks": {
     "not_available": "📈 Stock data is not available yet. Try again later.",
     "empty_portfolio": "📈 No stocks in your portfolio. Configure them in /settings.",
-    "header": "📈 <b>Stock Market</b>"
+    "header": "📈 <b>Stock Market</b>",
+    "loading": "📊 Načítání kurzů akcií..."
   },
   "exchange": {
     "btn_bind": "💱 Bind Exchange",
@@ -597,12 +612,14 @@
     "regular_users": "👤 Regular",
     "by_language": "🌐 By language:",
     "target_all": "📢 All users",
-    "target_lang": "🌐 {lang} only ({count})"
+    "target_lang": "🌐 {lang} only ({count})",
+    "not_found": "❌ Kampaň nebyla nalezena"
   },
   "crypto": {
     "no_data": "No crypto data available",
     "not_found": "No data for {currency}",
-    "empty": "No currencies selected"
+    "empty": "No currencies selected",
+    "loading": "🪙 Načítání kurzů kryptoměn..."
   },
   "guest": {
     "conversion_title": "💱 Currency Conversion",
@@ -640,5 +657,14 @@
     "view_admins": "👥 Zobrazit správce",
     "close": "✖️ Zavřít",
     "back": "◀️ Zpět"
+  },
+  "donate": {
+    "loading": "💖 Načítání stránky pro dary..."
+  },
+  "help": {
+    "loading": "❓ Načítání nápovědy..."
+  },
+  "start": {
+    "loading": "🚀 Načítání menu..."
   }
 }

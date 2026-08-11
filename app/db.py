@@ -33,6 +33,9 @@ def get_db() -> AsyncIOMotorDatabase:
         maxPoolSize=settings.database.pool_max,
         minPoolSize=settings.database.pool_min,
         maxIdleTimeMS=30_000,
+        serverSelectionTimeoutMS=5000,
+        connectTimeoutMS=5000,
+        socketTimeoutMS=20_000,
     )
     _db = _client[settings.database.mongo_database]
     log.info("MongoDB connection established -> %s", settings.database.mongo_database)

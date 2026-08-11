@@ -77,7 +77,8 @@
     "bad request": "😖 Devise mal écrite!",
     "warning": "☝️ Pour convertir, ajoutez le montant",
     "warning info": "☝️ Pour convertir, vous devez ajouter le montant de conversion. Exemple: \"usd 11\", \"eur 57\" etc...",
-    "choose error": "🔁 La devise n'a pas été écrite, réessayez"
+    "choose error": "🔁 La devise n'a pas été écrite, réessayez",
+    "all_currencies": "Toutes les devises"
   },
   "settings": {
     "menu": [
@@ -119,13 +120,15 @@
     "big_buttons_off": "📏 Big buttons are now <b>disabled</b>. Keyboard buttons will appear in standard size.",
     "current_selected": "<b>Currently selected:</b> {items}",
     "current_selected_none": "<b>Currently selected:</b> <i>none</i>",
-    "error group list": "😢 Il semble que vous n'administrez encore aucun groupe dans lequel je suis."
+    "error group list": "😢 Il semble que vous n'administrez encore aucun groupe dans lequel je suis.",
+    "loading": "⚙️ Chargement des paramètres..."
   },
   "language": {
     "select": "🌐 Choisissez votre langue préférée:",
     "changed": "✅ La langue a été changée avec succès en {language}",
     "current": "Langue actuelle: {language}",
-    "unknown": "Unknown language"
+    "unknown": "Unknown language",
+    "loading": "🌐 Chargement des langues..."
   },
   "privacy": {
     "title": "🔐 Protection des données",
@@ -236,7 +239,8 @@
     "digest_no_history": "<i>Weekly comparison will be available next week.</i>",
     "digest_top_gainer": "🏆 Top Gainer: <b>{ticker}</b> ({pct}%)",
     "digest_top_decliner": "🏆 Top Decliner: <b>{ticker}</b> ({pct}%)",
-    "digest_next": "<i>Next digest: next Sunday at {hour}:00 UTC</i>"
+    "digest_next": "<i>Next digest: next Sunday at {hour}:00 UTC</i>",
+    "loading": "🔔 Chargement des alertes..."
   },
   "portfolio": {
     "title": "💼 <b>Votre portefeuille</b>",
@@ -282,7 +286,14 @@
     "error_loading": "❌ Erreur de chargement du portefeuille: {error}",
     "btn_change_base": "💱 Change Currency",
     "btn_back": "◀️ Back",
-    "select_base_title": "Select a base currency for your portfolio:"
+    "select_base_title": "Select a base currency for your portfolio:",
+    "section_crypto": "🪙 <b>Actifs en cryptomonnaie</b>",
+    "section_stock": "📈 <b>Actions de sociétés</b>",
+    "section_fiat": "💵 <b>Devises fiat</b>",
+    "subtotal": "Sous-total",
+    "grand_total": "Total général",
+    "total_pnl": "P&L Total",
+    "loading": "⏳ Chargement du portefeuille..."
   },
   "admin": {
     "panel": "🔐 <b>Panneau d'administration</b>\n\nSélectionnez une option:",
@@ -462,7 +473,8 @@
       "add_link_prompt": "Envoyez le lien du groupe ou le nom (ex: https://t.me/...). Le bot doit deja etre membre du groupe.",
       "invalid_link": "❌ Impossible de traiter le lien ou le nom d'utilisateur."
     },
-    "groups_btn": "📢 Groupes"
+    "groups_btn": "📢 Groupes",
+    "loading": "⚡ Chargement du panneau d'administration..."
   },
   "comparison": {
     "title": "📊 Comparaison des devises",
@@ -491,12 +503,15 @@
     "importing": "⏳ Parsing and validating data...",
     "invalid_format": "❌ Invalid file format. Required columns: asset_type, ticker, amount.",
     "import_result": "✅ Import completed!\nSuccessfully added: {success}\nErrors (skipped): {error}",
-    "parse_error": "❌ An error occurred while parsing the file. Make sure it's a valid CSV."
+    "parse_error": "❌ An error occurred while parsing the file. Make sure it's a valid CSV.",
+    "cooldown": "⏳ Veuillez patienter quelques secondes avant de réessayer.",
+    "exporting": "📥 Exportation du portefeuille..."
   },
   "stocks": {
     "not_available": "📈 Stock data is not available yet. Try again later.",
     "empty_portfolio": "📈 No stocks in your portfolio. Configure them in /settings.",
-    "header": "📈 <b>Stock Market</b>"
+    "header": "📈 <b>Stock Market</b>",
+    "loading": "📊 Chargement des actions..."
   },
   "exchange": {
     "btn_bind": "💱 Bind Exchange",
@@ -558,12 +573,14 @@
     "regular_users": "👤 Regular",
     "by_language": "🌐 By language:",
     "target_all": "📢 All users",
-    "target_lang": "🌐 {lang} only ({count})"
+    "target_lang": "🌐 {lang} only ({count})",
+    "not_found": "❌ Campagne de diffusion introuvable"
   },
   "crypto": {
     "no_data": "No crypto data available",
     "not_found": "No data for {currency}",
-    "empty": "No currencies selected"
+    "empty": "No currencies selected",
+    "loading": "🪙 Chargement des cours crypto..."
   },
   "guest": {
     "conversion_title": "💱 Currency Conversion",
@@ -601,5 +618,14 @@
     "view_admins": "👥 Voir les admins",
     "close": "✖️ Fermer",
     "back": "◀️ Retour"
+  },
+  "donate": {
+    "loading": "💖 Chargement de la page de don..."
+  },
+  "help": {
+    "loading": "❓ Chargement de l'aide..."
+  },
+  "start": {
+    "loading": "🚀 Chargement du menu..."
   }
 }

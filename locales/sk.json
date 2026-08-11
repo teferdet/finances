@@ -30,7 +30,8 @@
     "other": "✨ Ďalšie funkcie",
     "delete": "🗑 Odstrániť správu",
     "reverse_rate": "🔄 Reverse rate",
-    "direct_rate": "🔄 Direct rate"
+    "direct_rate": "🔄 Direct rate",
+    "error": "Chyba načítania menu"
   },
   "time": {
     "morning": "Dobré ráno ☀️",
@@ -77,7 +78,8 @@
     "bad request": "😖 Nesprávny formát! Skúste niečo ako '100 USD'.",
     "warning": "☝️ Prosím pridajte sumu, ktorú chcete previesť.",
     "warning info": "☝️ Pre prevod jednoducho napíšte sumu a menu. Napríklad: \"100 USD\", \"50 EUR\", atď.",
-    "choose error": "🔁 Nepodarilo sa mi rozpoznať menu. Skúste ju napísať znova."
+    "choose error": "🔁 Nepodarilo sa mi rozpoznať menu. Skúste ju napísať znova.",
+    "all_currencies": "Všetky meny"
   },
   "settings": {
     "menu": [
@@ -118,7 +120,10 @@
     "big_buttons_off": "📏 Big buttons are now <b>disabled</b>. Keyboard buttons will appear in standard size.",
     "current_selected": "<b>Currently selected:</b> {items}",
     "current_selected_none": "<b>Currently selected:</b> <i>none</i>",
-    "error group list": "😢 Zdá sa, že zatiaľ nespravujete žiadne skupiny, v ktorých som."
+    "error group list": "😢 Zdá sa, že zatiaľ nespravujete žiadne skupiny, v ktorých som.",
+    "loading": "⚙️ Načítavanie nastavení...",
+    "language": "🌐 Vybrať jazyk",
+    "language changed": "✅ Jazyk bol úspešne zmenený!"
   },
   "other": {
     "donate": [
@@ -233,7 +238,8 @@
     "digest_no_history": "<i>Weekly comparison will be available next week.</i>",
     "digest_top_gainer": "🏆 Top Gainer: <b>{ticker}</b> ({pct}%)",
     "digest_top_decliner": "🏆 Top Decliner: <b>{ticker}</b> ({pct}%)",
-    "digest_next": "<i>Next digest: next Sunday at {hour}:00 UTC</i>"
+    "digest_next": "<i>Next digest: next Sunday at {hour}:00 UTC</i>",
+    "loading": "🔔 Načítavanie upozornení..."
   },
   "admin": {
     "panel": "🔐 <b>Kontrolný Panel Administrátora</b>\n\nVyberte prosím modul na konfiguráciu:",
@@ -413,7 +419,8 @@
       "add_link_prompt": "Poslite odkaz na skupinu alebo username (napr. https://t.me/...). Bot musi byt uz clenom skupiny.",
       "invalid_link": "❌ Nepodarilo sa spracovat odkaz alebo meno."
     },
-    "groups_btn": "📢 Skupiny"
+    "groups_btn": "📢 Skupiny",
+    "loading": "⚡ Načítavanie admin panelu..."
   },
   "portfolio": {
     "title": "💼 <b>Vaše Investičné Portfólio</b>",
@@ -459,7 +466,14 @@
     "error_loading": "❌ Nepodarilo sa načítať vaše údaje z portfólia: {error}",
     "btn_change_base": "💱 Change Currency",
     "btn_back": "◀️ Back",
-    "select_base_title": "Select a base currency for your portfolio:"
+    "select_base_title": "Select a base currency for your portfolio:",
+    "section_crypto": "🪙 <b>Kryptomenové aktíva</b>",
+    "section_stock": "📈 <b>Akcie spoločností</b>",
+    "section_fiat": "💵 <b>Fiat meny</b>",
+    "subtotal": "Medzisúčet",
+    "grand_total": "Celkový súčet",
+    "total_pnl": "Celkový P&L",
+    "loading": "⏳ Načítavanie portfólia..."
   },
   "commands": {
     "start": "🏠 Otvoriť Hlavné Menu",
@@ -479,7 +493,9 @@
   "language": {
     "select": "🌐 <b>Vyberte si preferovaný jazyk:</b>",
     "changed": "✅ Váš jazyk bol úspešne zmenený na <b>{language}</b>!",
-    "unknown": "Unknown language"
+    "unknown": "Unknown language",
+    "loading": "🌐 Načítavanie jazykov...",
+    "current": "Aktuálny jazyk"
   },
   "portability": {
     "export_success": "✅ Successfully exported {count} assets.",
@@ -488,12 +504,15 @@
     "importing": "⏳ Parsing and validating data...",
     "invalid_format": "❌ Invalid file format. Required columns: asset_type, ticker, amount.",
     "import_result": "✅ Import completed!\nSuccessfully added: {success}\nErrors (skipped): {error}",
-    "parse_error": "❌ An error occurred while parsing the file. Make sure it's a valid CSV."
+    "parse_error": "❌ An error occurred while parsing the file. Make sure it's a valid CSV.",
+    "cooldown": "⏳ Počkajte prosím niekoľko sekúnd pred opakovaným vykonaním akcie.",
+    "exporting": "📥 Exportovanie portfólia..."
   },
   "stocks": {
     "not_available": "📈 Stock data is not available yet. Try again later.",
     "empty_portfolio": "📈 No stocks in your portfolio. Configure them in /settings.",
-    "header": "📈 <b>Stock Market</b>"
+    "header": "📈 <b>Stock Market</b>",
+    "loading": "📊 Načítavanie kurzov akcií..."
   },
   "exchange": {
     "btn_bind": "💱 Bind Exchange",
@@ -555,12 +574,14 @@
     "regular_users": "👤 Regular",
     "by_language": "🌐 By language:",
     "target_all": "📢 All users",
-    "target_lang": "🌐 {lang} only ({count})"
+    "target_lang": "🌐 {lang} only ({count})",
+    "not_found": "❌ Kampaň nebola nájdená"
   },
   "crypto": {
     "no_data": "No crypto data available",
     "not_found": "No data for {currency}",
-    "empty": "No currencies selected"
+    "empty": "No currencies selected",
+    "loading": "🪙 Načítavanie kurzov kryptomien..."
   },
   "guest": {
     "conversion_title": "💱 Currency Conversion",
@@ -598,5 +619,28 @@
     "view_admins": "👥 Zobraziť správcov",
     "close": "✖️ Zavrieť",
     "back": "◀️ Späť"
+  },
+  "donate": {
+    "loading": "💖 Načítavanie stránky pre dary..."
+  },
+  "help": {
+    "loading": "❓ Načítavanie pomocníka..."
+  },
+  "start": {
+    "loading": "🚀 Načítavanie menu..."
+  },
+  "comparison": {
+    "title": "📊 Porovnanie meien",
+    "base": "Základná mena",
+    "rate": "Výmenný kurz"
+  },
+  "privacy": {
+    "title": "🔒 Zásady ochrany osobných údajov",
+    "data_collection": "Informácie o zbere dát",
+    "data_delete": "Vymazať moje dáta",
+    "data_export": "Exportovať moje dáta",
+    "delete_confirm": "Potvrdiť vymazanie dát",
+    "delete_success": "Vaše dáta boli vymazané",
+    "export_confirm": "Potvrdiť export dát"
   }
 }
