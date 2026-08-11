@@ -346,7 +346,7 @@
     "feature_groups": "👥 Groupes publics",
     "feature_inline": "🔍 Mode inline",
     "feature_miniapp": "📱 Mini App",
-    "access_denied": "⛔ Accès refusé. Réservé aux administrateurs.",
+    "access_denied": "⛔ Accès refusé",
     "stats": "📊 Statistiques",
     "config": "⚙️ Configuration",
     "users": "👥 Utilisateurs",
@@ -517,7 +517,8 @@
       "invalid_link": "❌ Impossible de traiter le lien ou le nom d'utilisateur."
     },
     "groups_btn": "📢 Groupes",
-    "loading": "⚡ Chargement du panneau d'administration..."
+    "loading": "⚡ Chargement du panneau d'administration...",
+    "unknown_feature": "⚠️ Fonctionnalité inconnue"
   },
   "comparison": {
     "title": "📊 Comparaison des devises",
@@ -661,7 +662,10 @@
     "admins_list": "Le bot voit les administrateurs suivants dans ce groupe :",
     "view_admins": "👥 Voir les admins",
     "close": "✖️ Fermer",
-    "back": "◀️ Retour"
+    "back": "◀️ Retour",
+    "published": "📢 Publié dans le groupe !",
+    "not_found": "⚠️ Groupe introuvable",
+    "session_expired": "⚠️ Session expirée, veuillez réessayer"
   },
   "donate": {
     "loading": "💖 Chargement de la page de don..."
@@ -671,5 +675,10 @@
   },
   "start": {
     "loading": "🚀 Chargement du menu..."
+  },
+  "calc": {
+    "title": "🧾 <b>Calculateur de dépenses en lot</b> (Cible: <b>{target}</b>)\n",
+    "total": "💰 <b>Dépenses totales: {total} {currency}</b>",
+    "help": "🧾 <b>Calculateur de dépenses en lot</b>\n\nSommez rapidement des dépenses en différentes devises !\n\n<b>Utilisation:</b>\n<code>/calc 100 USD hôtel, 45 EUR dîner</code>"
   }
 }

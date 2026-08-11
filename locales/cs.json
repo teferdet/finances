@@ -385,7 +385,7 @@
     "feature_groups": "👥 Veřejné skupiny",
     "feature_inline": "🔍 Inline režim",
     "feature_miniapp": "📱 Mini Aplikace",
-    "access_denied": "⛔ Přístup odepřen. Pouze pro administrátory.",
+    "access_denied": "⛔ Přístup odepřen",
     "stats": "📊 Statistiky",
     "config": "⚙️ Konfigurace",
     "users": "👥 Uživatelé",
@@ -556,7 +556,8 @@
       "invalid_link": "❌ Nepodarilo se zpracovat odkaz nebo uzivatelske jmeno."
     },
     "groups_btn": "📢 Skupiny",
-    "loading": "⚡ Načítání admin panelu..."
+    "loading": "⚡ Načítání admin panelu...",
+    "unknown_feature": "⚠️ Neznámá funkce"
   },
   "comparison": {
     "title": "📊 Porovnání měn",
@@ -700,7 +701,10 @@
     "admins_list": "Bot vidí v této skupině následující správce:",
     "view_admins": "👥 Zobrazit správce",
     "close": "✖️ Zavřít",
-    "back": "◀️ Zpět"
+    "back": "◀️ Zpět",
+    "published": "📢 Publikováno do skupiny!",
+    "not_found": "⚠️ Skupina nenalezena",
+    "session_expired": "⚠️ Relace vypršela, zkuste to znovu"
   },
   "donate": {
     "loading": "💖 Načítání stránky pro dary..."
@@ -710,5 +714,10 @@
   },
   "start": {
     "loading": "🚀 Načítání menu..."
+  },
+  "calc": {
+    "title": "🧾 <b>Kalkulátor hromadných výdajů</b> (Měna: <b>{target}</b>)\n",
+    "total": "💰 <b>Celkové výdaje: {total} {currency}</b>",
+    "help": "🧾 <b>Kalkulátor hromadných výdajů</b>\n\nRychle sečtěte položky v různých měnách!\n\n<b>Použití:</b>\n<code>/calc 100 USD hotel, 45 EUR večeře</code>"
   }
 }

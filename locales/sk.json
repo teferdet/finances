@@ -280,7 +280,7 @@
     "feature_groups": "👥 Verejné skupiny",
     "feature_inline": "🔍 Inline režim",
     "feature_miniapp": "📱 Mini Aplikácia",
-    "access_denied": "⛔ Prístup odmietnutý. Táto oblasť je vyhradená pre administrátorov.",
+    "access_denied": "⛔ Prístup odopretý",
     "stats": "📊 Globálne Štatistiky",
     "config": "⚙️ Konfigurácia Systému",
     "users": "👥 Analytika Používateľov",
@@ -451,7 +451,8 @@
       "invalid_link": "❌ Nepodarilo sa spracovat odkaz alebo meno."
     },
     "groups_btn": "📢 Skupiny",
-    "loading": "⚡ Načítavanie admin panelu..."
+    "loading": "⚡ Načítavanie admin panelu...",
+    "unknown_feature": "⚠️ Neznáma funkcia"
   },
   "portfolio": {
     "title": "💼 <b>Vaše Investičné Portfólio</b>",
@@ -650,7 +651,10 @@
     "admins_list": "Bot vidí v tejto skupine nasledujúcich správcov:",
     "view_admins": "👥 Zobraziť správcov",
     "close": "✖️ Zavrieť",
-    "back": "◀️ Späť"
+    "back": "◀️ Späť",
+    "published": "📢 Publikované do skupiny!",
+    "not_found": "⚠️ Skupina nenájdená",
+    "session_expired": "⚠️ Relácia vypršala, skúste to znova"
   },
   "donate": {
     "loading": "💖 Načítavanie stránky pre dary..."
@@ -674,5 +678,10 @@
     "delete_confirm": "Potvrdiť vymazanie dát",
     "delete_success": "Vaše dáta boli vymazané",
     "export_confirm": "Potvrdiť export dát"
+  },
+  "calc": {
+    "title": "🧾 <b>Kalkulačka hromadných výdavkov</b> (Mena: <b>{target}</b>)\n",
+    "total": "💰 <b>Celkové výdavky: {total} {currency}</b>",
+    "help": "🧾 <b>Kalkulačka hromadných výdavkov</b>\n\nRýchlo spočítajte položky v rôznych menách!\n\n<b>Použitie:</b>\n<code>/calc 100 USD hotel, 45 EUR večera</code>"
   }
 }

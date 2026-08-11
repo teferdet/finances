@@ -37,18 +37,24 @@ async def _calculate_bulk_expenses(
     u = user_doc or {}
 
     bc = u.get("BaseCurrency")
-    if isinstance(bc, list):
-        target_curr = bc[0] if bc else "UAH"
+    if isinstance(bc, list) and bc and bc[0]:
+        target_curr = bc[0]
     elif isinstance(bc, str) and bc:
         target_curr = bc
     else:
         fiats = u.get("Fiat currency", [])
-        target_curr = fiats[0] if fiats else "UAH"
+        if fiats and isinstance(fiats, list) and fiats[0]:
+            target_curr = fiats[0]
+        else:
+            from app.config import get_settings
+            st = get_settings()
+            target_curr = getattr(st, "default_currency", "USD")
 
     num_fmt = u.get("NumberFormat", "commas")
     from app.handlers.portfolio import _format_number
 
-    lines = [f"🧾 <b>Bulk Expense Calculation</b> (Target: <b>{target_curr}</b>)\n"]
+    title_str = str(i18n.get("calc.title", lang, target=target_curr))
+    lines = [title_str]
     total_sum = 0.0
 
     for code, amount in data:
@@ -69,8 +75,9 @@ async def _calculate_bulk_expenses(
         lines.append(f"• <b>{amt_str} {code}</b> ➔ {sub_str} {target_curr}")
 
     tot_str = _format_number(total_sum, 2, fmt=num_fmt)
+    total_text = str(i18n.get("calc.total", lang, total=tot_str, currency=target_curr))
     lines.append("\n━━━━━━━━━━━━━━━━━━")
-    lines.append(f"💰 <b>Total Expenses: {tot_str} {target_curr}</b>")
+    lines.append(total_text)
 
     return "\n".join(lines)
 
@@ -80,13 +87,7 @@ async def cmd_calc(message: Message, command: CommandObject, i18n: I18n, lang: s
     """Calculate bulk expenses in multiple currencies."""
     args = command.args or ""
     if not args.strip():
-        help_text = (
-            "🧾 <b>Bulk Expense Calculator</b>\n\n"
-            "Quickly sum up multiple items in different currencies!\n\n"
-            "<b>Usage:</b>\n"
-            "<code>/calc 100 USD hotel, 45 EUR dinner, 250 PLN tickets</code>\n\n"
-            "Or send multiple currency amounts in one message."
-        )
+        help_text = str(i18n.get("calc.help", lang))
         await message.answer(help_text, parse_mode="HTML")
         return
 
@@ -112,8 +113,27 @@ async def _get_user_fiat_currencies(user_id: int) -> list[str]:
     return doc.get("Fiat currency", []) if doc else []
 
 
-async def _format_info(currencies_data: list, i18n: I18n, lang: str) -> str:
-    """Build info string like '🇺🇸 USD 100$, 🇪🇺 EUR 50€'."""
+def format_header_item(code: str, amount: float, emoji: str, symbol: str, include_symbol: bool) -> str:
+    """
+    Format header item:
+      - amount == 1: omit number (e.g. "🇺🇦 UAH" or "🇺🇦 UAH₴")
+      - integer amount (e.g. 10.0): format without .0 (e.g. "🇺🇦 UAH 10" or "🇺🇦 UAH 10₴")
+      - float amount (e.g. 0.5): format cleanly (e.g. "🇺🇦 UAH 0.5" or "🇺🇦 UAH 0.5₴")
+    """
+    sym_str = symbol if include_symbol else ""
+    if abs(amount - 1.0) < 1e-9:
+        amt_str = ""
+    elif amount == int(amount):
+        amt_str = f" {int(amount)}"
+    else:
+        amt_str = f" {amount:g}"
+
+    emoji_str = f"{emoji} " if emoji else ""
+    return f"{emoji_str}{code}{amt_str}{sym_str}".strip()
+
+
+async def _format_info(currencies_data: list, i18n: I18n, lang: str, include_symbol: bool = True) -> str:
+    """Build info string like '🇺🇦 UAH 10₴' (direct mode) or '🇺🇦 UAH 10' (reverse mode)."""
     info_parts: list[str] = []
     all_info = await get_currencies_info()
     info_map = {i["code"]: i for i in all_info}
@@ -124,7 +144,7 @@ async def _format_info(currencies_data: list, i18n: I18n, lang: str) -> str:
         ci = info_map.get(code, {})
         emoji = ci.get("emoji", "") or cd_map.get(code, {}).get("emoji", "")
         symbol = ci.get("symbol", "") or cd_map.get(code, {}).get("symbol", "")
-        info_parts.append(f"{emoji} {code} {amount}{symbol}")
+        info_parts.append(format_header_item(code, amount, emoji, symbol, include_symbol))
 
     return ", ".join(info_parts)
 
@@ -177,7 +197,8 @@ async def handle_exchange(message: Message, i18n: I18n, lang: str) -> None:
     if result in ("server error", "bad request"):
         text_out = str(er_text.get(result, result))
     else:
-        info = await _format_info(data, i18n, lang)
+        include_sym = (index == 1)
+        info = await _format_info(data, i18n, lang, include_symbol=include_sym)
         template = str(er_text.get("main rate", "Rate as of {}\n{}\n\n{}"))
         text_out = template.format(day, info, result)
 
@@ -219,7 +240,7 @@ async def cb_alternative_convert(call: CallbackQuery, i18n: I18n, lang: str) -> 
         ci = info_map.get(currency, {})
         emoji = ci.get("emoji", "") or cd_map.get(currency, {}).get("emoji", "")
         symbol = ci.get("symbol", "") or cd_map.get(currency, {}).get("symbol", "")
-        info = f"{emoji} {currency} {amount}{symbol}"
+        info = format_header_item(currency, amount, emoji, symbol, include_symbol=(new_index == 1))
 
         template = str(er_text.get("main rate", "Rate as of {}\n{}\n\n{}"))
         text_out = template.format(day, info, result)

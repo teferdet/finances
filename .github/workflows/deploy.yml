@@ -79,7 +79,7 @@ jobs:
                     'token': os.environ.get('BOT_TOKEN', ''),
                     'admin_ids': json.loads(os.environ.get('BOT_ADMIN_IDS', '[1693890078]')),
                     'backup_enabled': True,
-                    'version': 'finances v6.4.5 \\'a lot like Vegas\\''
+                    'version': 'finances v6.4.6 \\'a lot like Vegas\\''
                 },
                 'database': {
                     'mongo_uri': os.environ.get('MONGO_URI', ''),

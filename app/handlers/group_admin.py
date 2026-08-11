@@ -149,8 +149,8 @@ async def cmd_rate(message: Message, i18n: I18n, lang: str) -> None:
     for code, amount in data:
         ci = info_map.get(code, {})
         emoji = ci.get("emoji", "") or cd_map.get(code, {}).get("emoji", "")
-        symbol = ci.get("symbol", "") or cd_map.get(code, {}).get("symbol", "")
-        info_parts.append(f"{emoji} {code} {amount}{symbol}")
+        sym_str = symbol if index == 1 else ""
+        info_parts.append(f"{emoji} {code} {amount}{sym_str}")
 
     info = ", ".join(info_parts)
     er_text = i18n.get_section("exchange rate", lang)
@@ -188,7 +188,7 @@ async def cb_rate_share(call: CallbackQuery, i18n: I18n, lang: str) -> None:
 
     try:
         await call.bot.send_message(chat_id, text, reply_markup=group_delete_kb(i18n, lang), parse_mode="HTML")
-        await call.answer("Published to group!", show_alert=False)
+        await call.answer(str(i18n.get("group_settings.published", lang)), show_alert=False)
         # Clean up ephemeral message if tracked
         if call.from_user:
             await delete_ephemeral_or_fallback(call.bot, chat_id, call.from_user.id)
@@ -328,7 +328,7 @@ async def cb_menu(call: CallbackQuery, i18n: I18n, lang: str) -> None:
 
     group = await get_group(chat_id)
     if not group:
-        await call.answer("Group not found", show_alert=True)
+        await call.answer(str(i18n.get("group_settings.not_found", lang)), show_alert=True)
         return
 
     settings = group.get("settings", {})
@@ -355,7 +355,7 @@ async def cb_cycle_mode(call: CallbackQuery, i18n: I18n, lang: str) -> None:
 
     group = await get_group(chat_id)
     if not group:
-        await call.answer("Group not found", show_alert=True)
+        await call.answer(str(i18n.get("group_settings.not_found", lang)), show_alert=True)
         return
 
     settings = group.get("settings", {})
@@ -392,7 +392,7 @@ async def cb_input_currencies(call: CallbackQuery, i18n: I18n, lang: str) -> Non
 
     group = await get_group(chat_id)
     if not group:
-        await call.answer("Group not found", show_alert=True)
+        await call.answer(str(i18n.get("group_settings.not_found", lang)), show_alert=True)
         return
 
     settings = group.get("settings", {})
@@ -428,7 +428,7 @@ async def cb_output_currencies(call: CallbackQuery, i18n: I18n, lang: str) -> No
 
     group = await get_group(chat_id)
     if not group:
-        await call.answer("Group not found", show_alert=True)
+        await call.answer(str(i18n.get("group_settings.not_found", lang)), show_alert=True)
         return
 
     settings = group.get("settings", {})
@@ -470,7 +470,7 @@ async def cb_grp_curr_action(call: CallbackQuery, i18n: I18n, lang: str) -> None
     data = cd.get("update data", [])
 
     if not chat_id or not field:
-        await call.answer("Session expired", show_alert=True)
+        await call.answer(str(i18n.get("group_settings.session_expired", lang)), show_alert=True)
         return
 
     if not await _check_admin_permissions(call, chat_id, i18n, lang):
@@ -570,7 +570,7 @@ async def cb_set_lang(call: CallbackQuery, i18n: I18n, lang: str) -> None:
 
     group = await get_group(chat_id)
     if not group:
-        await call.answer("Group not found", show_alert=True)
+        await call.answer(str(i18n.get("group_settings.not_found", lang)), show_alert=True)
         return
 
     settings = group.get("settings", {})

@@ -346,7 +346,7 @@
     "feature_groups": "👥 Öffentliche Gruppen",
     "feature_inline": "🔍 Inline-Modus",
     "feature_miniapp": "📱 Mini-App",
-    "access_denied": "⛔ Zugriff verweigert. Nur für Administratoren.",
+    "access_denied": "⛔ Zugriff verweigert",
     "stats": "📊 Statistiken",
     "config": "⚙️ Konfiguration",
     "users": "👥 Benutzer",
@@ -517,7 +517,8 @@
       "invalid_link": "❌ Link oder Benutzername konnte nicht verarbeitet werden."
     },
     "groups_btn": "📢 Gruppen",
-    "loading": "⚡ Admin-Panel wird geladen..."
+    "loading": "⚡ Admin-Panel wird geladen...",
+    "unknown_feature": "⚠️ Unbekannte Funktion"
   },
   "comparison": {
     "title": "📊 Währungsvergleich",
@@ -661,7 +662,10 @@
     "admins_list": "Der Bot sieht folgende Administratoren in dieser Gruppe:",
     "view_admins": "👥 Admins anzeigen",
     "close": "✖️ Schließen",
-    "back": "◀️ Zurück"
+    "back": "◀️ Zurück",
+    "published": "📢 In Gruppe veröffentlicht!",
+    "not_found": "⚠️ Gruppe nicht gefunden",
+    "session_expired": "⚠️ Sitzung abgelaufen, bitte erneut versuchen"
   },
   "donate": {
     "loading": "💖 Spendenseite wird geladen..."
@@ -671,5 +675,10 @@
   },
   "start": {
     "loading": "🚀 Menü wird geladen..."
+  },
+  "calc": {
+    "title": "🧾 <b>Ausgaben-Massenrechnung</b> (Ziel: <b>{target}</b>)\n",
+    "total": "💰 <b>Gesamtausgaben: {total} {currency}</b>",
+    "help": "🧾 <b>Ausgaben-Massenrechner</b>\n\nSummieren Sie Ausgaben in verschiedenen Währungen!\n\n<b>Verwendung:</b>\n<code>/calc 100 USD Hotel, 45 EUR Abendessen</code>"
   }
 }

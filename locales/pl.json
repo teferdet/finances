@@ -269,7 +269,7 @@
     "feature_groups": "👥 Grupy publiczne",
     "feature_inline": "🔍 Tryb inline",
     "feature_miniapp": "📱 Mini Aplikacja",
-    "access_denied": "⛔ Dostęp zabroniony. Tylko dla administratorów.",
+    "access_denied": "⛔ Dostęp zabroniony",
     "stats": "📊 Statystyki",
     "config": "⚙️ Konfiguracja",
     "users": "👥 Użytkownicy",
@@ -440,7 +440,8 @@
       "invalid_link": "❌ Nie udalo sie przetworzyc linku lub nazwy uzytkownika."
     },
     "groups_btn": "📢 Grupy",
-    "loading": "⚡ Ładowanie panelu admina..."
+    "loading": "⚡ Ładowanie panelu admina...",
+    "unknown_feature": "⚠️ Nieznana funkcja"
   },
   "alerts": {
     "menu_title": "🔔 <b>Alerty cenowe</b>",
@@ -692,7 +693,10 @@
     "admins_list": "Bot widzi następujących administratorów w tej grupie:",
     "view_admins": "👥 Wyświetl adminów",
     "close": "✖️ Zamknij",
-    "back": "◀️ Powrót"
+    "back": "◀️ Powrót",
+    "published": "📢 Opublikowano w grupie!",
+    "not_found": "⚠️ Nie znaleziono grupy",
+    "session_expired": "⚠️ Sesja wygasła, spróbuj ponownie"
   },
   "donate": {
     "loading": "💖 Ładowanie strony darowizn..."
@@ -716,5 +720,10 @@
     "delete_confirm": "Potwierdź usunięcie danych",
     "delete_success": "Twoje dane zostały usunięte",
     "export_confirm": "Potwierdź eksport danych"
+  },
+  "calc": {
+    "title": "🧾 <b>Kalkulator wydatków z listy</b> (Waluta: <b>{target}</b>)\n",
+    "total": "💰 <b>Suma wydatków: {total} {currency}</b>",
+    "help": "🧾 <b>Kalkulator wydatków z listy</b>\n\nSzybko zsumuj wydatki w różnych walutach!\n\n<b>Użycie:</b>\n<code>/calc 100 USD hotel, 45 EUR kolacja</code>"
   }
 }

@@ -26,11 +26,10 @@ from app.repositories.groups import (
     toggle_group_active,
     upsert_group_from_chat_member,
 )
-from app.services.parser_service import convert_currencies, get_currencies_info
 from app.utils.text_processing import TextProcessing
+from app.services.parser_service import convert_currencies, get_currencies_info
+from app.handlers.exchange import format_header_item
 from app.logger import get_logger
-
-log = get_logger("groups")
 router = Router(name="groups")
 
 
@@ -104,7 +103,7 @@ async def handle_group_message(message: Message, i18n: I18n, lang: str, **kwargs
         ci = info_map.get(code, {})
         emoji = ci.get("emoji", "") or cd_map.get(code, {}).get("emoji", "")
         symbol = ci.get("symbol", "") or cd_map.get(code, {}).get("symbol", "")
-        info_parts.append(f"{emoji} {code} {amount}{symbol}")
+        info_parts.append(format_header_item(code, amount, emoji, symbol, include_symbol=(index == 1)))
 
     info = ", ".join(info_parts)
     er_text = i18n.get_section("exchange rate", lang)

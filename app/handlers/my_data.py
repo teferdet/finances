@@ -29,21 +29,16 @@ def _format_list(items: list | str | None, fallback: str = "—") -> str:
     return str(items)
 
 
-@router.callback_query(F.data == "my_data_view")
-async def cb_my_data_view(call: CallbackQuery, i18n: I18n, lang: str) -> None:
-    if call.message.chat.type != "private":
-        md = i18n.get_section("my_data", lang)
-        await call.message.answer(md.get("private_only", "⚠️ Private only!"))
-        return
+from aiogram.filters import Command
+from aiogram.types import Message
 
-    uid = call.from_user.id
+
+async def _build_my_data_text_and_kb(uid: int, i18n: I18n, lang: str) -> tuple[str, InlineKeyboardMarkup]:
     db = get_db()
     md = i18n.get_section("my_data", lang)
 
     # Fetch user data
-    user = await db["Users"].find_one({"_id": uid})
-    if not user:
-        user = {}
+    user = await db["Users"].find_one({"_id": uid}) or {}
 
     # Count related data
     alerts_count = await db["Alerts"].count_documents({"user_id": uid, "triggered": False})
@@ -123,7 +118,29 @@ async def cb_my_data_view(call: CallbackQuery, i18n: I18n, lang: str) -> None:
         ]
     )
 
-    await call.message.edit_text("\n".join(lines), reply_markup=kb)
+    return "\n".join(lines), kb
+
+
+@router.message(Command("my_data"))
+async def cmd_my_data(message: Message, i18n: I18n, lang: str) -> None:
+    if message.chat.type != "private":
+        md = i18n.get_section("my_data", lang)
+        await message.answer(str(md.get("private_only", "⚠️ Private only!")))
+        return
+
+    text, kb = await _build_my_data_text_and_kb(message.from_user.id, i18n, lang)
+    await message.answer(text, reply_markup=kb, parse_mode="HTML")
+
+
+@router.callback_query(F.data == "my_data_view")
+async def cb_my_data_view(call: CallbackQuery, i18n: I18n, lang: str) -> None:
+    if call.message.chat.type != "private":
+        md = i18n.get_section("my_data", lang)
+        await call.message.answer(md.get("private_only", "⚠️ Private only!"))
+        return
+
+    text, kb = await _build_my_data_text_and_kb(call.from_user.id, i18n, lang)
+    await call.message.edit_text(text, reply_markup=kb, parse_mode="HTML")
 
 
 @router.callback_query(F.data == "my_data_reset")

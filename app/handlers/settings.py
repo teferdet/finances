@@ -702,7 +702,7 @@ async def cb_user_group_settings(call: CallbackQuery, i18n: I18n, lang: str) -> 
         chat_id = int(parts[2])
 
         if not await is_chat_admin(call.bot, chat_id, uid):
-            await call.answer("Access denied", show_alert=True)
+            await call.answer(str(i18n.get("admin.access_denied", lang)), show_alert=True)
             return
 
         if action == "delete":

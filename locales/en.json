@@ -341,7 +341,7 @@
       "add_link_prompt": "Send the group invite link or @username.\n\nExamples:\n- <code>https://t.me/mygroupname</code>\n- <code>@mygroupname</code>\n- <code>-1001234567890</code> (numeric ID)\n\nThe bot must already be a member of the group.",
       "invalid_link": "❌ Could not parse the link or username. Send a valid <code>t.me/...</code> link or <code>@username</code>."
     },
-    "access_denied": "⛔ Access denied. This area is restricted to administrators.",
+    "access_denied": "⛔ Access denied",
     "stats": "📊 Global Statistics",
     "config": "⚙️ System Configuration",
     "users": "👥 User Analytics",
@@ -461,7 +461,8 @@
     "invalid_user_id": "❌ Invalid User ID. Please send numbers only.",
     "main_menu": "⬅️ Main Menu",
     "broadcast_not_found": "Broadcast already sent or not found.",
-    "loading": "⚡ Admin panel loading..."
+    "loading": "⚡ Admin panel loading...",
+    "unknown_feature": "⚠️ Unknown feature"
   },
   "portfolio": {
     "title": "💼 <b>Your Investment Portfolio</b>",
@@ -660,7 +661,10 @@
     "admins_list": "Bot can see the following administrators in this group:",
     "view_admins": "👥 View Admins",
     "close": "✖️ Close",
-    "back": "◀️ Back"
+    "back": "◀️ Back",
+    "published": "📢 Published to group!",
+    "not_found": "⚠️ Group not found",
+    "session_expired": "⚠️ Session expired, please try again"
   },
   "donate": {
     "loading": "💖 Loading donation page..."
@@ -684,5 +688,10 @@
     "delete_confirm": "Confirm data deletion",
     "delete_success": "Your data has been deleted",
     "export_confirm": "Confirm data export"
+  },
+  "calc": {
+    "title": "🧾 <b>Bulk Expense Calculation</b> (Target: <b>{target}</b>)\n",
+    "total": "💰 <b>Total Expenses: {total} {currency}</b>",
+    "help": "🧾 <b>Bulk Expense Calculator</b>\n\nQuickly sum up multiple items in different currencies!\n\n<b>Usage:</b>\n<code>/calc 100 USD hotel, 45 EUR dinner, 250 PLN tickets</code>\n\nOr send multiple currency amounts in one message."
   }
 }

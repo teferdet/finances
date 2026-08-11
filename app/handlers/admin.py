@@ -518,7 +518,7 @@ async def cb_admin(call: CallbackQuery, i18n: I18n, lang: str, state: FSMContext
                 save_settings(cfg)
                 await call.answer(f"{feature_key}: {'ON' if not cur_val else 'OFF'}")
             else:
-                await call.answer("Unknown feature", show_alert=True)
+                await call.answer(str(i18n.get("admin.unknown_feature", "en")), show_alert=True)
         elif action == "cycle_draft_threshold":
             import dataclasses
 
