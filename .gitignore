@@ -20,4 +20,5 @@ config/.encryption_key
 files/stats.json
 files/price_alerts.json
 files/portfolios.json
-
+PRIVACY_UK.md
+PRIVACY.md

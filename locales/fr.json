@@ -206,21 +206,27 @@
     },
     "info": "🤖 Version: {}",
     "privacy": {
-      "update": "<i>Dernière mise à jour : {}</i>",
+      "update": "<i>Mis à jour : 12 août 2026</i>",
       "text": [
-        "🔐 <b>Politique de confidentialité du Finances Bot (@fStatisticsBot)</b>\n\n",
-        "🛡 <b>Données que nous collectons :</b>\n",
-        "• Les informations de base de votre profil Telegram (Nom, Nom d'utilisateur, ID) pour identifier votre compte.\n",
-        "• Vos paramètres de devise choisis, vos préférences linguistiques et les données de votre portefeuille.\n",
-        "• Nous n'enregistrons ni ne stockons <b>jamais</b> vos messages personnels ou vos conversations de groupe.\n\n",
-        "🔒 <b>Protection des données :</b>\n",
-        "• Vos préférences sont stockées en toute sécurité et ne sont jamais vendues ou partagées avec des tiers.\n",
-        "• Le bot ne traite que les messages contenant des nombres et des codes de devises.\n\n",
-        "✅ <b>Vos droits :</b>\n",
-        "• Vous pouvez demander la suppression complète de toutes vos données à tout moment en contactant l'administrateur.\n\n",
-        "En utilisant ce bot, vous consentez à cette politique. Merci de faire confiance à Finances !"
+        "🔐 <b>Confidentialité — @fStatisticsBot</b>\n\n",
+        "🛡 <b>Ce que je stocke sur toi :</b>\n",
+        "• ID Telegram, nom, pseudonyme, langue, date d'inscription.\n",
+        "• Paramètres : listes de devises, portefeuille, alertes, préférences.\n",
+        "• Si tu as lié un exchange : clés API — stockées <b>chiffrées</b>.\n",
+        "• Compteurs agrégés uniquement (le contenu des messages n'est jamais stocké).\n\n",
+        "🔒 <b>Sécurité :</b>\n",
+        "• Base de données : MongoDB Atlas avec TLS. Clés API exchanges : chiffrement Fernet.\n",
+        "• Tes données ne sont jamais vendues ni partagées avec quiconque.\n\n",
+        "✅ <b>Tes droits :</b>\n",
+        "• <b>Voir tes données :</b> /my_data\n",
+        "• <b>Exporter le portefeuille :</b> /export\n",
+        "• <b>Supprimer actifs / alertes :</b> /portfolio clear, /alerts\n",
+        "• <b>Tout supprimer :</b> écrire à @teferdet\n\n",
+        "C'est un projet perso, pas une entreprise. Je fais de mon mieux pour protéger tes données."
       ]
     },
+
+
     "mini app": [
       "💼 <b>Finances Manager</b>\n\n",
       "📊 Analysez vos dépenses et vos revenus facilement.\n",

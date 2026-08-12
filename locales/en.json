@@ -203,19 +203,23 @@
     },
     "privacy": {
       "text": [
-        "🔐 <b>Privacy Policy for Finances Bot (@fStatisticsBot)</b>\n\n",
-        "🛡 <b>Data We Collect:</b>\n",
-        "• Basic Telegram profile info (Name, Username, ID) to identify your account.\n",
-        "• Your chosen currency settings, language preferences, and portfolio data.\n",
-        "• We <b>never</b> log or store your personal chat messages or group conversations.\n\n",
-        "🔒 <b>Data Protection:</b>\n",
-        "• Your preferences are stored securely and never sold or shared with third parties.\n",
-        "• The bot only processes messages containing numbers and currency codes.\n\n",
-        "✅ <b>Your Rights:</b>\n",
-        "• You can request a complete deletion of all your data at any time by contacting the administrator.\n\n",
-        "By using this bot, you consent to this policy. Thank you for trusting Finances!"
+        "🔐 <b>Privacy — @fStatisticsBot</b>\n\n",
+        "🛡 <b>What I store about you:</b>\n",
+        "• Your Telegram ID, name, username, language, sign-up date.\n",
+        "• Your settings: currency lists, portfolio, alerts, preferences.\n",
+        "• If you link an exchange: your API keys — stored <b>encrypted</b>.\n",
+        "• Aggregated counters only (no message content is ever logged).\n\n",
+        "🔒 <b>Security:</b>\n",
+        "• Database: MongoDB Atlas with TLS. Exchange API secrets: Fernet-encrypted.\n",
+        "• Your data is never sold or shared with anyone.\n\n",
+        "✅ <b>Your rights:</b>\n",
+        "• <b>See your data:</b> /my_data\n",
+        "• <b>Export portfolio:</b> /export\n",
+        "• <b>Delete assets / alerts:</b> /portfolio clear, /alerts\n",
+        "• <b>Delete everything:</b> message @teferdet\n\n",
+        "This is a personal hobby project, not a company. I’m doing my best to keep your data safe."
       ],
-      "update": "<i>Last updated: {}</i>"
+      "update": "<i>Updated: August 12, 2026</i>"
     },
     "info": "🤖 Bot Version: <b>{}</b>",
     "mini app": [

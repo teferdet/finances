@@ -193,20 +193,26 @@
     },
     "privacy": {
       "text": [
-        "🔐 <b>Zásady ochrany osobných údajov pre Finances Bot (@fStatisticsBot)</b>\n\n",
-        "🛡 <b>Dáta, ktoré zhromažďujeme:</b>\n",
-        "• Základné informácie o profile Telegram (Meno, Používateľské meno, ID) na identifikáciu vášho účtu.\n",
-        "• Vaše vybrané nastavenia mien, jazykové preferencie a údaje portfólia.\n",
-        "• <b>Nikdy</b> nezaznamenávame ani neuchovávame vaše osobné správy z chatu ani skupinové konverzácie.\n\n",
-        "🔒 <b>Ochrana údajov:</b>\n",
-        "• Vaše preferencie sú bezpečne uložené a nikdy sa nepredávajú ani nezdieľajú s tretími stranami.\n",
-        "• Bot spracováva iba správy obsahujúce čísla a kódy mien.\n\n",
-        "✅ <b>Vaše práva:</b>\n",
-        "• Kedykoľvek môžete požiadať o úplné vymazanie všetkých vašich údajov kontaktovaním administrátora.\n\n",
-        "Používaním tohto bota vyjadrujete súhlas s týmito zásadami. Ďakujeme, že dôverujete Finances!"
+        "🔐 <b>Súkromie — @fStatisticsBot</b>\n\n",
+        "🛡 <b>Čo o tebe uchovávam:</b>\n",
+        "• Telegram ID, meno, používateľské meno, jazyk, dátum registrácie.\n",
+        "• Nastavenia: zoznamy mien, portfólio, upozornenia, preferencie.\n",
+        "• Ak si prepojil burzu: API kľúče — uložené <b>šifrované</b>.\n",
+        "• Len agregované počítadlá (obsah správ sa nikdy neukladá).\n\n",
+        "🔒 <b>Bezpečnosť:</b>\n",
+        "• Databáza: MongoDB Atlas s TLS. Burzenné API kľúče: Fernet-šifrovanie.\n",
+        "• Tvoje dáta sa nikdy nepredávajú ani nezdieľajú.\n\n",
+        "✅ <b>Tvoje práva:</b>\n",
+        "• <b>Zobraziť dáta:</b> /my_data\n",
+        "• <b>Exportovať portfólio:</b> /export\n",
+        "• <b>Vymazať aktíva / upozornenia:</b> /portfolio clear, /alerts\n",
+        "• <b>Vymazať všetko:</b> napíš @teferdet\n\n",
+        "Toto je osobný hobby projekt, nie firma. Snažím sa udržať tvoje dáta v bezpečí."
       ],
-      "update": "<i>Naposledy aktualizované: {}</i>"
+      "update": "<i>Aktualizované: 12. augusta 2026</i>"
     },
+
+
     "info": "🤖 Verzia Bota: <b>{}</b>",
     "mini app": [
       "💼 <b>Finances Manager</b>\n\n",

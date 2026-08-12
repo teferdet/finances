@@ -1,4 +1,12 @@
 {
+    "convert_crypto": [
+        "USD",
+        "EUR",
+        "GBP",
+        "PLN",
+        "CZK",
+        "UAH"
+    ],
     "small_convert_currencies": [
         "USD",
         "EUR",

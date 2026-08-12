@@ -206,19 +206,23 @@
     },
     "info": "🤖 Version: {}",
     "privacy": {
-      "update": "<i>Zuletzt aktualisiert: {}</i>",
+      "update": "<i>Aktualisiert: 12. August 2026</i>",
       "text": [
-        "🔐 <b>Datenschutzerklärung für Finances Bot (@fStatisticsBot)</b>\n\n",
-        "🛡 <b>Gesammelte Daten:</b>\n",
-        "• Grundlegende Telegram-Profilinformationen (Name, Benutzername, ID) zur Identifizierung Ihres Kontos.\n",
-        "• Ihre gewählten Währungseinstellungen, Spracheinstellungen und Portfolio-Daten.\n",
-        "• Wir protokollieren oder speichern <b>niemals</b> Ihre persönlichen Chat-Nachrichten oder Gruppenunterhaltungen.\n\n",
-        "🔒 <b>Datenschutz:</b>\n",
-        "• Ihre Einstellungen werden sicher gespeichert und niemals an Dritte verkauft oder weitergegeben.\n",
-        "• Der Bot verarbeitet nur Nachrichten, die Zahlen und Währungscodes enthalten.\n\n",
-        "✅ <b>Ihre Rechte:</b>\n",
-        "• Sie können jederzeit eine vollständige Löschung all Ihrer Daten anfordern, indem Sie sich an den Administrator wenden.\n\n",
-        "Durch die Nutzung dieses Bots stimmen Sie dieser Richtlinie zu. Vielen Dank für Ihr Vertrauen in Finances!"
+        "🔐 <b>Datenschutz — @fStatisticsBot</b>\n\n",
+        "🛡 <b>Was ich über dich speichere:</b>\n",
+        "• Telegram-ID, Name, Benutzername, Sprache, Registrierungsdatum.\n",
+        "• Einstellungen: Währungslisten, Portfolio, Alarme, Präferenzen.\n",
+        "• Falls du eine Börse verknüpft hast: API-Schlüssel — <b>verschlüsselt</b> gespeichert.\n",
+        "• Nur aggregierte Zähler (Nachrichteninhalte werden niemals gespeichert).\n\n",
+        "🔒 <b>Sicherheit:</b>\n",
+        "• Datenbank: MongoDB Atlas mit TLS. Börsen-API-Schlüssel: Fernet-verschlüsselt.\n",
+        "• Deine Daten werden niemals verkauft oder weitergegeben.\n\n",
+        "✅ <b>Deine Rechte:</b>\n",
+        "• <b>Daten ansehen:</b> /my_data\n",
+        "• <b>Portfolio exportieren:</b> /export\n",
+        "• <b>Assets / Alarme löschen:</b> /portfolio clear, /alerts\n",
+        "• <b>Alles löschen:</b> @teferdet schreiben\n\n",
+        "Dies ist ein persönliches Hobbyprojekt, kein Unternehmen. Ich gebe mein Bestes, deine Daten zu schützen."
       ]
     },
     "mini app": [
