@@ -129,6 +129,7 @@ jobs:
             DASH_DIR="/home/ubuntu/finances/dashboard"
 
             # Ensure rate-limit zones exist in /etc/nginx/conf.d/rate_limits.conf
+            sudo mkdir -p /etc/nginx/conf.d /etc/nginx/sites-available /etc/nginx/sites-enabled
             RATE_CONF="/etc/nginx/conf.d/rate_limits.conf"
             if [ ! -f "$RATE_CONF" ]; then
               echo "⚙️  Creating NGINX rate limit zones..."
