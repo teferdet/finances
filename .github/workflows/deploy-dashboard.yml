@@ -43,8 +43,8 @@ jobs:
             else
               cd "$APP_DIR"
               git remote set-url origin "$REPO_URL"
-              git fetch origin main
-              git reset --hard origin/main
+              git fetch --force origin main
+              git checkout -B main origin/main
             fi
 
             echo "✅ Code at: $(cd $APP_DIR && git rev-parse --short HEAD)"

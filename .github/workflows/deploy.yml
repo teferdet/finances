@@ -47,8 +47,8 @@ jobs:
               # Save hash of current requirements to detect changes
               sha256sum "$APP_DIR/requirements.txt" | awk '{print $1}' > /tmp/.finances_prev_req_hash
               git remote set-url origin "$REPO_URL"
-              git fetch origin main
-              git reset --hard origin/main
+              git fetch --force origin main
+              git checkout -B main origin/main
             fi
 
             cd "$APP_DIR"
