@@ -1,0 +1,41 @@
+[Unit]
+Description=Finances Dashboard API (FastAPI/Uvicorn)
+After=network.target mongod.service finances-bot.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/home/ubuntu/finances
+
+# Secrets injected from environment (set via /etc/systemd/system/finances-dashboard.service.d/env.conf)
+EnvironmentFile=-/home/ubuntu/finances/dashboard/.env
+
+Environment=PYTHONUNBUFFERED=1
+
+ExecStart=/home/ubuntu/finances/dashboard/venv/bin/uvicorn \
+    dashboard.api.main:app \
+    --host 127.0.0.1 \
+    --port 8090 \
+    --workers 1 \
+    --no-access-log \
+    --timeout-keep-alive 30
+
+# Restart policy
+Restart=always
+RestartSec=5
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=finances-dashboard
+
+# Security hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/home/ubuntu/finances/config
+ReadOnlyPaths=/home/ubuntu/finances/logs
+
+[Install]
+WantedBy=multi-user.target

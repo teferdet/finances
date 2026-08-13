@@ -1,0 +1,223 @@
+name: Deploy Dashboard to Oracle VPS
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'dashboard/**'
+      - '.github/workflows/deploy-dashboard.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-dashboard
+  cancel-in-progress: true
+
+jobs:
+  deploy-dashboard:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v5
+
+      # ── 1. Pull Latest Code ───────────────────────────────────────────
+      - name: 📦 Pull Latest Code
+        uses: appleboy/ssh-action@v1.0.3
+        timeout-minutes: 3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SERVER_PORT }}
+          envs: GH_TOKEN
+          script: |
+            set -e
+            APP_DIR="/home/ubuntu/finances"
+            REPO_URL="https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
+
+            if [ ! -d "$APP_DIR" ]; then
+              git clone "$REPO_URL" "$APP_DIR"
+            else
+              cd "$APP_DIR"
+              git remote set-url origin "$REPO_URL"
+              git fetch origin main
+              git reset --hard origin/main
+            fi
+
+            echo "✅ Code at: $(cd $APP_DIR && git rev-parse --short HEAD)"
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+
+      # ── 2. Generate Dashboard .env ────────────────────────────────────
+      - name: 🔐 Generate Dashboard Environment
+        uses: appleboy/ssh-action@v1.0.3
+        timeout-minutes: 2
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SERVER_PORT }}
+          envs: BOT_TOKEN,MONGO_URI,BOT_ADMIN_IDS,DASHBOARD_SECRET_KEY
+          script: |
+            set -e
+            DASH_DIR="/home/ubuntu/finances/dashboard"
+
+            cat > "$DASH_DIR/.env" << EOF
+            BOT_TOKEN=${BOT_TOKEN}
+            MONGO_URI=${MONGO_URI}
+            MONGO_DATABASE=finances
+            BOT_ADMIN_IDS=${BOT_ADMIN_IDS}
+            DASHBOARD_SECRET_KEY=${DASHBOARD_SECRET_KEY}
+            EOF
+
+            chmod 600 "$DASH_DIR/.env"
+            echo "✅ Dashboard .env generated"
+        env:
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          MONGO_URI: ${{ secrets.MONGO_URI }}
+          BOT_ADMIN_IDS: ${{ secrets.BOT_ADMIN_IDS }}
+          DASHBOARD_SECRET_KEY: ${{ secrets.DASHBOARD_SECRET_KEY }}
+
+      # ── 3. Install Dashboard Dependencies ────────────────────────────
+      - name: 🐍 Install Dashboard Dependencies
+        uses: appleboy/ssh-action@v1.0.3
+        timeout-minutes: 10
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SERVER_PORT }}
+          script: |
+            set -e
+            DASH_DIR="/home/ubuntu/finances/dashboard"
+            VENV_DIR="$DASH_DIR/venv"
+
+            # Create venv if missing
+            if [ ! -d "$VENV_DIR" ]; then
+              echo "🐍 Creating dashboard venv..."
+              python3 -m venv "$VENV_DIR"
+            fi
+
+            PIP="$VENV_DIR/bin/pip"
+
+            echo "⬆️  Upgrading pip..."
+            "$PIP" install --quiet --upgrade pip
+
+            echo "📥 Installing dashboard packages..."
+            "$PIP" install \
+              --requirement "$DASH_DIR/requirements.txt" \
+              --upgrade \
+              --upgrade-strategy only-if-needed \
+              --quiet
+
+            "$PIP" check && echo "✅ Dashboard dependencies OK" || exit 1
+
+      # ── 4. Configure NGINX ────────────────────────────────────────────
+      - name: 🌐 Configure NGINX
+        uses: appleboy/ssh-action@v1.0.3
+        timeout-minutes: 2
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SERVER_PORT }}
+          script: |
+            set -e
+            DASH_DIR="/home/ubuntu/finances/dashboard"
+
+            # Ensure rate-limit zones exist in /etc/nginx/conf.d/rate_limits.conf
+            RATE_CONF="/etc/nginx/conf.d/rate_limits.conf"
+            if [ ! -f "$RATE_CONF" ]; then
+              echo "⚙️  Creating NGINX rate limit zones..."
+              sudo bash -c "cat > $RATE_CONF" << 'EOF'
+            limit_req_zone $binary_remote_addr zone=dash_auth:10m rate=10r/m;
+            limit_req_zone $binary_remote_addr zone=dash_api:10m rate=60r/m;
+            EOF
+            fi
+
+            # Install dashboard site config
+            sudo cp "$DASH_DIR/nginx/finances-dashboard.conf" \
+              /etc/nginx/sites-available/finances-dashboard
+            sudo ln -sf /etc/nginx/sites-available/finances-dashboard \
+              /etc/nginx/sites-enabled/finances-dashboard
+
+            # Test and reload
+            sudo nginx -t
+            sudo systemctl reload nginx
+            echo "✅ NGINX configured and reloaded"
+
+      # ── 5. Configure systemd service ──────────────────────────────────
+      - name: ⚙️ Configure Dashboard Service
+        uses: appleboy/ssh-action@v1.0.3
+        timeout-minutes: 2
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SERVER_PORT }}
+          script: |
+            set -e
+            DASH_DIR="/home/ubuntu/finances/dashboard"
+
+            sudo cp "$DASH_DIR/finances-dashboard.service" \
+              /etc/systemd/system/finances-dashboard.service
+            sudo systemctl daemon-reload
+            sudo systemctl enable finances-dashboard.service
+            echo "✅ systemd service configured"
+
+      # ── 6. Restart Dashboard ──────────────────────────────────────────
+      - name: 🚀 Restart Dashboard
+        uses: appleboy/ssh-action@v1.0.3
+        timeout-minutes: 2
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SERVER_PORT }}
+          script: |
+            set -e
+            sudo systemctl restart finances-dashboard.service
+            echo "✅ Dashboard service restarted"
+
+      # ── 7. Health Check ───────────────────────────────────────────────
+      - name: ✅ Health Check
+        uses: appleboy/ssh-action@v1.0.3
+        timeout-minutes: 2
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SERVER_PORT }}
+          script: |
+            set -e
+
+            STARTED=false
+            for i in $(seq 1 10); do
+              if sudo systemctl is-active --quiet finances-dashboard.service; then
+                echo "✅ finances-dashboard is running! (attempt $i/10)"
+                STARTED=true
+                break
+              fi
+              echo "⏳ Waiting... ($i/10)"
+              sleep 2
+            done
+
+            if [ "$STARTED" = false ]; then
+              echo "❌ Dashboard failed to start. Logs:"
+              sudo journalctl -u finances-dashboard.service -n 30 --no-pager
+              exit 1
+            fi
+
+            # API health check
+            HEALTH=$(curl -sf http://127.0.0.1:8090/api/health || echo "FAIL")
+            if echo "$HEALTH" | grep -q '"ok"'; then
+              echo "✅ API health check passed: $HEALTH"
+            else
+              echo "❌ API health check failed: $HEALTH"
+              exit 1
+            fi
+
+            echo "🎉 Dashboard deploy completed! Available at http://SERVER_IP:8080"

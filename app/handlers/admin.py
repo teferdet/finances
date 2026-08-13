@@ -150,6 +150,59 @@ async def cmd_ping(message: Message, i18n: I18n, lang: str) -> None:
     )
 
 
+@router.callback_query(F.data.startswith("dash_"))
+async def cb_dash_auth(call: CallbackQuery) -> None:
+    if not _is_admin(call.from_user.id):
+        await call.answer("Access denied", show_alert=True)
+        return
+
+    data = call.data  # dash_approve:req_id or dash_block:req_id
+    if ":" not in data:
+        await call.answer("Invalid callback", show_alert=True)
+        return
+
+    action, req_id = data.split(":", 1)
+    db = get_db()
+    req = await db["dash_auth_requests"].find_one({"_id": req_id})
+    ip = req.get("ip", "unknown") if req else "unknown"
+
+    try:
+        from dashboard.api import auth as dash_auth
+        dash_auth.set_auth_status(req_id, "approved" if action == "dash_approve" else "blocked")
+    except Exception:
+        pass
+
+    if action == "dash_approve":
+        await db["dash_auth_requests"].update_one(
+            {"_id": req_id}, {"$set": {"status": "approved"}}
+        )
+        await call.answer("✅ Login approved!", show_alert=True)
+        try:
+            await call.message.edit_text(
+                f"✅ <b>Login Approved</b>\n\n📍 IP: <code>{ip}</code>\n👤 Admin: <code>{call.from_user.id}</code>",
+                parse_mode="HTML"
+            )
+        except Exception:
+            pass
+    elif action == "dash_block":
+        await db["dash_auth_requests"].update_one(
+            {"_id": req_id}, {"$set": {"status": "blocked"}}
+        )
+        await db["dash_blocked_ips"].update_one(
+            {"_id": ip},
+            {"$set": {"blocked_at": datetime.now(), "blocked_by": call.from_user.id}},
+            upsert=True
+        )
+        await call.answer("⛔ IP added to blacklist!", show_alert=True)
+        try:
+            await call.message.edit_text(
+                f"⛔ <b>IP Address Blacklisted</b>\n\n📍 IP: <code>{ip}</code>\n👤 Blocked by: <code>{call.from_user.id}</code>",
+                parse_mode="HTML"
+            )
+        except Exception:
+            pass
+
+
 @router.callback_query(F.data.startswith("admin_"))
 async def cb_admin(call: CallbackQuery, i18n: I18n, lang: str, state: FSMContext) -> None:
     callback_start_time = time.time()

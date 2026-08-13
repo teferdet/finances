@@ -8,7 +8,7 @@ async def run_debug_cli():
     await asyncio.sleep(8)
 
     print("\n" + "=" * 40)
-    print("🐛 Debug CLI Mode Activated")
+    print("Debug CLI Mode Activated")
     print("=" * 40)
 
     current_admin_id = None
