@@ -164,6 +164,7 @@ jobs:
             fi
 
             # Install dashboard site config
+            sudo rm -f /etc/nginx/sites-enabled/default
             sudo cp "$DASH_DIR/nginx/finances-dashboard.conf" \
               /etc/nginx/sites-available/finances-dashboard
             sudo ln -sf /etc/nginx/sites-available/finances-dashboard \
@@ -255,11 +256,21 @@ jobs:
             fi
 
             # API health check
-            HEALTH=$(curl -sf http://127.0.0.1:8090/api/health || echo "FAIL")
-            if echo "$HEALTH" | grep -q '"ok"'; then
-              echo "✅ API health check passed: $HEALTH"
-            else
+            API_UP=false
+            for i in $(seq 1 5); do
+              HEALTH=$(curl -sf http://127.0.0.1:8090/api/health || echo "FAIL")
+              if echo "$HEALTH" | grep -q '"ok"'; then
+                echo "✅ API health check passed: $HEALTH"
+                API_UP=true
+                break
+              fi
+              echo "⏳ Waiting for API to respond... ($i/5)"
+              sleep 3
+            done
+
+            if [ "$API_UP" = false ]; then
               echo "❌ API health check failed: $HEALTH"
+              sudo journalctl -u finances-dashboard.service -n 50 --no-pager
               exit 1
             fi
 

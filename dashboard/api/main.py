@@ -71,12 +71,10 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         _db = None
 
-    # Periodic cleanup task (every 60 seconds) & Telegram poller (every 1.5s)
+    # Periodic cleanup task (every 60 seconds)
     cleanup_task = asyncio.create_task(_cleanup_loop())
-    telegram_task = asyncio.create_task(_telegram_poll_loop())
     yield
     cleanup_task.cancel()
-    telegram_task.cancel()
     if _client:
         _client.close()
 
@@ -90,13 +88,7 @@ async def _cleanup_loop():
         await asyncio.sleep(60)
 
 
-async def _telegram_poll_loop():
-    while True:
-        try:
-            await auth.poll_telegram_updates()
-        except Exception:
-            pass
-        await asyncio.sleep(1.5)
+
 
 
 def get_db() -> AsyncIOMotorDatabase:

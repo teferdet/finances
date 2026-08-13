@@ -217,17 +217,8 @@ async def send_otp_via_telegram(telegram_id: int, otp: str, req_id: str, client_
         "🔐 *Dashboard Login Request*\n\n"
         f"📍 *IP Address:* `{client_ip}`\n"
         f"🔑 *Verification Code:* `{otp}`\n\n"
-        "_Approve immediately via button below or enter code on web page\\. Valid for 5 minutes\\._"
+        "_Enter this code on the web page to login\\. Valid for 5 minutes\\._"
     )
-    
-    reply_markup = {
-        "inline_keyboard": [
-            [
-                {"text": "✅ Approve", "callback_data": f"dash_approve:{req_id}"},
-                {"text": "⛔ Block IP", "callback_data": f"dash_block:{req_id}"}
-            ]
-        ]
-    }
 
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
     try:
@@ -236,7 +227,6 @@ async def send_otp_via_telegram(telegram_id: int, otp: str, req_id: str, client_
                 "chat_id": telegram_id,
                 "text": text,
                 "parse_mode": "MarkdownV2",
-                "reply_markup": reply_markup,
             })
             return resp.status_code == 200
     except Exception:
@@ -247,74 +237,7 @@ async def send_otp_via_telegram(telegram_id: int, otp: str, req_id: str, client_
 
 # ── Telegram Inline Button Poller ──────────────────────────────────────────────
 
-_last_update_id = 0
 
-async def poll_telegram_updates() -> None:
-    """Poll Telegram Bot API for callback queries (dash_approve / dash_block)."""
-    global _last_update_id
-    if not BOT_TOKEN:
-        return
-
-    url = f"https://api.telegram.org/bot{BOT_TOKEN}/getUpdates"
-    try:
-        async with httpx.AsyncClient(timeout=4.0) as client:
-            resp = await client.get(url, params={
-                "offset": _last_update_id + 1,
-                "timeout": 1,
-                "allowed_updates": ["callback_query"]
-            })
-            if resp.status_code != 200:
-                return
-            data = resp.json()
-            for update in data.get("result", []):
-                _last_update_id = max(_last_update_id, update["update_id"])
-                cb = update.get("callback_query")
-                if not cb:
-                    continue
-
-                cb_data = cb.get("data", "")
-                cb_id = cb.get("id")
-                msg = cb.get("message", {})
-                chat_id = msg.get("chat", {}).get("id")
-                msg_id = msg.get("message_id")
-
-                if cb_data.startswith("dash_approve:") or cb_data.startswith("dash_block:"):
-                    action, req_id = cb_data.split(":", 1)
-                    req = get_auth_request(req_id)
-                    ip = req["ip"] if req else "unknown"
-
-                    if action == "dash_approve":
-                        set_auth_status(req_id, "approved")
-                        await client.post(
-                            f"https://api.telegram.org/bot{BOT_TOKEN}/answerCallbackQuery",
-                            json={"callback_query_id": cb_id, "text": "✅ Access Approved!"}
-                        )
-                        await client.post(
-                            f"https://api.telegram.org/bot{BOT_TOKEN}/editMessageText",
-                            json={
-                                "chat_id": chat_id,
-                                "message_id": msg_id,
-                                "text": f"✅ *Login Approved*\n\n📍 IP: `{ip}`",
-                                "parse_mode": "MarkdownV2"
-                            }
-                        )
-                    elif action == "dash_block":
-                        set_auth_status(req_id, "blocked")
-                        await client.post(
-                            f"https://api.telegram.org/bot{BOT_TOKEN}/answerCallbackQuery",
-                            json={"callback_query_id": cb_id, "text": "⛔ IP Blacklisted!"}
-                        )
-                        await client.post(
-                            f"https://api.telegram.org/bot{BOT_TOKEN}/editMessageText",
-                            json={
-                                "chat_id": chat_id,
-                                "message_id": msg_id,
-                                "text": f"⛔ *IP Address Blacklisted*\n\n📍 IP: `{ip}`",
-                                "parse_mode": "MarkdownV2"
-                            }
-                        )
-    except Exception:
-        pass
 
 
 def cleanup_expired() -> None:
