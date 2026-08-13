@@ -53,7 +53,7 @@ jobs:
               if ! git fetch --force origin main; then
                 echo "⚠️  Fetch failed even after clearing locks — re-cloning fresh."
                 cd ..
-                rm -rf "$APP_DIR"
+                sudo rm -rf "$APP_DIR"
                 git clone "$REPO_URL" "$APP_DIR"
                 cd "$APP_DIR"
               fi
