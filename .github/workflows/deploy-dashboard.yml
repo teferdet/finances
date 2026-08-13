@@ -134,8 +134,7 @@ jobs:
               sudo apt-get update -qq
               sudo apt-get install -y -qq nginx
               sudo systemctl enable nginx
-              sudo systemctl start nginx
-              echo "✅ NGINX installed and started"
+              echo "✅ NGINX installed"
             fi
 
             # Ensure rate-limit zones exist in /etc/nginx/conf.d/rate_limits.conf
@@ -155,9 +154,27 @@ jobs:
             sudo ln -sf /etc/nginx/sites-available/finances-dashboard \
               /etc/nginx/sites-enabled/finances-dashboard
 
-            # Test and reload
-            sudo nginx -t
-            sudo systemctl reload nginx
+            # Validate config BEFORE touching the running service.
+            # If this fails, nginx keeps running on its last-known-good config
+            # instead of the deploy tearing it down.
+            if ! sudo nginx -t; then
+              echo "❌ NGINX config test failed — leaving current service untouched."
+              exit 1
+            fi
+
+            # Bring NGINX up regardless of its current state: a previous bad
+            # config (or a server reboot) can leave the service 'inactive',
+            # in which case a plain 'reload' fails with
+            # 'Unit cannot be reloaded because it is inactive.'
+            # reload-or-restart reloads if it's running, or starts it if not.
+            sudo systemctl reload-or-restart nginx
+
+            if ! systemctl is-active --quiet nginx; then
+              echo "❌ NGINX is not active after reload-or-restart. Recent logs:"
+              sudo journalctl -u nginx -n 30 --no-pager
+              exit 1
+            fi
+
             echo "✅ NGINX configured and reloaded"
 
       # ── 5. Configure systemd service ──────────────────────────────────
