@@ -38,7 +38,8 @@ jobs:
             APP_DIR="/home/ubuntu/finances"
             REPO_URL="https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
 
-            if [ ! -d "$APP_DIR" ]; then
+            if [ ! -d "$APP_DIR/.git" ]; then
+              sudo rm -rf "$APP_DIR"
               git clone "$REPO_URL" "$APP_DIR"
             else
               cd "$APP_DIR"
