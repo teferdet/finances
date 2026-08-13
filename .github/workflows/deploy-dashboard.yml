@@ -43,7 +43,21 @@ jobs:
             else
               cd "$APP_DIR"
               git remote set-url origin "$REPO_URL"
-              git fetch --force origin main
+
+              # A previous run that got killed mid-fetch (timeout, concurrent
+              # job, etc.) can leave stale .lock files behind, causing:
+              # "cannot lock ref 'refs/remotes/origin/main': is at X but
+              # expected Y" on the next fetch. Clear them defensively.
+              find .git -name "*.lock" -delete 2>/dev/null || true
+
+              if ! git fetch --force origin main; then
+                echo "⚠️  Fetch failed even after clearing locks — re-cloning fresh."
+                cd ..
+                rm -rf "$APP_DIR"
+                git clone "$REPO_URL" "$APP_DIR"
+                cd "$APP_DIR"
+              fi
+
               git checkout -B main origin/main
             fi
 
