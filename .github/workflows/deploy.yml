@@ -1,4 +1,4 @@
-﻿name: Deploy to Oracle VPS
+name: Deploy to Oracle VPS
 
 on:
   push:
@@ -63,7 +63,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GH_PAT }}
 
       # ── 2. Generate Configuration ────────────────────────────────────
-      - name: 🔐 Generate .env
+      - name: 🔐 Generate settings.json
         uses: appleboy/ssh-action@v1.0.3
         timeout-minutes: 2
         with:
@@ -77,25 +77,77 @@ jobs:
             set -e
             APP_DIR="/home/ubuntu/finances"
 
-            echo "🔐 Generating .env from secrets..."
-            cat > "$APP_DIR/.env" << EOF
-            BOT_TOKEN=${BOT_TOKEN}
-            MONGO_URI=${MONGO_URI}
-            CRYPTO_API_KEY=${CRYPTO_API_KEY}
-            STOCKS_API_KEY=${STOCKS_API_KEY}
-            FERNET_KEY=${FERNET_KEY}
-            BOT_ADMIN_IDS=${BOT_ADMIN_IDS}
-            URL_COMMUNICATION=${URL_COMMUNICATION}
-            URL_INVITE=${URL_INVITE}
-            URL_BUYMEACOFFEE=${URL_BUYMEACOFFEE}
-            URL_DONATELLO=${URL_DONATELLO}
-            URL_BANK=${URL_BANK}
-            URL_MINI_APP=${URL_MINI_APP}
-            REDIS_URL=${REDIS_URL}
-            SENTRY_DSN=${SENTRY_DSN}
-            EOF
-            chmod 600 "$APP_DIR/.env"
-            echo "✅ .env generated successfully"
+            echo "🔐 Generating settings.json from secrets..."
+            python3 -c "
+            import json, os
+
+            def env_list(key, default='[]'):
+                try:
+                    return json.loads(os.environ.get(key, default))
+                except:
+                    return json.loads(default)
+
+            settings = {
+                'bot': {
+                    'token': os.environ.get('BOT_TOKEN', ''),
+                    'admin_ids': env_list('BOT_ADMIN_IDS', '[1693890078]'),
+                    'backup_enabled': True,
+                    'version': 'finances 6.6.0'
+                },
+                'database': {
+                    'mongo_uri': os.environ.get('MONGO_URI', ''),
+                    'mongo_database': 'finances',
+                    'pool_min': 5,
+                    'pool_max': 50
+                },
+                'api_keys': {
+                    'crypto': os.environ.get('CRYPTO_API_KEY', ''),
+                    'stocks': os.environ.get('STOCKS_API_KEY', '')
+                },
+                'urls': {
+                    'github': '',
+                    'communication': os.environ.get('URL_COMMUNICATION', ''),
+                    'invite': os.environ.get('URL_INVITE', ''),
+                    'buymeacoffee': os.environ.get('URL_BUYMEACOFFEE', ''),
+                    'donatello': os.environ.get('URL_DONATELLO', ''),
+                    'bank': os.environ.get('URL_BANK', ''),
+                    'mini_app': os.environ.get('URL_MINI_APP', '')
+                },
+                'i18n': {
+                    'supported_languages': ['en', 'uk'],
+                    'default_language': 'en'
+                },
+                'security': {
+                    'rate_limit_requests': 30,
+                    'rate_limit_window_sec': 60,
+                    'fernet_key': os.environ.get('FERNET_KEY', '')
+                },
+                'features': {
+                    'mini_app_enabled': False,
+                    'groups_enabled': True,
+                    'inline_mode_enabled': True
+                },
+                'redis': {
+                    'url': os.environ.get('REDIS_URL', 'redis://redis:6379/0')
+                },
+                'sentry': {
+                    'dsn': os.environ.get('SENTRY_DSN', ''),
+                    'environment': 'production'
+                },
+                'draft': {
+                    'enabled': True,
+                    'loading_threshold_sec': 0.05,
+                    'animation_interval_sec': 0.25,
+                    'preview_delay_sec': 0.15
+                }
+            }
+            
+            os.makedirs('/home/ubuntu/finances/config', exist_ok=True)
+            with open('/home/ubuntu/finances/config/settings.json', 'w', encoding='utf-8') as f:
+                json.dump(settings, f, indent=2, ensure_ascii=False)
+            print('✅ settings.json generated successfully')
+            "
+            touch "$APP_DIR/.env"
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           MONGO_URI: ${{ secrets.MONGO_URI }}
@@ -168,4 +220,5 @@ jobs:
             fi
             
             echo "🎉 Bot deploy completed successfully!"
+
 

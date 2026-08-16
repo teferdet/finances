@@ -111,7 +111,7 @@ jobs:
             BOT_ADMIN_IDS=${BOT_ADMIN_IDS}
             DASHBOARD_SECRET_KEY=${DASHBOARD_SECRET_KEY}
             SENTRY_DSN=${SENTRY_DSN}
-            REDIS_URL=${REDIS_URL:-redis://127.0.0.1:6379/0}
+                        REDIS_URL=${REDIS_URL:-redis://127.0.0.1:6379/0}
             EOF
 
             chmod 600 "$DASH_DIR/.env"
@@ -254,3 +254,4 @@ jobs:
             fi
 
             echo "🎉 Dashboard deploy completed!"
+

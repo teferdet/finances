@@ -15,7 +15,7 @@ import { UsersPage } from '@/components/pages/UsersPage'
 import { ConfigPage } from '@/components/pages/ConfigPage'
 
 export const App: React.FC = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(true)
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
   const [currentPage, setCurrentPage] = useState<PageId>('overview')
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [lastRefreshTime, setLastRefreshTime] = useState<Date | null>(null)
@@ -92,7 +92,7 @@ export const App: React.FC = () => {
       setLastRefreshTime(new Date())
     } catch (err: any) {
       if (err?.status === 401) {
-        // setIsAuthenticated(false)
+        setIsAuthenticated(false)
       }
     } finally {
       setIsRefreshing(false)
@@ -106,7 +106,7 @@ export const App: React.FC = () => {
         await api.getOverview()
         setIsAuthenticated(true)
       } catch (err: any) {
-        // setIsAuthenticated(false)
+        setIsAuthenticated(false)
       }
     }
     checkAuth()
@@ -132,7 +132,7 @@ export const App: React.FC = () => {
     try {
       await api.logout()
     } finally {
-      // setIsAuthenticated(false)
+      setIsAuthenticated(false)
     }
   }
 
