@@ -1,4 +1,4 @@
-name: Defender for DevOps
+﻿name: Defender for DevOps
 
 on:
   push:
@@ -38,3 +38,4 @@ jobs:
           sarif_file: ${{ steps.msdo.outputs.sarifFile }}
           # Upload even if the scan found issues (if: always)
           # so results always appear in the Security tab
+

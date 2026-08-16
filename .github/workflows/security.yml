@@ -1,4 +1,4 @@
-name: Security Scan
+﻿name: Security Scan
 
 on:
   push:
@@ -30,3 +30,4 @@ jobs:
         run: |
           echo "🔍 Scanning dependencies for vulnerabilities..."
           pip-audit -r requirements.txt --desc on
+

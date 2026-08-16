@@ -1,4 +1,4 @@
-name: Pyre Type Check
+﻿name: Pyre Type Check
 
 on:
   push:
@@ -89,3 +89,4 @@ jobs:
         if: always()
         with:
           sarif_file: pyre-results.sarif
+

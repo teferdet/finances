@@ -1,4 +1,4 @@
-name: Deploy to Oracle VPS
+﻿name: Deploy to Oracle VPS
 
 on:
   push:
@@ -33,6 +33,7 @@ jobs:
           port: ${{ secrets.SERVER_PORT }}
           envs: GH_TOKEN
           script: |
+            export PATH=$PATH:/usr/local/bin:/usr/bin:/bin:/snap/bin
             set -e
             APP_DIR="/home/ubuntu/finances"
             REPO_URL="https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
@@ -72,6 +73,7 @@ jobs:
           port: ${{ secrets.SERVER_PORT }}
           envs: BOT_TOKEN,MONGO_URI,CRYPTO_API_KEY,STOCKS_API_KEY,FERNET_KEY,BOT_ADMIN_IDS,URL_COMMUNICATION,URL_INVITE,URL_BUYMEACOFFEE,URL_DONATELLO,URL_BANK,URL_MINI_APP,REDIS_URL,SENTRY_DSN
           script: |
+            export PATH=$PATH:/usr/local/bin:/usr/bin:/bin:/snap/bin
             set -e
             APP_DIR="/home/ubuntu/finances"
 
@@ -120,6 +122,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SERVER_PORT }}
           script: |
+            export PATH=$PATH:/usr/local/bin:/usr/bin:/bin:/snap/bin
             set -e
             APP_DIR="/home/ubuntu/finances"
             cd "$APP_DIR"
@@ -142,6 +145,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SERVER_PORT }}
           script: |
+            export PATH=$PATH:/usr/local/bin:/usr/bin:/bin:/snap/bin
             set -e
             APP_DIR="/home/ubuntu/finances"
             cd "$APP_DIR"
@@ -164,3 +168,4 @@ jobs:
             fi
             
             echo "🎉 Bot deploy completed successfully!"
+

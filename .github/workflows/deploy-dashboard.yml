@@ -1,4 +1,4 @@
-name: Deploy Dashboard to Oracle VPS
+﻿name: Deploy Dashboard to Oracle VPS
 
 on:
   push:
@@ -48,6 +48,7 @@ jobs:
           port: ${{ secrets.SERVER_PORT }}
           envs: GH_TOKEN
           script: |
+            export PATH=$PATH:/usr/local/bin:/usr/bin:/bin:/snap/bin
             set -e
             APP_DIR="/home/ubuntu/finances"
             REPO_URL="https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
@@ -99,6 +100,7 @@ jobs:
           port: ${{ secrets.SERVER_PORT }}
           envs: BOT_TOKEN,MONGO_URI,BOT_ADMIN_IDS,DASHBOARD_SECRET_KEY,SENTRY_DSN,REDIS_URL
           script: |
+            export PATH=$PATH:/usr/local/bin:/usr/bin:/bin:/snap/bin
             set -e
             DASH_DIR="/home/ubuntu/finances/dashboard"
 
@@ -132,6 +134,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SERVER_PORT }}
           script: |
+            export PATH=$PATH:/usr/local/bin:/usr/bin:/bin:/snap/bin
             set -e
             DASH_DIR="/home/ubuntu/finances/dashboard"
 
@@ -186,6 +189,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SERVER_PORT }}
           script: |
+            export PATH=$PATH:/usr/local/bin:/usr/bin:/bin:/snap/bin
             set -e
             APP_DIR="/home/ubuntu/finances"
             cd "$APP_DIR"
@@ -208,6 +212,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SERVER_PORT }}
           script: |
+            export PATH=$PATH:/usr/local/bin:/usr/bin:/bin:/snap/bin
             set -e
             APP_DIR="/home/ubuntu/finances"
             cd "$APP_DIR"

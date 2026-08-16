@@ -1,4 +1,4 @@
-name: Code Quality
+﻿name: Code Quality
 
 on:
   push:
@@ -33,3 +33,4 @@ jobs:
 
       - name: Ruff format check
         run: ruff format app/ --check
+

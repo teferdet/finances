@@ -1,4 +1,4 @@
-name: Sync Docs to GitHub Wiki
+﻿name: Sync Docs to GitHub Wiki
 
 on:
   push:
@@ -64,3 +64,4 @@ jobs:
           else
             echo "ℹ️ Wiki is already up to date."
           fi
+

@@ -1,4 +1,4 @@
-name: Server Health Check
+﻿name: Server Health Check
 
 on:
   schedule:
@@ -22,6 +22,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SERVER_PORT }}
           script: |
+            export PATH=$PATH:/usr/local/bin:/usr/bin:/bin:/snap/bin
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
             echo "  📊 Finances Bot Health Check"
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -53,3 +54,4 @@ jobs:
 
             echo ""
             echo "✅ Health check passed"
+

@@ -1,4 +1,4 @@
-name: Validate Locales
+﻿name: Validate Locales
 
 on:
   push:
@@ -88,3 +88,4 @@ jobs:
           else:
               print('✅ All locales are complete!')
           "
+
