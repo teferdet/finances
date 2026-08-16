@@ -24,23 +24,33 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 import os
 import subprocess
 from contextlib import asynccontextmanager
 from typing import Any
 
+import sentry_sdk
 from fastapi import Cookie, Depends, FastAPI, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 from pydantic import BaseModel
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
+from slowapi.util import get_remote_address
 
 from . import auth, queries
+
+log = logging.getLogger("dashboard.api")
+
 
 # ── Configuration ──────────────────────────────────────────────────────────────
 MONGO_URI = os.environ.get("MONGO_URI", "")
 MONGO_DB = os.environ.get("MONGO_DATABASE", "finances")
 ADMIN_IDS_RAW = os.environ.get("BOT_ADMIN_IDS", "[]")
+SENTRY_DSN = os.environ.get("SENTRY_DSN", "")
 try:
     ADMIN_IDS: list[int] = json.loads(ADMIN_IDS_RAW)
 except Exception:
@@ -48,6 +58,10 @@ except Exception:
 
 COOKIE_NAME = "dash_session"
 COOKIE_MAX_AGE = auth.JWT_EXPIRY_SECONDS
+
+# ── Rate limiter (slowapi) ─────────────────────────────────────────────────────
+limiter = Limiter(key_func=get_remote_address, default_limits=["200/minute"])
+
 
 
 # ── Database lifecycle ─────────────────────────────────────────────────────────
@@ -59,6 +73,19 @@ _db: AsyncIOMotorDatabase | None = None
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global _client, _db
+
+    # ── Sentry initialization ──────────────────────────────────────────────────
+    if SENTRY_DSN:
+        sentry_sdk.init(
+            dsn=SENTRY_DSN,
+            environment=os.environ.get("SENTRY_ENVIRONMENT", "production"),
+            traces_sample_rate=float(os.environ.get("SENTRY_TRACES_SAMPLE_RATE", "0.1")),
+            send_default_pii=False,
+        )
+        log.info("Sentry initialized for dashboard")
+    else:
+        log.info("Sentry disabled (SENTRY_DSN not set)")
+
     try:
         _client = AsyncIOMotorClient(
             MONGO_URI,
@@ -69,6 +96,7 @@ async def lifespan(app: FastAPI):
         )
         _db = _client[MONGO_DB]
     except Exception as e:
+        log.error("MongoDB connection error: %s", e)
         _db = None
 
     # Periodic cleanup task (every 60 seconds)
@@ -77,6 +105,7 @@ async def lifespan(app: FastAPI):
     cleanup_task.cancel()
     if _client:
         _client.close()
+
 
 
 async def _cleanup_loop():
@@ -107,6 +136,11 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# ── SlowAPI middleware (rate limiting) ─────────────────────────────────────────
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(SlowAPIMiddleware)
+
 # CORS: only allow same-origin (dashboard served from same NGINX)
 app.add_middleware(
     CORSMiddleware,
@@ -115,6 +149,7 @@ app.add_middleware(
     allow_methods=["GET", "POST", "PATCH"],
     allow_headers=["Content-Type"],
 )
+
 
 
 # ── Auth helpers ───────────────────────────────────────────────────────────────
@@ -154,6 +189,7 @@ class FeaturePatch(BaseModel):
 # ── Auth endpoints ─────────────────────────────────────────────────────────────
 
 @app.post("/api/auth/request-otp")
+@limiter.limit("10/minute")
 async def request_otp(body: OtpRequest, request: Request) -> dict:
     ip = _get_client_ip(request)
 
@@ -251,6 +287,7 @@ async def check_auth_status(req_id: str, request: Request, response: Response) -
 
 
 @app.post("/api/auth/verify-otp")
+@limiter.limit("10/minute")
 async def verify_otp(body: OtpVerify, request: Request, response: Response) -> dict:
     ip = _get_client_ip(request)
 

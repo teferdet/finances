@@ -29,8 +29,9 @@ if env_file.exists():
 from fastapi.staticfiles import StaticFiles
 from dashboard.api.main import app
 
-# Mount static files so NGINX isn't needed locally
-_static_dir = Path(__file__).parent / "static"
+# Mount static/built files so NGINX isn't needed locally
+_frontend_dist = Path(__file__).parent / "frontend" / "dist"
+_static_dir = _frontend_dist if _frontend_dist.exists() else Path(__file__).parent / "static"
 app.mount("/", StaticFiles(directory=str(_static_dir), html=True), name="static")
 
 if __name__ == "__main__":

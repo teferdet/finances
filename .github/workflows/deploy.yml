@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+    paths-ignore:
+      - 'dashboard/**'
 
 permissions:
   contents: read
@@ -20,7 +22,7 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v5
 
-      # ── 1. Clone or Pull ─────────────────────────────────────────
+      # ── 1. Pull Latest Code ──────────────────────────────────────────
       - name: 📦 Pull Latest Code
         uses: appleboy/ssh-action@v1.0.3
         timeout-minutes: 3
@@ -35,19 +37,21 @@ jobs:
             APP_DIR="/home/ubuntu/finances"
             REPO_URL="https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
 
-            if [ ! -d "$APP_DIR" ]; then
+            if [ ! -d "$APP_DIR/.git" ]; then
               echo "📦 First deploy — cloning repository..."
               git clone "$REPO_URL" "$APP_DIR"
-              echo "" > /tmp/.finances_prev_commit
-              echo "" > /tmp/.finances_prev_req_hash
             else
               echo "🔄 Pulling latest changes..."
               cd "$APP_DIR"
-              git rev-parse HEAD > /tmp/.finances_prev_commit
-              # Save hash of current requirements to detect changes
-              sha256sum "$APP_DIR/requirements.txt" | awk '{print $1}' > /tmp/.finances_prev_req_hash
               git remote set-url origin "$REPO_URL"
-              git fetch origin main
+              find .git -name "*.lock" -delete 2>/dev/null || true
+              if ! git fetch --force origin main; then
+                echo "⚠️  Fetch failed even after clearing locks — re-cloning fresh."
+                cd ..
+                sudo rm -rf "$APP_DIR"
+                git clone "$REPO_URL" "$APP_DIR"
+                cd "$APP_DIR"
+              fi
               git reset --hard origin/main
             fi
 
@@ -57,8 +61,8 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
 
-      # ── 2. Generate Configuration ────────────────────────────────
-      - name: 🔐 Generate Settings
+      # ── 2. Generate Configuration ────────────────────────────────────
+      - name: 🔐 Generate .env
         uses: appleboy/ssh-action@v1.0.3
         timeout-minutes: 2
         with:
@@ -66,82 +70,30 @@ jobs:
           username: ${{ secrets.SERVER_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SERVER_PORT }}
-          envs: BOT_TOKEN,MONGO_URI,CRYPTO_API_KEY,STOCKS_API_KEY,FERNET_KEY,BOT_ADMIN_IDS,URL_COMMUNICATION,URL_INVITE,URL_BUYMEACOFFEE,URL_DONATELLO,URL_BANK,URL_MINI_APP
+          envs: BOT_TOKEN,MONGO_URI,CRYPTO_API_KEY,STOCKS_API_KEY,FERNET_KEY,BOT_ADMIN_IDS,URL_COMMUNICATION,URL_INVITE,URL_BUYMEACOFFEE,URL_DONATELLO,URL_BANK,URL_MINI_APP,REDIS_URL,SENTRY_DSN
           script: |
             set -e
             APP_DIR="/home/ubuntu/finances"
 
-            echo "🔐 Generating settings.json from secrets..."
-            python3 -c "
-            import json, os
-            settings = {
-                'bot': {
-                    'token': os.environ.get('BOT_TOKEN', ''),
-                    'admin_ids': json.loads(os.environ.get('BOT_ADMIN_IDS', '[1693890078]')),
-                    'backup_enabled': True,
-                    'version': 'finances v6.5.0 \\'a lot like Vegas\\''
-                },
-                'database': {
-                    'mongo_uri': os.environ.get('MONGO_URI', ''),
-                    'mongo_database': 'finances',
-                    'pool_min': 5,
-                    'pool_max': 50
-                },
-                'api_keys': {
-                    'crypto': os.environ.get('CRYPTO_API_KEY', ''),
-                    'stocks': os.environ.get('STOCKS_API_KEY', '')
-                },
-                'urls': {
-                    'github': 'https://github.com/${{ github.repository }}',
-                    'communication': os.environ.get('URL_COMMUNICATION', 'https://t.me/teferdet'),
-                    'invite': os.environ.get('URL_INVITE', 'https://t.me/fStatisticsBot?startgroup=true'),
-                    'buymeacoffee': os.environ.get('URL_BUYMEACOFFEE', 'https://www.buymeacoffee.com/teferdet'),
-                    'donatello': os.environ.get('URL_DONATELLO', 'https://donatello.to/teferdet'),
-                    'bank': os.environ.get('URL_BANK', 'https://donatello.to/teferdet'),
-                    'mini_app': os.environ.get('URL_MINI_APP', 'https://t.me/fStatisticsBot/app')
-                },
-                'i18n': {
-                    'supported_languages': ['en', 'uk', 'pl', 'cs', 'sk', 'de', 'fr'],
-                    'default_language': 'en'
-                },
-                'parser': {
-                    'auto_update': True,
-                    'update_interval_sec': 7000,
-                    'fiat_source_url': 'https://fx-rate.net',
-                    'retry_attempts': 3,
-                    'retry_delay_sec': 5,
-                    'request_delay_min_sec': 3,
-                    'request_delay_max_sec': 7,
-                    'critical_currencies': [
-                        'USD', 'EUR', 'GBP', 'UAH', 'PLN', 'CZK', 'CHF', 'CNY', 'JPY',
-                        'CAD', 'AUD', 'SEK', 'NOK', 'DKK', 'SGD', 'INR', 'ILS', 'KRW',
-                        'TRY', 'RON', 'BGN', 'ISK', 'EGP', 'ARS', 'RUB'
-                    ],
-                    'on_demand_cache_ttl_hours': 5,
-                    'crypto_stocks_interval_sec': 10800
-                },
-                'security': {
-                    'rate_limit_requests': 30,
-                    'rate_limit_window_sec': 60,
-                    'max_message_length': 1000,
-                    'fernet_key': os.environ.get('FERNET_KEY', '')
-                },
-                'features': {
-                    'mini_app_enabled': False,
-                    'groups_enabled': True,
-                    'inline_mode_enabled': True
-                },
-                'draft': {
-                    'enabled': False,
-                    'loading_threshold_sec': 0.05,
-                    'animation_interval_sec': 0.25,
-                    'preview_delay_sec': 0.15
-                }
-            }
-            with open('$APP_DIR/config/settings.json', 'w') as f:
-                json.dump(settings, f, indent=2, ensure_ascii=False)
-            print('✅ settings.json generated successfully')
-            "
+            echo "🔐 Generating .env from secrets..."
+            cat > "$APP_DIR/.env" << EOF
+            BOT_TOKEN=${BOT_TOKEN}
+            MONGO_URI=${MONGO_URI}
+            CRYPTO_API_KEY=${CRYPTO_API_KEY}
+            STOCKS_API_KEY=${STOCKS_API_KEY}
+            FERNET_KEY=${FERNET_KEY}
+            BOT_ADMIN_IDS=${BOT_ADMIN_IDS}
+            URL_COMMUNICATION=${URL_COMMUNICATION}
+            URL_INVITE=${URL_INVITE}
+            URL_BUYMEACOFFEE=${URL_BUYMEACOFFEE}
+            URL_DONATELLO=${URL_DONATELLO}
+            URL_BANK=${URL_BANK}
+            URL_MINI_APP=${URL_MINI_APP}
+            REDIS_URL=${REDIS_URL}
+            SENTRY_DSN=${SENTRY_DSN}
+            EOF
+            chmod 600 "$APP_DIR/.env"
+            echo "✅ .env generated successfully"
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           MONGO_URI: ${{ secrets.MONGO_URI }}
@@ -155,9 +107,11 @@ jobs:
           URL_DONATELLO: ${{ vars.URL_DONATELLO }}
           URL_BANK: ${{ vars.URL_BANK }}
           URL_MINI_APP: ${{ vars.URL_MINI_APP }}
+          REDIS_URL: ${{ secrets.REDIS_URL }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
 
-      # ── 3. Install Dependencies ──────────────────────────────────
-      - name: 🐍 Install Dependencies
+      # ── 3. Deploy with Docker Compose ────────────────────────────────
+      - name: 🚀 Deploy Services
         uses: appleboy/ssh-action@v1.0.3
         timeout-minutes: 10
         with:
@@ -168,172 +122,17 @@ jobs:
           script: |
             set -e
             APP_DIR="/home/ubuntu/finances"
-            VENV_DIR="$APP_DIR/venv"
-            REQ_FILE="$APP_DIR/requirements.txt"
-            CACHE_DIR="$HOME/.cache/pip-deploy"
+            cd "$APP_DIR"
+            
+            echo "🐳 Starting Docker Compose for bot..."
+            docker compose up -d --build bot
+            
+            # Prune old images to save space
+            docker image prune -f
+            
+            echo "✅ Bot service deployed"
 
-            # ── Create venv if missing ─────────────────────────────
-            if [ ! -d "$VENV_DIR" ]; then
-              echo "🐍 Creating virtual environment (Python $(python3 --version))..."
-              python3 -m venv "$VENV_DIR"
-              echo "✅ venv created at $VENV_DIR"
-            fi
-
-            PIP="$VENV_DIR/bin/pip"
-            PYTHON="$VENV_DIR/bin/python"
-
-            # ── Upgrade pip & setuptools first ────────────────────
-            echo "⬆️  Upgrading pip + setuptools + wheel..."
-            "$PIP" install --quiet --upgrade pip setuptools wheel
-            echo "   pip $("$PIP" --version | awk '{print $2}')"
-
-            # ── Detect if requirements.txt changed ────────────────
-            CURRENT_HASH=$(sha256sum "$REQ_FILE" | awk '{print $1}')
-            PREV_HASH=$(cat /tmp/.finances_prev_req_hash 2>/dev/null || echo "")
-
-            if [ "$CURRENT_HASH" = "$PREV_HASH" ] && [ -f "$VENV_DIR/pyvenv.cfg" ]; then
-              echo "📋 requirements.txt unchanged — running fast integrity check..."
-              MISSING=$("$PIP" check 2>&1 || true)
-              if [ -z "$MISSING" ]; then
-                echo "✅ All packages OK — skipping full install (requirements unchanged)"
-                # Still run verify step below
-              else
-                echo "⚠️  Dependency issues detected, forcing reinstall:"
-                echo "$MISSING"
-              fi
-            fi
-
-            # ── Install / sync all dependencies ───────────────────
-            echo "📥 Installing packages from requirements.txt..."
-            "$PIP" install \
-              --requirement "$REQ_FILE" \
-              --cache-dir "$CACHE_DIR" \
-              --upgrade \
-              --upgrade-strategy only-if-needed \
-              2>&1 | tee /tmp/.pip_install_log.txt
-
-            INSTALL_EXIT=${PIPESTATUS[0]}
-            if [ "$INSTALL_EXIT" -ne 0 ]; then
-              echo ""
-              echo "❌ pip install FAILED (exit code $INSTALL_EXIT)"
-              echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-              echo "Full pip output:"
-              cat /tmp/.pip_install_log.txt
-              echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-              echo ""
-              echo "💡 To fix locally, run:"
-              echo "   pip install -r requirements.txt"
-              exit 1
-            fi
-
-            # ── Post-install integrity check ───────────────────────
-            echo ""
-            echo "🔍 Verifying installed packages..."
-            CHECK_OUTPUT=$("$PIP" check 2>&1)
-            CHECK_EXIT=$?
-            if [ "$CHECK_EXIT" -ne 0 ]; then
-              echo "⚠️  Dependency conflicts detected:"
-              echo "$CHECK_OUTPUT"
-              echo ""
-              echo "🔧 Attempting to resolve conflicts..."
-              "$PIP" install \
-                --requirement "$REQ_FILE" \
-                --cache-dir "$CACHE_DIR" \
-                --force-reinstall \
-                --quiet
-              # Re-check
-              "$PIP" check && echo "✅ Conflicts resolved!" || {
-                echo "❌ Could not resolve dependency conflicts. Manual intervention required."
-                exit 1
-              }
-            else
-              echo "✅ All packages installed and consistent"
-            fi
-
-            # ── Verify critical imports ────────────────────────────
-            echo ""
-            echo "🧪 Verifying critical package imports..."
-            IMPORT_ERRORS=()
-            declare -A PACKAGES=(
-              ["aiogram"]="aiogram"
-              ["motor"]="motor"
-              ["pymongo"]="pymongo"
-              ["curl_cffi"]="curl_cffi"
-              ["aiohttp"]="aiohttp"
-              ["bs4"]="bs4"
-              ["yfinance"]="yfinance"
-              ["pandas"]="pandas"
-              ["psutil"]="psutil"
-              ["cryptography"]="cryptography"
-            )
-            for pkg in "${!PACKAGES[@]}"; do
-              module="${PACKAGES[$pkg]}"
-              if "$PYTHON" -c "import $module" 2>/dev/null; then
-                VERSION=$("$PYTHON" -c "import $module; v = getattr($module, '__version__', getattr($module, 'version', '?')); print(v)" 2>/dev/null || echo "?")
-                echo "   ✅ $pkg ($VERSION)"
-              else
-                echo "   ❌ $pkg — import FAILED"
-                IMPORT_ERRORS+=("$pkg")
-              fi
-            done
-
-            if [ "${#IMPORT_ERRORS[@]}" -gt 0 ]; then
-              echo ""
-              echo "❌ The following packages failed to import:"
-              for err in "${IMPORT_ERRORS[@]}"; do
-                echo "   ✗ $err"
-              done
-              echo ""
-              echo "💡 Run on the server:"
-              echo "   pip install ${IMPORT_ERRORS[*]}"
-              exit 1
-            fi
-
-            # ── Show installed package summary ─────────────────────
-            echo ""
-            echo "📦 Installed packages summary:"
-            "$PIP" list --format=columns 2>/dev/null | head -40
-            TOTAL=$("$PIP" list 2>/dev/null | tail -n +3 | wc -l)
-            echo "   ... $TOTAL packages total in venv"
-            echo ""
-            echo "✅ Dependencies step complete"
-
-      # ── 4. Configure Systemd ─────────────────────────────────────
-      - name: ⚙️ Configure Systemd Service
-        uses: appleboy/ssh-action@v1.0.3
-        timeout-minutes: 2
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.SERVER_PORT }}
-          script: |
-            set -e
-            APP_DIR="/home/ubuntu/finances"
-
-            echo "⚙️  Setting up systemd service..."
-            sudo cp "$APP_DIR/deploy/finances-bot.service" /etc/systemd/system/finances-bot.service
-            sudo systemctl daemon-reload
-            sudo systemctl enable finances-bot.service
-            echo "✅ Systemd service configured"
-
-      # ── 5. Restart Bot ───────────────────────────────────────────
-      - name: 🚀 Restart Bot
-        uses: appleboy/ssh-action@v1.0.3
-        timeout-minutes: 2
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.SERVER_PORT }}
-          script: |
-            set -e
-
-            echo "🚀 Restarting finances-bot..."
-            sudo systemctl restart finances-bot.service
-            echo "✅ Restart command sent"
-
-      # ── 6. Health Check ──────────────────────────────────────────
+      # ── 4. Health Check ──────────────────────────────────────────────
       - name: ✅ Health Check
         uses: appleboy/ssh-action@v1.0.3
         timeout-minutes: 2
@@ -345,47 +144,23 @@ jobs:
           script: |
             set -e
             APP_DIR="/home/ubuntu/finances"
-            VENV_DIR="$APP_DIR/venv"
+            cd "$APP_DIR"
 
-            BOT_STARTED=false
+            STARTED=false
             for i in $(seq 1 10); do
-              if sudo systemctl is-active --quiet finances-bot.service; then
-                echo "✅ finances-bot is running! (attempt $i/10)"
-                BOT_STARTED=true
+              if docker compose ps bot | grep -q "Up"; then
+                echo "✅ finances-bot container is running! (attempt $i/10)"
+                STARTED=true
                 break
               fi
-              echo "⏳ Waiting for service to start... ($i/10)"
+              echo "⏳ Waiting for container to start... ($i/10)"
               sleep 2
             done
 
-            if [ "$BOT_STARTED" = false ]; then
+            if [ "$STARTED" = false ]; then
               echo "❌ finances-bot failed to start. Logs:"
-              sudo journalctl -u finances-bot.service -n 50 --no-pager
-
-              # Rollback on failure
-              PREV_COMMIT=$(cat /tmp/.finances_prev_commit 2>/dev/null || echo "")
-              if [ -n "$PREV_COMMIT" ]; then
-                echo "⏪ Rolling back to commit $PREV_COMMIT..."
-                cd "$APP_DIR"
-                git reset --hard "$PREV_COMMIT"
-                echo "📥 Restoring dependencies for previous commit..."
-                "$VENV_DIR/bin/pip" install \
-                  --requirement "$APP_DIR/requirements.txt" \
-                  --upgrade \
-                  --upgrade-strategy only-if-needed \
-                  --quiet
-                sudo systemctl restart finances-bot.service
-                sleep 3
-                if sudo systemctl is-active --quiet finances-bot.service; then
-                  echo "⚠️  Rollback successful, but deploy FAILED"
-                else
-                  echo "💀 Rollback also failed!"
-                fi
-              fi
+              docker compose logs bot
               exit 1
             fi
-
-            # Cleanup
-            rm -f /tmp/.finances_prev_commit
-            rm -f /tmp/.finances_prev_req_hash
-            echo "🎉 Deploy completed successfully!"
+            
+            echo "🎉 Bot deploy completed successfully!"

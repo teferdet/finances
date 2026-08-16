@@ -152,13 +152,15 @@ async def cmd_ping(message: Message, i18n: I18n, lang: str) -> None:
 
 @router.callback_query(F.data.startswith("dash_"))
 async def cb_dash_auth(call: CallbackQuery) -> None:
+    msg_denied = "Access denied"
     if not _is_admin(call.from_user.id):
-        await call.answer("Access denied", show_alert=True)
+        await call.answer(text=msg_denied, show_alert=True)
         return
 
     data = call.data  # dash_approve:req_id or dash_block:req_id
     if ":" not in data:
-        await call.answer("Invalid callback", show_alert=True)
+        msg_invalid = "Invalid callback"
+        await call.answer(text=msg_invalid, show_alert=True)
         return
 
     action, req_id = data.split(":", 1)
@@ -176,12 +178,11 @@ async def cb_dash_auth(call: CallbackQuery) -> None:
         await db["dash_auth_requests"].update_one(
             {"_id": req_id}, {"$set": {"status": "approved"}}
         )
-        await call.answer("✅ Login approved!", show_alert=True)
+        msg_approved = "✅ Login approved!"
+        await call.answer(text=msg_approved, show_alert=True)
         try:
-            await call.message.edit_text(
-                f"✅ <b>Login Approved</b>\n\n📍 IP: <code>{ip}</code>\n👤 Admin: <code>{call.from_user.id}</code>",
-                parse_mode="HTML"
-            )
+            approved_text = f"✅ <b>Login Approved</b>\n\n📍 IP: <code>{ip}</code>\n👤 Admin: <code>{call.from_user.id}</code>"
+            await call.message.edit_text(text=approved_text, parse_mode="HTML")
         except Exception:
             pass
     elif action == "dash_block":
@@ -193,12 +194,11 @@ async def cb_dash_auth(call: CallbackQuery) -> None:
             {"$set": {"blocked_at": datetime.now(), "blocked_by": call.from_user.id}},
             upsert=True
         )
-        await call.answer("⛔ IP added to blacklist!", show_alert=True)
+        msg_blocked = "⛔ IP added to blacklist!"
+        await call.answer(text=msg_blocked, show_alert=True)
         try:
-            await call.message.edit_text(
-                f"⛔ <b>IP Address Blacklisted</b>\n\n📍 IP: <code>{ip}</code>\n👤 Blocked by: <code>{call.from_user.id}</code>",
-                parse_mode="HTML"
-            )
+            blocked_text = f"⛔ <b>IP Address Blacklisted</b>\n\n📍 IP: <code>{ip}</code>\n👤 Blocked by: <code>{call.from_user.id}</code>"
+            await call.message.edit_text(text=blocked_text, parse_mode="HTML")
         except Exception:
             pass
 

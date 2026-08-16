@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -20,18 +21,39 @@
   <!-- Shake animation for wrong OTP -->
   <style>
     @keyframes shake {
-      0%,100% { transform: translateX(0); }
-      20% { transform: translateX(-8px); }
-      40% { transform: translateX(8px); }
-      60% { transform: translateX(-6px); }
-      80% { transform: translateX(6px); }
+
+      0%,
+      100% {
+        transform: translateX(0);
+      }
+
+      20% {
+        transform: translateX(-8px);
+      }
+
+      40% {
+        transform: translateX(8px);
+      }
+
+      60% {
+        transform: translateX(-6px);
+      }
+
+      80% {
+        transform: translateX(6px);
+      }
     }
-    .shake { animation: shake 0.4s ease-in-out; }
+
+    .shake {
+      animation: shake 0.4s ease-in-out;
+    }
   </style>
 
   <!-- Favicon inline SVG -->
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>" />
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>" />
 </head>
+
 <body>
   <!-- Mount point for SPA -->
   <div id="app" aria-live="polite">
@@ -44,10 +66,10 @@
 
   <!-- Chart.js — loaded from CDN for chart rendering -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"
-          integrity="sha256-oVuCGcvrTKJGSFE38d5NZcVhUhXqzb/xL8mxSBVmJEY=" crossorigin="anonymous"
-          defer></script>
+    integrity="sha256-oVuCGcvrTKJGSFE38d5NZcVhUhXqzb/xL8mxSBVmJEY=" crossorigin="anonymous" defer></script>
 
   <!-- SPA application -->
   <script src="/js/app.js" defer></script>
 </body>
+
 </html>

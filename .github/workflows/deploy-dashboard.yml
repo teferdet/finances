@@ -23,6 +23,20 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v5
 
+      # ── 0. Build React Frontend (CI Runner) ───────────────────────────
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: dashboard/frontend/package.json
+
+      - name: ⚛️ Build React Frontend
+        working-directory: dashboard/frontend
+        run: |
+          npm ci
+          npm run build
+
       # ── 1. Pull Latest Code ───────────────────────────────────────────
       - name: 📦 Pull Latest Code
         uses: appleboy/ssh-action@v1.0.3
@@ -45,10 +59,6 @@ jobs:
               cd "$APP_DIR"
               git remote set-url origin "$REPO_URL"
 
-              # A previous run that got killed mid-fetch (timeout, concurrent
-              # job, etc.) can leave stale .lock files behind, causing:
-              # "cannot lock ref 'refs/remotes/origin/main': is at X but
-              # expected Y" on the next fetch. Clear them defensively.
               find .git -name "*.lock" -delete 2>/dev/null || true
 
               if ! git fetch --force origin main; then
@@ -66,6 +76,18 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
 
+      # ── 1.1 Transfer Built Frontend to VPS ───────────────────────────
+      - name: 🚀 Transfer Built Frontend Dist
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SERVER_PORT }}
+          source: "dashboard/frontend/dist"
+          target: "/home/ubuntu/finances/dashboard/frontend"
+          strip_components: 2
+
       # ── 2. Generate Dashboard .env ────────────────────────────────────
       - name: 🔐 Generate Dashboard Environment
         uses: appleboy/ssh-action@v1.0.3
@@ -75,7 +97,7 @@ jobs:
           username: ${{ secrets.SERVER_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SERVER_PORT }}
-          envs: BOT_TOKEN,MONGO_URI,BOT_ADMIN_IDS,DASHBOARD_SECRET_KEY
+          envs: BOT_TOKEN,MONGO_URI,BOT_ADMIN_IDS,DASHBOARD_SECRET_KEY,SENTRY_DSN,REDIS_URL
           script: |
             set -e
             DASH_DIR="/home/ubuntu/finances/dashboard"
@@ -86,6 +108,8 @@ jobs:
             MONGO_DATABASE=finances
             BOT_ADMIN_IDS=${BOT_ADMIN_IDS}
             DASHBOARD_SECRET_KEY=${DASHBOARD_SECRET_KEY}
+            SENTRY_DSN=${SENTRY_DSN}
+            REDIS_URL=${REDIS_URL:-redis://127.0.0.1:6379/0}
             EOF
 
             chmod 600 "$DASH_DIR/.env"
@@ -95,42 +119,10 @@ jobs:
           MONGO_URI: ${{ secrets.MONGO_URI }}
           BOT_ADMIN_IDS: ${{ secrets.BOT_ADMIN_IDS }}
           DASHBOARD_SECRET_KEY: ${{ secrets.DASHBOARD_SECRET_KEY }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          REDIS_URL: ${{ secrets.REDIS_URL }}
 
-      # ── 3. Install Dashboard Dependencies ────────────────────────────
-      - name: 🐍 Install Dashboard Dependencies
-        uses: appleboy/ssh-action@v1.0.3
-        timeout-minutes: 10
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.SERVER_PORT }}
-          script: |
-            set -e
-            DASH_DIR="/home/ubuntu/finances/dashboard"
-            VENV_DIR="$DASH_DIR/venv"
-
-            # Create venv if missing
-            if [ ! -d "$VENV_DIR" ]; then
-              echo "🐍 Creating dashboard venv..."
-              python3 -m venv "$VENV_DIR"
-            fi
-
-            PIP="$VENV_DIR/bin/pip"
-
-            echo "⬆️  Upgrading pip..."
-            "$PIP" install --quiet --upgrade pip
-
-            echo "📥 Installing dashboard packages..."
-            "$PIP" install \
-              --requirement "$DASH_DIR/requirements.txt" \
-              --upgrade \
-              --upgrade-strategy only-if-needed \
-              --quiet
-
-            "$PIP" check && echo "✅ Dashboard dependencies OK" || exit 1
-
-      # ── 4. Configure NGINX ────────────────────────────────────────────
+      # ── 3. Configure NGINX ────────────────────────────────────────────
       - name: 🌐 Configure NGINX
         uses: appleboy/ssh-action@v1.0.3
         timeout-minutes: 5
@@ -164,39 +156,30 @@ jobs:
             fi
 
             # Install dashboard site config
-            sudo rm -f /etc/nginx/sites-enabled/default
             sudo cp "$DASH_DIR/nginx/finances-dashboard.conf" \
               /etc/nginx/sites-available/finances-dashboard
             sudo ln -sf /etc/nginx/sites-available/finances-dashboard \
               /etc/nginx/sites-enabled/finances-dashboard
 
-            # Validate config BEFORE touching the running service.
-            # If this fails, nginx keeps running on its last-known-good config
-            # instead of the deploy tearing it down.
             if ! sudo nginx -t; then
               echo "❌ NGINX config test failed — leaving current service untouched."
               exit 1
             fi
 
-            # Bring NGINX up regardless of its current state: a previous bad
-            # config (or a server reboot) can leave the service 'inactive',
-            # in which case a plain 'reload' fails with
-            # 'Unit cannot be reloaded because it is inactive.'
-            # reload-or-restart reloads if it's running, or starts it if not.
             sudo systemctl reload-or-restart nginx
 
             if ! systemctl is-active --quiet nginx; then
-              echo "❌ NGINX is not active after reload-or-restart. Recent logs:"
+              echo "❌ NGINX is not active after reload-or-restart."
               sudo journalctl -u nginx -n 30 --no-pager
               exit 1
             fi
 
             echo "✅ NGINX configured and reloaded"
 
-      # ── 5. Configure systemd service ──────────────────────────────────
-      - name: ⚙️ Configure Dashboard Service
+      # ── 4. Deploy Dashboard with Docker Compose ───────────────────────
+      - name: 🚀 Deploy Dashboard Services
         uses: appleboy/ssh-action@v1.0.3
-        timeout-minutes: 2
+        timeout-minutes: 5
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USERNAME }}
@@ -204,29 +187,18 @@ jobs:
           port: ${{ secrets.SERVER_PORT }}
           script: |
             set -e
-            DASH_DIR="/home/ubuntu/finances/dashboard"
+            APP_DIR="/home/ubuntu/finances"
+            cd "$APP_DIR"
+            
+            echo "🐳 Starting Docker Compose for dashboard..."
+            docker compose up -d --build dashboard
+            
+            # Prune old images
+            docker image prune -f
+            
+            echo "✅ Dashboard service deployed"
 
-            sudo cp "$DASH_DIR/finances-dashboard.service" \
-              /etc/systemd/system/finances-dashboard.service
-            sudo systemctl daemon-reload
-            sudo systemctl enable finances-dashboard.service
-            echo "✅ systemd service configured"
-
-      # ── 6. Restart Dashboard ──────────────────────────────────────────
-      - name: 🚀 Restart Dashboard
-        uses: appleboy/ssh-action@v1.0.3
-        timeout-minutes: 2
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.SERVER_PORT }}
-          script: |
-            set -e
-            sudo systemctl restart finances-dashboard.service
-            echo "✅ Dashboard service restarted"
-
-      # ── 7. Health Check ───────────────────────────────────────────────
+      # ── 5. Health Check ───────────────────────────────────────────────
       - name: ✅ Health Check
         uses: appleboy/ssh-action@v1.0.3
         timeout-minutes: 2
@@ -237,11 +209,13 @@ jobs:
           port: ${{ secrets.SERVER_PORT }}
           script: |
             set -e
+            APP_DIR="/home/ubuntu/finances"
+            cd "$APP_DIR"
 
             STARTED=false
             for i in $(seq 1 10); do
-              if sudo systemctl is-active --quiet finances-dashboard.service; then
-                echo "✅ finances-dashboard is running! (attempt $i/10)"
+              if docker compose ps dashboard | grep -q "Up"; then
+                echo "✅ finances-dashboard container is running! (attempt $i/10)"
                 STARTED=true
                 break
               fi
@@ -250,8 +224,8 @@ jobs:
             done
 
             if [ "$STARTED" = false ]; then
-              echo "❌ Dashboard failed to start. Logs:"
-              sudo journalctl -u finances-dashboard.service -n 30 --no-pager
+              echo "❌ Dashboard container failed to start. Logs:"
+              docker compose logs dashboard
               exit 1
             fi
 
@@ -270,8 +244,8 @@ jobs:
 
             if [ "$API_UP" = false ]; then
               echo "❌ API health check failed: $HEALTH"
-              sudo journalctl -u finances-dashboard.service -n 50 --no-pager
+              docker compose logs dashboard
               exit 1
             fi
 
-            echo "🎉 Dashboard deploy completed! Available at http://SERVER_IP:8080"
+            echo "🎉 Dashboard deploy completed!"

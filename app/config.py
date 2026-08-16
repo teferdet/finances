@@ -130,6 +130,33 @@ class DraftSettings:
 
 
 @dataclass(frozen=True)
+class RedisSettings:
+    """
+    Redis configuration.
+    If url is empty — Redis is disabled, the bot falls back to MemoryCache.
+    Example url: redis://localhost:6379/0
+    """
+    url: str = ""  # empty = disabled
+    max_connections: int = 10
+    socket_timeout: float = 2.0
+    socket_connect_timeout: float = 2.0
+
+
+@dataclass(frozen=True)
+class SentrySettings:
+    """
+    Sentry error tracking configuration.
+    If dsn is empty — Sentry is disabled (no-op).
+    Add SENTRY_DSN to settings.json or deploy env secrets to enable.
+    """
+    dsn: str = ""  # empty = disabled
+    environment: str = "production"
+    traces_sample_rate: float = 0.1  # 10% of transactions traced
+    profiles_sample_rate: float = 0.0  # profiling disabled by default
+    send_default_pii: bool = False
+
+
+@dataclass(frozen=True)
 class Settings:
     bot: BotSettings
     database: DatabaseSettings
@@ -140,6 +167,8 @@ class Settings:
     security: SecuritySettings
     features: FeaturesSettings
     draft: DraftSettings = field(default_factory=DraftSettings)
+    redis: RedisSettings = field(default_factory=RedisSettings)
+    sentry: SentrySettings = field(default_factory=SentrySettings)
 
     # ── Currency data helpers (loaded from data.json) ───────────────────
     _data_json: dict = field(default_factory=dict, repr=False)
@@ -208,6 +237,8 @@ def _build_settings(raw: dict, data_json: dict) -> Settings:
         security=_from_dict(SecuritySettings, raw.get("security", {})),
         features=_from_dict(FeaturesSettings, raw.get("features", {})),
         draft=_from_dict(DraftSettings, raw.get("draft", {})),
+        redis=_from_dict(RedisSettings, raw.get("redis", {})),
+        sentry=_from_dict(SentrySettings, raw.get("sentry", {})),
         _data_json=data_json,
     )
 

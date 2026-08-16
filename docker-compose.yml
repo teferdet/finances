@@ -1,0 +1,127 @@
+# docker-compose.yml — Finances project local/Docker deployment
+#
+# Services:
+#   bot        — Telegram bot (Python/aiogram)
+#   dashboard  — Admin dashboard (FastAPI/uvicorn)
+#   redis      — Optional cache (disabled by default — set REDIS_URL to enable)
+#   mongo      — MongoDB (use 'external' profile for managed/Atlas MongoDB)
+#
+# Quick start:
+#   cp .env.example .env   # fill in required secrets
+#   docker compose up -d
+#
+# Healthchecks: all services have healthchecks defined.
+# Logs: docker compose logs -f bot
+#       docker compose logs -f dashboard
+
+name: finances
+
+# ── Volumes ────────────────────────────────────────────────────────────────────
+volumes:
+
+  redis_data:
+    driver: local
+  app_logs:
+    driver: local
+
+# ── Networks ───────────────────────────────────────────────────────────────────
+networks:
+  finances_net:
+    driver: bridge
+
+# ── Services ───────────────────────────────────────────────────────────────────
+services:
+
+
+
+  # ── Redis ─────────────────────────────────────────────────────────────────────
+  # Optional cache. Only used when REDIS_URL is set in .env.
+  # Bot and dashboard gracefully fall back to in-memory cache if Redis is not available.
+  redis:
+    image: redis:7-alpine
+    container_name: finances-redis
+    restart: unless-stopped
+    networks:
+      - finances_net
+    volumes:
+      - redis_data:/data
+    deploy:
+      resources:
+        limits:
+          cpus: '0.2'
+          memory: 50M
+    command: >
+      redis-server
+      --save 60 1
+      --loglevel warning
+      --maxmemory 32mb
+      --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  # ── Telegram Bot ──────────────────────────────────────────────────────────────
+  bot:
+    build:
+      context: .
+      dockerfile: Dockerfile.bot
+    container_name: finances-bot
+    restart: unless-stopped
+    networks:
+      - finances_net
+    env_file:
+      - .env
+    environment:
+      # Use provided env variables or default to internal services
+      MONGO_URI: "${MONGO_URI:-mongodb://mongo:27017/finances}"
+      REDIS_URL: "${REDIS_URL:-redis://redis:6379/0}"
+      PYTHONUNBUFFERED: "1"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.8'
+          memory: 400M
+    volumes:
+      - app_logs:/app/logs
+      - ./config:/app/config
+    healthcheck:
+      test: ["CMD", "python", "-c", "import app; print('ok')"]
+      interval: 60s
+      timeout: 15s
+      retries: 3
+      start_period: 30s
+
+  # ── Dashboard (FastAPI) ───────────────────────────────────────────────────────
+  dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile.dashboard
+    container_name: finances-dashboard
+    restart: unless-stopped
+    networks:
+      - finances_net
+    depends_on:
+      bot:
+        condition: service_started
+    env_file:
+      - dashboard/.env
+    environment:
+      MONGO_URI: "${MONGO_URI:-mongodb://mongo:27017}"
+      MONGO_DATABASE: "${MONGO_DATABASE:-finances}"
+      REDIS_URL: "${REDIS_URL:-redis://redis:6379/0}"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.6'
+          memory: 200M
+    ports:
+      # Expose dashboard on localhost only; put NGINX in front for production
+      - "127.0.0.1:8090:8090"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8090/api/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s

@@ -90,6 +90,7 @@ _check_dependencies()
 from app.logger import setup_logging, get_logger, AsyncTelegramErrorHandler
 from app.config import get_settings
 from app.db import get_db, ensure_indexes, close_db
+from app.redis_client import init_redis, close_redis
 from app.bot import create_bot, create_dispatcher
 from app.services.parser_service import run_parser_loop
 from app.services.alert_service import (
@@ -239,8 +240,28 @@ async def main() -> None:
         log.critical("Failed to load config: %s", exc)
         sys.exit(1)
 
+    # ── Sentry initialization ──────────────────────────────────────────────────
+    if settings.sentry.dsn:
+        try:
+            import sentry_sdk
+            sentry_sdk.init(
+                dsn=settings.sentry.dsn,
+                environment=settings.sentry.environment,
+                traces_sample_rate=settings.sentry.traces_sample_rate,
+                profiles_sample_rate=settings.sentry.profiles_sample_rate,
+                send_default_pii=settings.sentry.send_default_pii,
+            )
+            log.info("Sentry initialized (env=%s)", settings.sentry.environment)
+        except Exception as exc:
+            log.warning("Failed to initialize Sentry: %s", exc)
+    else:
+        log.info("Sentry disabled (settings.sentry.dsn is empty)")
+
     # Initialize DB
     get_db()
+
+    # ── Redis initialization (optional, fallback to MemoryCache) ───────────────
+    await init_redis()
 
     bot = create_bot()
     dp = create_dispatcher()
@@ -306,8 +327,10 @@ async def main() -> None:
             log.info("Background task '%s' stopped", name)
 
         await close_db()
+        await close_redis()
         await bot.session.close()
         log.info("Shutdown complete")
+
 
 
 if __name__ == "__main__":
