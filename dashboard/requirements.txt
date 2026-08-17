@@ -9,7 +9,7 @@ psutil>=7.2.2
 python-multipart>=0.0.20
 
 # Rate limiting
-slowapi>=0.1.9
+slowapi>=0.1.10
 
 # Error tracking
 sentry-sdk[fastapi]>=2.0.0
