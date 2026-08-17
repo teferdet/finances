@@ -1,4 +1,4 @@
-﻿name: Server Health Check
+name: Server Health Check
 
 on:
   schedule:
@@ -23,35 +23,36 @@ jobs:
           port: ${{ secrets.SERVER_PORT }}
           script: |
             export PATH=$PATH:/usr/local/bin:/usr/bin:/bin:/snap/bin
+            APP_DIR="/home/ubuntu/finances"
+            cd "$APP_DIR" || exit 1
+
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
             echo "  📊 Finances Bot Health Check"
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
             # Service status
-            if sudo systemctl is-active --quiet finances-bot.service; then
+            if docker compose ps bot | grep -q "Up"; then
               echo "✅ Service: RUNNING"
-              echo "📅 Started: $(systemctl show finances-bot -p ActiveEnterTimestamp --value)"
             else
               echo "❌ Service: DOWN"
               echo ""
               echo "📋 Recent logs:"
-              sudo journalctl -u finances-bot -n 30 --no-pager
+              docker compose logs --tail=30 bot
               exit 1
             fi
 
             # Resource usage
-            BOT_PID=$(pgrep -f 'python -m app' 2>/dev/null || echo "")
-            if [ -n "$BOT_PID" ]; then
-              MEM=$(ps -o rss= -p "$BOT_PID" | awk '{printf "%.1f MB", $1/1024}')
-              CPU=$(ps -o %cpu= -p "$BOT_PID" | awk '{printf "%.1f%%", $1}')
-              echo "💾 Memory: $MEM"
-              echo "⚡ CPU: $CPU"
+            CONTAINER_ID=$(docker compose ps -q bot)
+            if [ -n "$CONTAINER_ID" ]; then
+              STATS=$(docker stats --no-stream --format "💾 Memory: {{.MemUsage}} | ⚡ CPU: {{.CPUPerc}}" "$CONTAINER_ID")
+              echo "$STATS"
+            else
+              echo "⚠️ Could not fetch container stats."
             fi
 
             # Disk usage
-            DISK_USAGE=$(df -h /home/ubuntu/finances --output=pcent | tail -1 | tr -d ' ')
+            DISK_USAGE=$(df -h "$APP_DIR" --output=pcent | tail -1 | tr -d ' ')
             echo "💿 Disk: $DISK_USAGE used"
 
             echo ""
             echo "✅ Health check passed"
-
