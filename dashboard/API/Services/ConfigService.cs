@@ -25,13 +25,13 @@ public class ConfigService
         var configNode = JsonNode.Parse(json);
 
         // Hide sensitive data like the Python API did
-        if (configNode?["bot"]?["token"] != null)
+        if (configNode?["bot"] is JsonObject botObj && botObj["token"] != null)
         {
-            configNode["bot"]["token"] = "**********************";
+            botObj["token"] = "**********************";
         }
-        if (configNode?["database"]?["mongo_uri"] != null)
+        if (configNode?["database"] is JsonObject dbObj && dbObj["mongo_uri"] != null)
         {
-            configNode["database"]["mongo_uri"] = "mongodb://**********************";
+            dbObj["mongo_uri"] = "mongodb://**********************";
         }
 
         return configNode;

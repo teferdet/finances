@@ -11,8 +11,9 @@ These tasks interact with MongoDB and external financial APIs, utilizing a globa
 ### `parser_service.py` (`CentralParserService`)
 The central orchestrator for all price fetching and currency conversions. Contains the `run_parser_loop()` background task and thread-safe parsing logic.
 - **Initial Boot Population**: Automatically fetches critical currency lists on application startup if database collections are empty.
-- **Periodic Refreshes**: Hourly refresh for major fiat currency pairs via `fiat_parser.py`; 3-hour refresh cycles for crypto and stocks via CoinMarketCap and Yahoo Finance.
-- **Conversion Engine**: `convert_currencies()` provides fast, multi-pair, on-demand conversion calculations consumed by `text.py`, `inline_query.py`, `group_admin.py`, and `guest.py`.
+- **Hourly Fiat Cycle**: Verifies critical fiat currencies (`USD`, `EUR`, `UAH`, etc.) against a 1-hour TTL, triggering rate scraping via `fiat_parser.fetch_rates()` (using Cloudflare bypass).
+- **Three-Hour Market Cycle**: Refreshes cryptocurrency and stock prices via CoinMarketCap and Yahoo Finance APIs, updating both legacy lists and flat `current_prices` cache.
+- **Conversion Engine**: `convert_currencies()` provides fast, multi-pair, on-demand conversion calculations consumed by `exchange.py`, `inline_query.py`, `group_admin.py`, and `guest.py`.
 
 ### `alert_service.py`
 Handles two automated background loops:
@@ -52,15 +53,14 @@ Generates comprehensive usage metrics and health analytics for group administrat
 - Handles portfolio CRUD operations, lot tracking, and server-side aggregation for total P&L calculations (`get_portfolio_with_pnl`).
 
 ### `security.py`
-- Provides symmetric Fernet encryption (`cryptography.fernet`) for user API secrets stored in MongoDB.
+- Provides symmetric Fernet encryption (`cryptography.fernet`) for user API secrets stored in MongoDB. Encryption key is stored in `settings.security.fernet_key`.
 
 ### `export_service.py`
 - Generates system database statistics and CSV/Markdown reports for system administrators.
 
 ### `error_tracking.py`
-- Tracks data crawler health in `ProblematicSources` to report failing external APIs.
+- Tracks data crawler health in `ProblematicSources` to report failing external APIs (CoinMarketCap, Yahoo Finance, fx-rate.net).
 
 ---
 
-*Last updated: 2026-07-22*
-
+*Last updated: 2026-08-19*

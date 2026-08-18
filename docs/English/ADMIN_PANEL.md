@@ -40,6 +40,10 @@ Invoking `/admin` opens an interactive inline dashboard:
    - Add/remove dynamic admin IDs via FSM (`AdminManageStates`).
    - Trigger mass broadcasts (`/broadcast`).
 
+## Web Dashboard
+
+In addition to the in-Telegram `/admin` panel, the project includes a full **web-based dashboard** at `dashboard/`. It provides the same monitoring and configuration capabilities through a browser interface, with additional data visualization (charts, tables, collection stats). See [Dashboard](DASHBOARD.md) for details.
+
 ## Group Administration System (`/group_settings`, `/rate`, `/group_stats`)
 
 Real group administrators use `/group_settings` inside their groups to configure:
@@ -57,5 +61,4 @@ State-machine flow (`BroadcastStates`) for mass announcements:
 
 ---
 
-*Last updated: 2026-07-22*
-
+*Last updated: 2026-08-19*

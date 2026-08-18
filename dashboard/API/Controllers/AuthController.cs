@@ -47,7 +47,7 @@ public class AuthController : ControllerBase
         {
             HttpOnly = true,
             SameSite = SameSiteMode.Strict,
-            Secure = false, 
+            Secure = true, 
             MaxAge = TimeSpan.FromDays(7),
             Path = "/"
         };
@@ -60,7 +60,13 @@ public class AuthController : ControllerBase
     [HttpPost("logout")]
     public IActionResult Logout()
     {
-        Response.Cookies.Delete("dash_session", new CookieOptions { Path = "/" });
+        Response.Cookies.Delete("dash_session", new CookieOptions
+        {
+            Path = "/",
+            HttpOnly = true,
+            SameSite = SameSiteMode.Strict,
+            Secure = true
+        });
         return Ok(new { ok = true });
     }
 

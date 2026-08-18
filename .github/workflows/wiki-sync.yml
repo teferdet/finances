@@ -1,4 +1,4 @@
-﻿name: Sync Docs to GitHub Wiki
+name: Sync Docs to GitHub Wiki
 
 on:
   push:
@@ -32,10 +32,10 @@ jobs:
             exit 1
           }
 
-          # Remove all old .md files in wiki_temp to delete obsolete/duplicate pages
-          find wiki_temp -maxdepth 1 -type f -name "*.md" -delete
+          # Clean all existing files in wiki_temp except the .git directory
+          find wiki_temp -mindepth 1 -not -path 'wiki_temp/.git*' -delete
 
-          # Copy fresh docs files into wiki repository
+          # Copy fresh docs files and subdirectories into wiki repository
           cp -r docs/* wiki_temp/
           
           # GitHub Wiki uses Home.md as the main landing page
@@ -43,13 +43,13 @@ jobs:
             cp wiki_temp/README.md wiki_temp/Home.md
           fi
 
-          # Adapt links for GitHub Wiki: convert (README.md) links to point to (Home) page
-          find wiki_temp -maxdepth 1 -type f -name "*.md" -exec sed -i 's/(README.md)/(Home)/g' {} +
-          find wiki_temp -maxdepth 1 -type f -name "*.md" -exec sed -i 's/(README.md#/(Home#/g' {} +
+          # Adapt links for GitHub Wiki across all markdown files recursively
+          find wiki_temp -type f -name "*.md" -exec sed -i 's/(README.md)/(Home)/g' {} +
+          find wiki_temp -type f -name "*.md" -exec sed -i 's/(README.md#/(Home#/g' {} +
           
           # Strip .md extension from inline Markdown links for seamless Wiki routing
-          find wiki_temp -maxdepth 1 -type f -name "*.md" -exec sed -i -E 's/\(([^)]+)\.md\)/(\1)/g' {} +
-          find wiki_temp -maxdepth 1 -type f -name "*.md" -exec sed -i -E 's/\(([^)]+)\.md#/\(\1#/g' {} +
+          find wiki_temp -type f -name "*.md" -exec sed -i -E 's/\(([^)]+)\.md\)/(\1)/g' {} +
+          find wiki_temp -type f -name "*.md" -exec sed -i -E 's/\(([^)]+)\.md#/\(\1#/g' {} +
 
           cd wiki_temp
           git config user.name "github-actions[bot]"
@@ -64,4 +64,3 @@ jobs:
           else
             echo "ℹ️ Wiki is already up to date."
           fi
-

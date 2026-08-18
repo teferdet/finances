@@ -2,11 +2,11 @@
 
 # Database Structure
 
-The `teferdet/finances` bot uses **MongoDB** with the asynchronous Python driver **Motor** (`motor.motor_asyncio`).
+The `teferdet/finances` bot uses **MongoDB** with the asynchronous Python driver **Motor** (`motor.motor_asyncio`). The Dashboard API connects to the same database using the .NET **MongoDB.Driver**.
 
 ## Connection Setup (`app/db.py`)
 
-- `init_db(uri, db_name)`: Establishes the database connection using connection pooling bounds defined in `settings.json` (`pool_min`, `pool_max`). 
+- `init_db(uri, db_name)`: Establishes the database connection using connection pooling bounds defined in `settings.json` (`pool_min`, `pool_max`).
 - **Startup Indexes**: The initialization step executes `ensure_indexes()`, forcing `TTL` (Time-To-Live) and standard query indexes asynchronously on collections to guarantee optimal read/write speeds.
 - **Debug Collections**: `get_fiat_collection_name()` returns `fiat_rates_debug` instead of `fiat_rates` if the bot is started with the `--debug` flag.
 
@@ -20,6 +20,9 @@ Stores core user profiles, preferences, and portfolio lot data.
 - `BaseCurrency`: Default calculation currency.
 - `MainMenu`, `BigButtons`: UI customizations.
 - `portfolio`: Array of cost-basis asset lot dictionaries.
+- `last_active`: Last interaction timestamp (used for DAU/WAU/MAU calculations).
+- `language`: ISO language code (`en`, `uk`, `pl`, `cs`, `sk`, `de`, `fr`).
+- `volatility_threshold_pct`: User-configured volatility alert threshold (default 5%).
 
 ### 2. `Groups`
 Stores configurations and settings for Telegram groups where the bot is installed (`app/repositories/groups.py`).
@@ -67,13 +70,29 @@ Used for short-term volatility alerts and weekly digests.
 
 ### 8. `ApiKeys`
 Stores user API keys bound for exchange synchronization (Binance, Bybit).
-- `api_secret`: Stored symmetrically encrypted (Fernet cipher).
+- `user_id`: Telegram User ID.
+- `exchange`: Exchange name (`binance` or `bybit`).
+- `api_key`: Plaintext API key.
+- `api_secret`: Stored symmetrically encrypted (Fernet cipher, key from `settings.security.fernet_key`).
 
 ### 9. `Status` & `ProblematicSources`
 - `Status`: Tracks global singleton states (e.g., `last_digest_sent`, `last_crypto_stocks_update`).
 - `ProblematicSources`: Logs crawler failures from CoinMarketCap, Yahoo Finance, or `fx-rate.net`.
 
+### 10. `Otps` (Dashboard)
+Stores OTP codes for dashboard login.
+- `telegramId`: Admin's Telegram User ID.
+- `otp`: 6-digit code string.
+- `ipAddress`: Requester's IP address.
+- `createdAt`: Creation timestamp (effective 5-minute TTL).
+- `used`: Boolean — marks OTP as consumed.
+
+### 11. `Settings` (Dynamic Admin)
+Runtime configuration overrides managed via `/admin`.
+- `_id`: `"admin_settings"` (singleton).
+- `admin_ids`: Dynamically granted admin Telegram IDs.
+- `maintenance_mode`: Boolean — blocks normal user commands when active.
+
 ---
 
-*Last updated: 2026-07-22*
-
+*Last updated: 2026-08-19*

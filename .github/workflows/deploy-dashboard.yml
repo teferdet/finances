@@ -165,6 +165,13 @@ jobs:
             mkdir -p "$APP_DIR/logs/bot" "$APP_DIR/logs/api" "$APP_DIR/config"
             chmod -R 777 "$APP_DIR/logs" 2>/dev/null || true
 
+            # Stop host nginx so containerized frontend can bind to port 80
+            if systemctl is-active --quiet nginx 2>/dev/null; then
+              echo "🛑 Stopping host nginx (port 80 used by docker finances-frontend container)..."
+              sudo systemctl stop nginx || true
+              sudo systemctl disable nginx 2>/dev/null || true
+            fi
+
             echo "🐳 Starting Docker Compose for dashboard and frontend..."
             docker compose up -d --build dashboard frontend
             
