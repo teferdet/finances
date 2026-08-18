@@ -163,7 +163,7 @@ jobs:
             
             echo "📁 Ensuring log directories and permissions..."
             mkdir -p "$APP_DIR/logs/bot" "$APP_DIR/logs/api" "$APP_DIR/config"
-            chmod -R 777 "$APP_DIR/logs"
+            chmod -R 777 "$APP_DIR/logs" 2>/dev/null || true
 
             echo "🐳 Starting Docker Compose for dashboard and frontend..."
             docker compose up -d --build dashboard frontend
