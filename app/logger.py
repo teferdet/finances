@@ -83,8 +83,6 @@ def setup_logging(level: int = logging.INFO) -> None:
         return
     _CONFIGURED = True
 
-    LOGS_DIR.mkdir(parents=True, exist_ok=True)
-
     fmt = "%(asctime)s | %(levelname)-8s | %(name)-25s | %(message)s"
     date_fmt = "%Y-%m-%d %H:%M:%S"
     formatter = logging.Formatter(fmt, datefmt=date_fmt)
@@ -101,31 +99,36 @@ def setup_logging(level: int = logging.INFO) -> None:
     console.setLevel(level)
     console.setFormatter(formatter)
 
-    # ── bot.log — INFO+ from app.* only, daily rotation, 30 days ───────────
-    bot_file = _make_timed_handler("bot.log", logging.INFO, backup_days=30, app_only=True)
-    bot_file.setFormatter(formatter)
-
-    # ── debug.log — DEBUG+ from app.* only, daily rotation, 7 days ─────────
-    debug_file = _make_timed_handler("debug.log", logging.DEBUG, backup_days=7, app_only=True)
-    debug_file.setFormatter(formatter)
-
-    # ── errors.log — ERROR/CRITICAL from all sources, size rotation ─────────
-    error_file = RotatingFileHandler(
-        LOGS_DIR / "errors.log",
-        maxBytes=5 * 1024 * 1024,   # 5 MB per file
-        backupCount=7,               # keep 7 backups → up to 40 MB
-        encoding="utf-8",
-    )
-    error_file.setLevel(logging.ERROR)
-    error_file.setFormatter(formatter)
-
     # ── Root logger ─────────────────────────────────────────────────────────
     root = logging.getLogger()
     root.setLevel(logging.DEBUG)
     root.addHandler(console)
-    root.addHandler(bot_file)
-    root.addHandler(debug_file)
-    root.addHandler(error_file)
+
+    try:
+        LOGS_DIR.mkdir(parents=True, exist_ok=True)
+
+        # ── bot.log — INFO+ from app.* only, daily rotation, 30 days ───────────
+        bot_file = _make_timed_handler("bot.log", logging.INFO, backup_days=30, app_only=True)
+        bot_file.setFormatter(formatter)
+        root.addHandler(bot_file)
+
+        # ── debug.log — DEBUG+ from app.* only, daily rotation, 7 days ─────────
+        debug_file = _make_timed_handler("debug.log", logging.DEBUG, backup_days=7, app_only=True)
+        debug_file.setFormatter(formatter)
+        root.addHandler(debug_file)
+
+        # ── errors.log — ERROR/CRITICAL from all sources, size rotation ─────────
+        error_file = RotatingFileHandler(
+            LOGS_DIR / "errors.log",
+            maxBytes=5 * 1024 * 1024,   # 5 MB per file
+            backupCount=7,               # keep 7 backups → up to 40 MB
+            encoding="utf-8",
+        )
+        error_file.setLevel(logging.ERROR)
+        error_file.setFormatter(formatter)
+        root.addHandler(error_file)
+    except (PermissionError, OSError) as exc:
+        sys.stderr.write(f"⚠️  Warning: File logging unavailable in {LOGS_DIR} ({exc}). Using console logging only.\n")
 
     # ── Silence noisy third-party libraries ─────────────────────────────────
     for name in _SILENT_LIBS:

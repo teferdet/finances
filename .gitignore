@@ -30,6 +30,8 @@ PRIVACY.md
 # C# / .NET Backend 
 [Bb]in/
 [Oo]bj/
+publish/
+dashboard/API/publish/
 *.user
 *.suo
 *.userprefs

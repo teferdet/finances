@@ -23,7 +23,31 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # ── 1. Pull Latest Code ───────────────────────────────────────────
+      # ── 0. Build React Frontend (Fast CI Runner) ──────────────────────
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: dashboard/frontend/package.json
+
+      - name: ⚛️ Build React Frontend
+        working-directory: dashboard/frontend
+        run: |
+          npm ci
+          npm run build
+
+      # ── 0.1 Build .NET API (Fast CI Runner) ───────────────────────────
+      - name: 🟣 Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: 🔨 Publish .NET API
+        run: |
+          dotnet publish dashboard/API/API.csproj -c Release -o dashboard/API/publish
+
+      # ── 1. Pull Latest Code on VPS ────────────────────────────────────
       - name: 📦 Pull Latest Code
         uses: appleboy/ssh-action@v1.0.3
         timeout-minutes: 3
@@ -62,6 +86,29 @@ jobs:
             echo "📝 Latest: $(git log -1 --pretty=format:'%s')"
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
+
+      # ── 1.1 Transfer Pre-built Artifacts to VPS ───────────────────────
+      - name: 🚀 Transfer Built Frontend Dist
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SERVER_PORT }}
+          source: "dashboard/frontend/dist"
+          target: "/home/ubuntu/finances/dashboard/frontend"
+          strip_components: 2
+
+      - name: 🚀 Transfer Built API Publish
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SERVER_PORT }}
+          source: "dashboard/API/publish"
+          target: "/home/ubuntu/finances/dashboard/API"
+          strip_components: 2
 
       # ── 2. Generate Unified .env ──────────────────────────────────────
       - name: 🔐 Generate Unified Environment
@@ -102,7 +149,7 @@ jobs:
       # ── 3. Deploy Dashboard & Frontend with Docker Compose ────────────
       - name: 🚀 Deploy Dashboard Services
         uses: appleboy/ssh-action@v1.0.3
-        timeout-minutes: 10
+        timeout-minutes: 5
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USERNAME }}
@@ -114,6 +161,10 @@ jobs:
             APP_DIR="/home/ubuntu/finances"
             cd "$APP_DIR"
             
+            echo "📁 Ensuring log directories and permissions..."
+            mkdir -p "$APP_DIR/logs/bot" "$APP_DIR/logs/api" "$APP_DIR/config"
+            chmod -R 777 "$APP_DIR/logs"
+
             echo "🐳 Starting Docker Compose for dashboard and frontend..."
             docker compose up -d --build dashboard frontend
             
@@ -174,5 +225,3 @@ jobs:
             fi
 
             echo "🎉 Dashboard deploy completed successfully!"
-
-

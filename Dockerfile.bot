@@ -23,8 +23,8 @@ FROM python:3.11-slim AS runtime
 RUN apt-get update && apt-get install -y --no-install-recommends libjemalloc2 \
     && rm -rf /var/lib/apt/lists/*
 
-# Security: run as non-root
-RUN addgroup --system finances && adduser --system --ingroup finances finances
+# Security: run as non-root (UID 1000 matches standard host user on Linux)
+RUN groupadd -g 1000 finances && useradd -u 1000 -g finances -d /app finances
 
 WORKDIR /app
 

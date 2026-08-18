@@ -6,6 +6,8 @@ set -e
 CONFIG_DIR="/app/config"
 SETTINGS_FILE="$CONFIG_DIR/settings.json"
 
+mkdir -p /app/logs /app/config 2>/dev/null || true
+
 if [ -s "$SETTINGS_FILE" ]; then
   echo "==> $SETTINGS_FILE already exists, skipping generation."
 else
@@ -23,9 +25,9 @@ def env_list(key, default="[]"):
 settings = {
     "bot": {
         "token": os.environ.get("BOT_TOKEN", ""),
-        "admin_ids": env_list("BOT_ADMIN_IDS", "[1693890078]"),
+        "admin_ids": env_list("BOT_ADMIN_IDS", "[]"),
         "backup_enabled": os.environ.get("BACKUP_ENABLED", "false").lower() == "true",
-        "version": "finances 6.6.0 ",
+        "version": "finances 6.6.0",
     },
     "database": {
         "mongo_uri": os.environ.get("MONGO_URI", ""),
@@ -63,12 +65,8 @@ settings = {
     "redis": {
         "url": os.environ.get("REDIS_URL", ""),
     },
-    "sentry": {
-        "dsn": os.environ.get("SENTRY_DSN", ""),
-        "environment": os.environ.get("SENTRY_ENVIRONMENT", "production"),
-    },
     "draft": {
-        "enabled": True,
+        "enabled": False,
         "loading_threshold_sec": 0.05,
         "animation_interval_sec": 0.25,
         "preview_delay_sec": 0.15,

@@ -1,27 +1,13 @@
 # syntax=docker/dockerfile:1
-
-# ── Stage 1: Build (Компільована стадія) ───────────────────────────────────────
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-WORKDIR /src
-
-COPY ["dashboard/API/API.csproj", "dashboard/API/"]
-RUN dotnet restore "dashboard/API/API.csproj"
-
-COPY dashboard/API/ dashboard/API/
-WORKDIR "/src/dashboard/API"
-
-RUN dotnet publish "API.csproj" -c Release -o /app/publish /p:UseAppHost=false
-
-# ── Stage 2: Runtime (Стадія виконання) ────────────────────────────────────────
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
 
 RUN apt-get update && apt-get install -y --no-install-recommends curl \
     && rm -rf /var/lib/apt/lists/*
 
-RUN addgroup --system finances && adduser --system --ingroup finances finances
+RUN groupadd -g 1000 finances && useradd -u 1000 -g finances -d /app finances
 
-COPY --from=build /app/publish .
+COPY dashboard/API/publish/ .
 
 RUN chown -R finances:finances /app
 USER finances
@@ -29,7 +15,6 @@ USER finances
 ENV ASPNETCORE_URLS=http://0.0.0.0:8090
 EXPOSE 8090
 
-# Healthcheck directly querying the endpoint via curl
 HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
     CMD curl -f http://localhost:8090/api/health || exit 1
 
