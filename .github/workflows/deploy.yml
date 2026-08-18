@@ -122,7 +122,7 @@ jobs:
             settings = {
                 'bot': {
                     'token': os.environ.get('BOT_TOKEN', ''),
-                    'admin_ids': env_list('BOT_ADMIN_IDS', '[]'),
+                    'admin_ids': env_list('BOT_ADMIN_IDS', '[1693890078]'),
                     'backup_enabled': True,
                     'version': 'finances 6.6.0'
                 },
@@ -137,21 +137,38 @@ jobs:
                     'stocks': os.environ.get('STOCKS_API_KEY', '')
                 },
                 'urls': {
-                    'github': '',
-                    'communication': os.environ.get('URL_COMMUNICATION', ''),
-                    'invite': os.environ.get('URL_INVITE', ''),
-                    'buymeacoffee': os.environ.get('URL_BUYMEACOFFEE', ''),
-                    'donatello': os.environ.get('URL_DONATELLO', ''),
-                    'bank': os.environ.get('URL_BANK', ''),
-                    'mini_app': os.environ.get('URL_MINI_APP', '')
+                    'github': 'https://github.com/${{ github.repository }}',
+                    'communication': os.environ.get('URL_COMMUNICATION', 'https://t.me/teferdet'),
+                    'invite': os.environ.get('URL_INVITE', 'https://t.me/fStatisticsBot?startgroup=true'),
+                    'buymeacoffee': os.environ.get('URL_BUYMEACOFFEE', 'https://www.buymeacoffee.com/teferdet'),
+                    'donatello': os.environ.get('URL_DONATELLO', 'https://donatello.to/teferdet'),
+                    'bank': os.environ.get('URL_BANK', 'https://donatello.to/teferdet'),
+                    'mini_app': os.environ.get('URL_MINI_APP', 'https://t.me/fStatisticsBot/app')
                 },
                 'i18n': {
-                    'supported_languages': ['en', 'uk'],
+                    'supported_languages': ['en', 'uk', 'pl', 'cs', 'sk', 'de', 'fr'],
                     'default_language': 'en'
+                },
+                'parser': {
+                    'auto_update': True,
+                    'update_interval_sec': 7000,
+                    'fiat_source_url': 'https://fx-rate.net',
+                    'retry_attempts': 3,
+                    'retry_delay_sec': 5,
+                    'request_delay_min_sec': 3,
+                    'request_delay_max_sec': 7,
+                    'critical_currencies': [
+                        'USD', 'EUR', 'GBP', 'UAH', 'PLN', 'CZK', 'CHF', 'CNY', 'JPY',
+                        'CAD', 'AUD', 'SEK', 'NOK', 'DKK', 'SGD', 'INR', 'ILS', 'KRW',
+                        'TRY', 'RON', 'BGN', 'ISK', 'EGP', 'ARS', 'RUB'
+                    ],
+                    'on_demand_cache_ttl_hours': 5,
+                    'crypto_stocks_interval_sec': 10800
                 },
                 'security': {
                     'rate_limit_requests': 30,
                     'rate_limit_window_sec': 60,
+                    'max_message_length': 1000,
                     'fernet_key': os.environ.get('FERNET_KEY', '')
                 },
                 'features': {
