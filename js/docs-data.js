@@ -1,98 +1,316 @@
 /**
  * Finances Telegram Bot - Documentation Dataset
- * Contains metadata for documentation. Content is dynamically fetched from GitHub.
+ * Supports English & Ukrainian (Multilingual Docs Architecture for v6.6.0+)
  */
 
+window.UI_STRINGS = {
+  en: {
+    brandVersion: "v6.6.0",
+    navHome: "Home",
+    navDocs: "Documentation",
+    searchPlaceholder: "Search documentation topics, modules, methods...",
+    searchHint: "Type a query to search documentation...",
+    noResults: "No matching documentation found.",
+    onThisPage: "On this page",
+    noSubsections: "No sub-sections",
+    loadingDoc: "Loading documentation from GitHub...",
+    errorLoading: "Error loading document:",
+    copied: "Copied!",
+    copy: "📋 Copy",
+    btnCopy: "Copy",
+    heroTitle: "📊 Finances Telegram Bot",
+    heroDesc: "A comprehensive, open-source personal financial assistant for Telegram with an integrated .NET 8 + React admin dashboard. Real-time fiat, crypto, and stock tracking, portfolio analytics, price alerts, Redis caching, and containerized Docker deployment.",
+    btnTelegram: "📱 Open Telegram Bot",
+    btnDocs: "📚 Open Documentation",
+    btnGitHub: "🐙 GitHub Repository",
+    cards: [
+      {
+        icon: "🎛️",
+        title: "No-Redeploy Admin Panel",
+        desc: "Control parser intervals, inspect CPU/RAM diagnostics, purge logs, or broadcast announcements directly inside Telegram via <code>/admin</code>."
+      },
+      {
+        icon: "📊",
+        title: "Web Admin Dashboard",
+        desc: "Modern React 18 + .NET 8 ASP.NET Core web dashboard with Telegram OTP authentication, real-time DAU/WAU/MAU analytics, and live config editor."
+      },
+      {
+        icon: "🛡️",
+        title: "Cloudflare Bypass Scraper",
+        desc: "Scrapes live exchange rates using <code>curl_cffi</code> Chrome 120 browser impersonation to bypass anti-bot challenges securely."
+      },
+      {
+        icon: "🌍",
+        title: "i18n Localization System",
+        desc: "Custom zero-dependency JSON localization engine supporting dot-notation keys and instant language switching (EN, UK, PL, CS, SK, DE, FR)."
+      },
+      {
+        icon: "📈",
+        title: "Portfolio & Volatility Monitor",
+        desc: "Track asset lots, aggregate live P&L, and receive background alerts on sudden market swings (≥3%) and weekly Sunday digest reports."
+      },
+      {
+        icon: "🐳",
+        title: "Docker & Redis Caching",
+        desc: "Full containerization via Docker Compose (bot, dashboard, frontend, redis) with automated GitHub Actions SSH deployment and healthchecks."
+      }
+    ]
+  },
+  uk: {
+    brandVersion: "v6.6.0",
+    navHome: "Головна",
+    navDocs: "Документація",
+    searchPlaceholder: "Пошук по темах, модулях, методах...",
+    searchHint: "Введіть запит для пошуку в документації...",
+    noResults: "Нічого не знайдено за вашим запитом.",
+    onThisPage: "На цій сторінці",
+    noSubsections: "Немає підрозділів",
+    loadingDoc: "Завантаження документації з GitHub...",
+    errorLoading: "Помилка завантаження документа:",
+    copied: "Скопійовано!",
+    copy: "📋 Скопіювати",
+    btnCopy: "Копіювати",
+    heroTitle: "📊 Telegram-бот Finances",
+    heroDesc: "Повнофункціональний персональний фінансовий асистент для Telegram з інтегрованою веб-панеллю адміністратора на .NET 8 + React. Відстеження фіату, крипти й акцій у реальному часі, аналітика портфеля, цінові алерти, кешування Redis та Docker-деплой.",
+    btnTelegram: "📱 Відкрити бота в Telegram",
+    btnDocs: "📚 Відкрити документацію",
+    btnGitHub: "🐙 Репозиторій GitHub",
+    cards: [
+      {
+        icon: "🎛️",
+        title: "Адмін-панель без перезапуску",
+        desc: "Керуйте інтервалами парсера, переглядайте діагностику CPU/RAM, очищайте логи та робіть розсилки прямо в Telegram через <code>/admin</code>."
+      },
+      {
+        icon: "📊",
+        title: "Веб-панель адміністратора",
+        desc: "Сучасний веб-дашборд на React 18 + .NET 8 ASP.NET Core з автентифікацією через Telegram OTP, графіками DAU/WAU/MAU та живим редактором конфігу."
+      },
+      {
+        icon: "🛡️",
+        title: "Скрапер з обходом Cloudflare",
+        desc: "Збирає актуальні курси валют з використанням <code>curl_cffi</code> Chrome 120 для безпечного та надійного обходу антибот-захисту."
+      },
+      {
+        icon: "🌍",
+        title: "Система локалізації i18n",
+        desc: "Кастомний швидкий JSON-движок локалізації з вкладеними ключами та миттєвим перемиканням 7 мов (EN, UK, PL, CS, SK, DE, FR)."
+      },
+      {
+        icon: "📈",
+        title: "Портфель та монітор волатильності",
+        desc: "Трекінг лотів активів, розрахунок P&L у реальному часі, фонові сповіщення про різкі стрибки цін (≥3%) та недільні дайджести."
+      },
+      {
+        icon: "🐳",
+        title: "Docker та кешування Redis",
+        desc: "Повна контейнеризація через Docker Compose (bot, dashboard, frontend, redis) з автодеплоєм через GitHub Actions та моніторингом."
+      }
+    ]
+  }
+};
+
 window.DOCS_DATA = {
-  "readme": {
-    "title": "Home / Overview",
-    "icon": "🏠",
-    "category": "Getting Started",
-    "file": "README.md",
-    "content": "# 📊 Finances Telegram Bot\n\n**Finances** is a comprehensive, open-source personal financial assistant for Telegram. Built on async Python 3.12+, it provides real-time fiat, crypto, and stock tracking, portfolio management, and advanced administrative capabilities directly via the Telegram interface.\n\n---\n\n## 🌟 Key Highlights\n\n* **Administration Without Redeploy**: Fully control your bot via the interactive `/admin` panel. Change parsing intervals, toggle features, or restart the bot directly inside Telegram.\n* **Built-in Observability**: Real-time server diagnostics (CPU, RAM), database footprint tracking, and in-app error log viewing.\n* **i18n-First Architecture**: Custom-built, deeply integrated localization engine supporting nested JSON keys and seamless language switching.\n* **Secure by Design**: Double-check authorization on sensitive actions, encrypted API secrets (Fernet cipher), and flood control.\n\n---\n\n## ✨ Features Breakdown\n\n### 💱 Core Capabilities\n* **Async & High Performance**: Built on `aiogram` 3.x and `motor` for asynchronous MongoDB operations.\n* **Background Parser**: Custom `curl_cffi` based parser fetching live rates with Cloudflare anti-bot bypass.\n* **Price Alerts & Volatility Monitor**: Set specific targets or track portfolio volatility with background schedulers.\n* **Localization System**: Fully localized interface supporting multiple languages (`en`, `uk`, `pl`, `cs`, `sk`, `de`, `fr`).\n* **Bot API 10.x Guest Mode**: Evaluates mentions of `@bot` in non-member group chats cleanly.\n\n### 🔐 Admin Panel Modules (`/admin`)\n| Module | Description |\n|--------|-------------|\n| **Analytics & Statistics** | Monitor daily/weekly active users, total lifetime requests, and parser cycles. |\n| **System Configuration** | Manage parser auto-updater state, update intervals, and core currencies on the fly. |\n| **Server Diagnostics** | View real-time RAM allocation, CPU load, and database storage footprint. |\n| **Error Logs** | Read recent incidents directly in Telegram, export full `.log` files, or purge logs. |\n| **Mass Broadcast** | Push formatted HTML announcements to all registered bot users with rate limiting. |\n| **Restart Bot** | Interactive 2-step restart sequence directly from Telegram, persisting state across reboots. |\n\n---\n\n## 🚀 Tech Stack\n\n* **Framework**: `aiogram` (v3.x) - Asynchronous Telegram Bot API wrapper.\n* **Database**: `motor` (MongoDB async driver).\n* **Networking**: `curl_cffi` (advanced anti-bot bypass) & `aiohttp`.\n* **Data Sources**: `yfinance`, `beautifulsoup4`, `pandas`, CoinMarketCap.\n* **Monitoring**: `psutil` for system diagnostics.\n\n---\n\n## 📂 Project Structure\n\n```text\nfinances-dev/\n├── app/\n│   ├── handlers/        # Message, callback, and admin routers\n│   ├── keyboards/       # Inline & Reply UI builders\n│   ├── services/        # Background parsers, alerts, exports\n│   ├── utils/           # Helper functions and text processing\n│   ├── bot.py           # Bot instance & dispatcher setup\n│   ├── config.py        # Configuration models\n│   ├── db.py            # MongoDB connection & indexes\n│   ├── i18n.py          # Custom localization engine\n│   ├── logger.py        # Centralized logging configuration\n│   └── __main__.py      # App entry point\n├── locales/             # JSON translation files (en.json, uk.json, etc.)\n├── config/              # Configuration files (settings.json)\n├── logs/                # Local log storage\n└── requirements.txt     # Python dependencies\n```\n\n---\n\n## 📄 License\nThis project is open-source and available under the **MIT License**."
+  en: {
+    "readme": {
+      "title": "Home / Overview",
+      "icon": "🏠",
+      "category": "Getting Started",
+      "file": "English/README.md"
+    },
+    "architecture": {
+      "title": "Architecture Overview",
+      "icon": "🏛️",
+      "category": "Core Design",
+      "file": "English/ARCHITECTURE.md"
+    },
+    "modules": {
+      "title": "Modules Reference",
+      "icon": "📦",
+      "category": "Core Design",
+      "file": "English/MODULES.md"
+    },
+    "handlers": {
+      "title": "Handlers & Routers",
+      "icon": "🎛️",
+      "category": "Bot Core",
+      "file": "English/HANDLERS.md"
+    },
+    "services": {
+      "title": "Services & Parsers",
+      "icon": "⚙️",
+      "category": "Bot Core",
+      "file": "English/SERVICES.md"
+    },
+    "db": {
+      "title": "Database Schema",
+      "icon": "🗄️",
+      "category": "Storage",
+      "file": "English/DATABASE.md"
+    },
+    "i18n": {
+      "title": "Localization (i18n)",
+      "icon": "🌍",
+      "category": "Core Design",
+      "file": "English/I18N.md"
+    },
+    "admin": {
+      "title": "Admin Panel & Groups",
+      "icon": "🛠️",
+      "category": "Administration",
+      "file": "English/ADMIN_PANEL.md"
+    },
+    "background": {
+      "title": "Background Tasks",
+      "icon": "🔄",
+      "category": "Bot Core",
+      "file": "English/BACKGROUND_TASKS.md"
+    },
+    "api": {
+      "title": "External API Reference",
+      "icon": "🌐",
+      "category": "Integrations",
+      "file": "English/API_REFERENCE.md"
+    },
+    "dashboard": {
+      "title": "Dashboard Overview",
+      "icon": "📊",
+      "category": "Web Dashboard",
+      "file": "English/DASHBOARD.md"
+    },
+    "dashboard_api": {
+      "title": "Dashboard REST API",
+      "icon": "🔌",
+      "category": "Web Dashboard",
+      "file": "English/DASHBOARD_API.md"
+    },
+    "dashboard_fe": {
+      "title": "Dashboard Frontend",
+      "icon": "🖥️",
+      "category": "Web Dashboard",
+      "file": "English/DASHBOARD_FRONTEND.md"
+    },
+    "cicd": {
+      "title": "CI/CD & Workflows",
+      "icon": "🚀",
+      "category": "DevOps",
+      "file": "English/CI_CD.md"
+    },
+    "devops": {
+      "title": "DevOps & Server Guide",
+      "icon": "🖥️",
+      "category": "DevOps",
+      "file": "English/DEVOPS.md"
+    },
+    "setup": {
+      "title": "Setup Guide",
+      "icon": "⚙️",
+      "category": "Getting Started",
+      "file": "English/setup.md"
+    },
+    "configuration": {
+      "title": "Configuration",
+      "icon": "🎛️",
+      "category": "Getting Started",
+      "file": "English/configuration.md"
+    },
+    "faq": {
+      "title": "FAQ & Troubleshooting",
+      "icon": "❓",
+      "category": "Support",
+      "file": "English/faq-troubleshooting.md"
+    }
   },
-  "setup": {
-    "title": "Setup Guide",
-    "icon": "⚙️",
-    "category": "Getting Started",
-    "file": "setup.md"
-  },
-  "configuration": {
-    "title": "Configuration",
-    "icon": "🎛️",
-    "category": "Getting Started",
-    "file": "configuration.md"
-  },
-  "faq": {
-    "title": "FAQ & Troubleshooting",
-    "icon": "❓",
-    "category": "Support",
-    "file": "faq-troubleshooting.md"
-  },
-  "architecture": {
-    "title": "Architecture Overview",
-    "icon": "🏛️",
-    "category": "Core Design",
-    "file": "ARCHITECTURE.md"
-  },
-  "modules": {
-    "title": "Modules Reference",
-    "icon": "📦",
-    "category": "Core Design",
-    "file": "MODULES.md"
-  },
-  "handlers": {
-    "title": "Handlers & Routers",
-    "icon": "🎛️",
-    "category": "Architecture",
-    "file": "HANDLERS.md"
-  },
-  "services": {
-    "title": "Services & Parser",
-    "icon": "⚙️",
-    "category": "Core Logic",
-    "file": "SERVICES.md"
-  },
-  "i18n": {
-    "title": "Localization (i18n)",
-    "icon": "🌍",
-    "category": "Core Design",
-    "file": "I18N.md"
-  },
-  "db": {
-    "title": "Database Schema",
-    "icon": "🗄️",
-    "category": "Storage",
-    "file": "DATABASE.md"
-  },
-  "admin": {
-    "title": "Admin Panel & Group Mgmt",
-    "icon": "🛠️",
-    "category": "Administration",
-    "file": "ADMIN_PANEL.md"
-  },
-  "background": {
-    "title": "Background Tasks",
-    "icon": "🔄",
-    "category": "Core Logic",
-    "file": "BACKGROUND_TASKS.md"
-  },
-  "api": {
-    "title": "External API Reference",
-    "icon": "🌐",
-    "category": "Integrations",
-    "file": "API_REFERENCE.md"
-  },
-  "cicd": {
-    "title": "CI/CD & Workflows",
-    "icon": "🚀",
-    "category": "DevOps",
-    "file": "CI_CD.md"
-  },
-  "devops": {
-    "title": "DevOps & Server Guide",
-    "icon": "🖥️",
-    "category": "DevOps",
-    "file": "DEVOPS.md"
+  uk: {
+    "readme": {
+      "title": "Головна / Огляд",
+      "icon": "🏠",
+      "category": "Початок роботи",
+      "file": "Ukrainian/README.md"
+    },
+    "architecture": {
+      "title": "Огляд архітектури",
+      "icon": "🏛️",
+      "category": "Архітектура",
+      "file": "Ukrainian/ARCHITECTURE.md"
+    },
+    "modules": {
+      "title": "Довідник модулів",
+      "icon": "📦",
+      "category": "Архітектура",
+      "file": "Ukrainian/MODULES.md"
+    },
+    "handlers": {
+      "title": "Обробники та роутери",
+      "icon": "🎛️",
+      "category": "Ядро бота",
+      "file": "Ukrainian/HANDLERS.md"
+    },
+    "services": {
+      "title": "Сервіси та парсери",
+      "icon": "⚙️",
+      "category": "Ядро бота",
+      "file": "Ukrainian/SERVICES.md"
+    },
+    "db": {
+      "title": "Структура бази даних",
+      "icon": "🗄️",
+      "category": "База даних",
+      "file": "Ukrainian/DATABASE.md"
+    },
+    "i18n": {
+      "title": "Локалізація (i18n)",
+      "icon": "🌍",
+      "category": "Архітектура",
+      "file": "Ukrainian/I18N.md"
+    },
+    "admin": {
+      "title": "Адмін-панель та групи",
+      "icon": "🛠️",
+      "category": "Адміністрування",
+      "file": "Ukrainian/ADMIN_PANEL.md"
+    },
+    "background": {
+      "title": "Фонові задачі",
+      "icon": "🔄",
+      "category": "Ядро бота",
+      "file": "Ukrainian/BACKGROUND_TASKS.md"
+    },
+    "api": {
+      "title": "Довідник зовнішніх API",
+      "icon": "🌐",
+      "category": "Інтеграції",
+      "file": "Ukrainian/API_REFERENCE.md"
+    },
+    "dashboard": {
+      "title": "Огляд дашборда",
+      "icon": "📊",
+      "category": "Веб-дашборд",
+      "file": "Ukrainian/DASHBOARD.md"
+    },
+    "dashboard_api": {
+      "title": "API дашборда (.NET 8)",
+      "icon": "🔌",
+      "category": "Веб-дашборд",
+      "file": "Ukrainian/DASHBOARD_API.md"
+    },
+    "dashboard_fe": {
+      "title": "Фронтенд дашборда",
+      "icon": "🖥️",
+      "category": "Веб-дашборд",
+      "file": "Ukrainian/DASHBOARD_FRONTEND.md"
+    },
+    "cicd": {
+      "title": "CI/CD та автоматизація",
+      "icon": "🚀",
+      "category": "DevOps",
+      "file": "Ukrainian/CI_CD.md"
+    },
+    "devops": {
+      "title": "DevOps — посібник сервера",
+      "icon": "🖥️",
+      "category": "DevOps",
+      "file": "Ukrainian/DEVOPS.md"
+    }
   }
 };

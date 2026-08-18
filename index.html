@@ -11,15 +11,13 @@
   <!-- Classic Documentation Stylesheet -->
   <link rel="stylesheet" href="css/styles.css">
 
-  <!-- Prism.js Syntax Highlighting -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
-
   <!-- Marked.js Markdown Parser -->
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
   <!-- Prism Syntax Highlighting Scripts -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-csharp.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
 
@@ -33,7 +31,7 @@
   <header class="site-header">
     <a href="#" class="brand-area" id="brand-home-link">
       <span>📊 Finances Bot</span>
-      <span class="brand-badge">v6.3</span>
+      <span class="brand-badge">v6.6.0</span>
     </a>
 
     <nav class="header-nav">
@@ -42,6 +40,11 @@
     </nav>
 
     <div class="header-actions">
+      <!-- Language Switcher (EN / UA) -->
+      <button class="lang-toggle-btn" id="lang-toggle-btn" title="Switch Language / Змінити мову" aria-label="Switch Language">
+        <span class="lang-label" id="lang-label">EN</span>
+      </button>
+
       <button class="icon-btn mobile-sidebar-toggle" id="mobile-sidebar-toggle" title="Toggle Documentation Menu" aria-label="Toggle Documentation Menu">
         <span>☰</span>
       </button>
@@ -56,7 +59,7 @@
         <span id="theme-icon">🌙</span>
       </button>
 
-      <a href="https://github.com/teferdet/finances" target="_blank" rel="noopener" class="icon-btn"
+      <a href="https://github.com/teferdet/finances" target="_blank" rel="noopener" class="icon-btn github-btn"
         title="GitHub Repository">
         <span>🐙</span>
       </a>
@@ -74,8 +77,7 @@
       <div class="hero-box">
         <h1 class="hero-title">📊 Finances Telegram Bot</h1>
         <p class="hero-description">
-          A comprehensive, open-source personal financial assistant for Telegram. Real-time fiat, crypto, and stock
-          tracking, portfolio analytics, automated price alert schedulers, and zero-downtime interactive admin control.
+          A comprehensive, open-source personal financial assistant for Telegram with an integrated .NET 8 + React admin dashboard. Real-time fiat, crypto, and stock tracking, portfolio analytics, price alerts, Redis caching, and containerized Docker deployment.
         </p>
 
         <!-- Button Row: Telegram Link, Open Documentation, GitHub Link -->
@@ -108,6 +110,12 @@
         </div>
 
         <div class="home-card">
+          <div class="home-card-icon">📊</div>
+          <h3 class="home-card-title">Web Admin Dashboard</h3>
+          <p class="home-card-text">Modern React 18 + .NET 8 ASP.NET Core web dashboard with Telegram OTP authentication, real-time DAU/WAU/MAU analytics, and live config editor.</p>
+        </div>
+
+        <div class="home-card">
           <div class="home-card-icon">🛡️</div>
           <h3 class="home-card-title">Cloudflare Bypass Scraper</h3>
           <p class="home-card-text">Scrapes live exchange rates using <code>curl_cffi</code> Chrome 120 browser
@@ -125,21 +133,13 @@
           <div class="home-card-icon">📈</div>
           <h3 class="home-card-title">Portfolio & Volatility Monitor</h3>
           <p class="home-card-text">Track asset lots, aggregate live P&L, and receive background alerts on sudden market
-            swings (≥3%).</p>
+            swings (≥3%) and weekly Sunday digest reports.</p>
         </div>
 
         <div class="home-card">
-          <div class="home-card-icon">💬</div>
-          <h3 class="home-card-title">Group & Guest Mode</h3>
-          <p class="home-card-text">Auto-converts natural currency text in group chats, provides self-deleting menu UI,
-            and handles <code>@bot</code> guest queries.</p>
-        </div>
-
-        <div class="home-card">
-          <div class="home-card-icon">🚀</div>
-          <h3 class="home-card-title">DevOps & Automated Backups</h3>
-          <p class="home-card-text">Daily compressed MongoDB snapshots and automated GitHub Actions SSH deployment with
-            instant failure rollback.</p>
+          <div class="home-card-icon">🐳</div>
+          <h3 class="home-card-title">Docker & Redis Caching</h3>
+          <p class="home-card-text">Full containerization via Docker Compose (bot, dashboard, frontend, redis) with automated GitHub Actions SSH deployment and healthchecks.</p>
         </div>
       </div>
     </div>
@@ -178,12 +178,27 @@
   <!-- Mobile Sidebar Backdrop Overlay -->
   <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
 
+  <!-- Mermaid Fullscreen / Zoom Modal Overlay -->
+  <div class="mermaid-modal-backdrop" id="mermaid-modal-backdrop">
+    <div class="mermaid-modal">
+      <div class="mermaid-modal-header">
+        <span class="mermaid-modal-title">📊 Diagram Interactive Zoom & View</span>
+        <div class="mermaid-modal-actions">
+          <button class="mermaid-modal-btn" id="modal-zoom-in" title="Zoom In">🔍+</button>
+          <button class="mermaid-modal-btn" id="modal-zoom-out" title="Zoom Out">🔍−</button>
+          <button class="mermaid-modal-btn" id="modal-zoom-reset" title="Reset Zoom">🔄 100%</button>
+          <button class="mermaid-modal-btn" id="modal-close" title="Close (Esc)">✕ Close</button>
+        </div>
+      </div>
+      <div class="mermaid-modal-body" id="mermaid-modal-body">
+        <div class="mermaid-modal-content" id="mermaid-modal-content"></div>
+      </div>
+    </div>
+  </div>
+
   <!-- Scripts -->
   <script src="js/docs-data.js"></script>
   <script src="js/app.js"></script>
-  <script>
-    mermaid.initialize({ startOnLoad: true, theme: 'dark' });
-  </script>
 </body>
 
 </html>
