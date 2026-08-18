@@ -12,9 +12,7 @@ __pycache__
 *.pyc
 tests
 node_modules
-dist
 dashboard/frontend/node_modules
-dashboard/frontend/dist
 dashboard/API/bin
 dashboard/API/obj
 dashboard/venv

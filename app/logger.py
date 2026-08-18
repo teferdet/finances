@@ -127,6 +127,20 @@ def setup_logging(level: int = logging.INFO) -> None:
         error_file.setLevel(logging.ERROR)
         error_file.setFormatter(formatter)
         root.addHandler(error_file)
+
+        # ── Session separator in log files ──────────────────────────────────────
+        sep = "=" * 72
+        startup_record = logging.LogRecord(
+            name="app.main",
+            level=logging.INFO,
+            pathname="",
+            lineno=0,
+            msg=f"{sep}\n  BOT SESSION STARTED\n{sep}",
+            args=(),
+            exc_info=None,
+        )
+        bot_file.emit(startup_record)
+        debug_file.emit(startup_record)
     except (PermissionError, OSError) as exc:
         sys.stderr.write(f"⚠️  Warning: File logging unavailable in {LOGS_DIR} ({exc}). Using console logging only.\n")
 
@@ -140,20 +154,6 @@ def setup_logging(level: int = logging.INFO) -> None:
     for name in _PARSER_INFO_SPAM:
         logging.getLogger(name).setLevel(logging.WARNING)
 
-    # ── Session separator in log files ──────────────────────────────────────
-    sep = "=" * 72
-    startup_record = logging.LogRecord(
-        name="app.main",
-        level=logging.INFO,
-        pathname="",
-        lineno=0,
-        msg=f"{sep}\n  BOT SESSION STARTED\n{sep}",
-        args=(),
-        exc_info=None,
-    )
-    bot_file.emit(startup_record)
-    debug_file.emit(startup_record)
-
 
 def get_logger(name: str) -> logging.Logger:
     """Get a named child logger under the 'app' namespace."""
@@ -165,15 +165,18 @@ def get_d_admin_logger() -> logging.Logger:
     logger = logging.getLogger("d_admin")
     if not logger.handlers:
         logger.setLevel(logging.INFO)
-        handler = RotatingFileHandler(
-            LOGS_DIR / "d_admin.log",
-            maxBytes=5 * 1024 * 1024,
-            backupCount=3,
-            encoding="utf-8",
-        )
-        fmt = "%(asctime)s | %(message)s"
-        handler.setFormatter(logging.Formatter(fmt, datefmt="%Y-%m-%d %H:%M:%S"))
-        logger.addHandler(handler)
+        try:
+            handler = RotatingFileHandler(
+                LOGS_DIR / "d_admin.log",
+                maxBytes=5 * 1024 * 1024,
+                backupCount=3,
+                encoding="utf-8",
+            )
+            fmt = "%(asctime)s | %(message)s"
+            handler.setFormatter(logging.Formatter(fmt, datefmt="%Y-%m-%d %H:%M:%S"))
+            logger.addHandler(handler)
+        except (PermissionError, OSError) as exc:
+            sys.stderr.write(f"⚠️  Warning: d_admin logger unavailable ({exc})\n")
     return logger
 
 
