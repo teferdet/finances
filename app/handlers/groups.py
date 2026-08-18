@@ -30,6 +30,8 @@ from app.utils.text_processing import TextProcessing
 from app.services.parser_service import convert_currencies, get_currencies_info
 from app.handlers.exchange import format_header_item
 from app.logger import get_logger
+
+log = get_logger(__name__)
 router = Router(name="groups")
 
 

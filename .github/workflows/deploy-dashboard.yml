@@ -1,4 +1,4 @@
-﻿name: Deploy Dashboard to Oracle VPS
+name: Deploy Dashboard to Oracle VPS
 
 on:
   push:
@@ -21,21 +21,7 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v5
-
-      # ── 0. Build React Frontend (CI Runner) ───────────────────────────
-      - name: 🟢 Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'npm'
-          cache-dependency-path: dashboard/frontend/package.json
-
-      - name: ⚛️ Build React Frontend
-        working-directory: dashboard/frontend
-        run: |
-          npm ci
-          npm run build
+        uses: actions/checkout@v4
 
       # ── 1. Pull Latest Code ───────────────────────────────────────────
       - name: 📦 Pull Latest Code
@@ -54,14 +40,13 @@ jobs:
             REPO_URL="https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
 
             if [ ! -d "$APP_DIR/.git" ]; then
-              sudo rm -rf "$APP_DIR"
+              echo "📦 First deploy — cloning repository..."
               git clone "$REPO_URL" "$APP_DIR"
             else
+              echo "🔄 Pulling latest changes..."
               cd "$APP_DIR"
               git remote set-url origin "$REPO_URL"
-
               find .git -name "*.lock" -delete 2>/dev/null || true
-
               if ! git fetch --force origin main; then
                 echo "⚠️  Fetch failed even after clearing locks — re-cloning fresh."
                 cd ..
@@ -69,28 +54,17 @@ jobs:
                 git clone "$REPO_URL" "$APP_DIR"
                 cd "$APP_DIR"
               fi
-
-              git checkout -B main origin/main
+              git reset --hard origin/main
             fi
 
-            echo "✅ Code at: $(cd $APP_DIR && git rev-parse --short HEAD)"
+            cd "$APP_DIR"
+            echo "✅ Code is at commit: $(git rev-parse --short HEAD)"
+            echo "📝 Latest: $(git log -1 --pretty=format:'%s')"
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
 
-      # ── 1.1 Transfer Built Frontend to VPS ───────────────────────────
-      - name: 🚀 Transfer Built Frontend Dist
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.SERVER_PORT }}
-          source: "dashboard/frontend/dist"
-          target: "/home/ubuntu/finances/dashboard/frontend"
-          strip_components: 2
-
-      # ── 2. Generate Dashboard .env ────────────────────────────────────
-      - name: 🔐 Generate Dashboard Environment
+      # ── 2. Generate Unified .env ──────────────────────────────────────
+      - name: 🔐 Generate Unified Environment
         uses: appleboy/ssh-action@v1.0.3
         timeout-minutes: 2
         with:
@@ -98,91 +72,37 @@ jobs:
           username: ${{ secrets.SERVER_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SERVER_PORT }}
-          envs: BOT_TOKEN,MONGO_URI,BOT_ADMIN_IDS,DASHBOARD_SECRET_KEY,SENTRY_DSN,REDIS_URL
+          envs: BOT_TOKEN,MONGO_URI,BOT_ADMIN_IDS,DASHBOARD_SECRET_KEY,REDIS_URL
           script: |
             export PATH=$PATH:/usr/local/bin:/usr/bin:/bin:/snap/bin
             set -e
-            DASH_DIR="/home/ubuntu/finances/dashboard"
+            APP_DIR="/home/ubuntu/finances"
 
-            cat > "$DASH_DIR/.env" << EOF
+            # Remove legacy dashboard/.env files
+            rm -f "$APP_DIR/dashboard/.env" "$APP_DIR/dashboard/API/.env"
+
+            cat > "$APP_DIR/.env" << EOF
             BOT_TOKEN=${BOT_TOKEN}
             MONGO_URI=${MONGO_URI}
             MONGO_DATABASE=finances
             BOT_ADMIN_IDS=${BOT_ADMIN_IDS}
-            DASHBOARD_SECRET_KEY=${DASHBOARD_SECRET_KEY}
-            SENTRY_DSN=${SENTRY_DSN}
-                        REDIS_URL=${REDIS_URL:-redis://127.0.0.1:6379/0}
+            JWT_SECRET=${JWT_SECRET:-${DASHBOARD_SECRET_KEY}}
+            REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
             EOF
 
-            chmod 600 "$DASH_DIR/.env"
-            echo "✅ Dashboard .env generated"
+            chmod 600 "$APP_DIR/.env"
+            echo "✅ Unified .env generated"
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           MONGO_URI: ${{ secrets.MONGO_URI }}
           BOT_ADMIN_IDS: ${{ secrets.BOT_ADMIN_IDS }}
           DASHBOARD_SECRET_KEY: ${{ secrets.DASHBOARD_SECRET_KEY }}
-          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
           REDIS_URL: ${{ secrets.REDIS_URL }}
 
-      # ── 3. Configure NGINX ────────────────────────────────────────────
-      - name: 🌐 Configure NGINX
-        uses: appleboy/ssh-action@v1.0.3
-        timeout-minutes: 5
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.SERVER_PORT }}
-          script: |
-            export PATH=$PATH:/usr/local/bin:/usr/bin:/bin:/snap/bin
-            set -e
-            DASH_DIR="/home/ubuntu/finances/dashboard"
-
-            # Ensure NGINX is installed
-            if ! command -v nginx &> /dev/null; then
-              echo "📦 NGINX is not installed — installing via apt..."
-              sudo apt-get update -qq
-              sudo apt-get install -y -qq nginx
-              sudo systemctl enable nginx
-              echo "✅ NGINX installed"
-            fi
-
-            # Ensure rate-limit zones exist in /etc/nginx/conf.d/rate_limits.conf
-            sudo mkdir -p /etc/nginx/conf.d /etc/nginx/sites-available /etc/nginx/sites-enabled
-            RATE_CONF="/etc/nginx/conf.d/rate_limits.conf"
-            if [ ! -f "$RATE_CONF" ]; then
-              echo "⚙️  Creating NGINX rate limit zones..."
-              sudo bash -c "cat > $RATE_CONF" << 'EOF'
-            limit_req_zone $binary_remote_addr zone=dash_auth:10m rate=10r/m;
-            limit_req_zone $binary_remote_addr zone=dash_api:10m rate=60r/m;
-            EOF
-            fi
-
-            # Install dashboard site config
-            sudo cp "$DASH_DIR/nginx/finances-dashboard.conf" \
-              /etc/nginx/sites-available/finances-dashboard
-            sudo ln -sf /etc/nginx/sites-available/finances-dashboard \
-              /etc/nginx/sites-enabled/finances-dashboard
-
-            if ! sudo nginx -t; then
-              echo "❌ NGINX config test failed — leaving current service untouched."
-              exit 1
-            fi
-
-            sudo systemctl reload-or-restart nginx
-
-            if ! systemctl is-active --quiet nginx; then
-              echo "❌ NGINX is not active after reload-or-restart."
-              sudo journalctl -u nginx -n 30 --no-pager
-              exit 1
-            fi
-
-            echo "✅ NGINX configured and reloaded"
-
-      # ── 4. Deploy Dashboard with Docker Compose ───────────────────────
+      # ── 3. Deploy Dashboard & Frontend with Docker Compose ────────────
       - name: 🚀 Deploy Dashboard Services
         uses: appleboy/ssh-action@v1.0.3
-        timeout-minutes: 5
+        timeout-minutes: 10
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USERNAME }}
@@ -194,15 +114,15 @@ jobs:
             APP_DIR="/home/ubuntu/finances"
             cd "$APP_DIR"
             
-            echo "🐳 Starting Docker Compose for dashboard..."
-            docker compose up -d --build dashboard
+            echo "🐳 Starting Docker Compose for dashboard and frontend..."
+            docker compose up -d --build dashboard frontend
             
             # Prune old images
             docker image prune -f
             
-            echo "✅ Dashboard service deployed"
+            echo "✅ Dashboard and Frontend services deployed"
 
-      # ── 5. Health Check ───────────────────────────────────────────────
+      # ── 4. Health Check ───────────────────────────────────────────────
       - name: ✅ Health Check
         uses: appleboy/ssh-action@v1.0.3
         timeout-minutes: 2
@@ -219,31 +139,31 @@ jobs:
 
             STARTED=false
             for i in $(seq 1 10); do
-              if docker compose ps dashboard | grep -q "Up"; then
-                echo "✅ finances-dashboard container is running! (attempt $i/10)"
+              if docker compose ps dashboard | grep -q "Up" && docker compose ps frontend | grep -q "Up"; then
+                echo "✅ Dashboard and Frontend containers are running! (attempt $i/10)"
                 STARTED=true
                 break
               fi
-              echo "⏳ Waiting... ($i/10)"
+              echo "⏳ Waiting for containers... ($i/10)"
               sleep 2
             done
 
             if [ "$STARTED" = false ]; then
-              echo "❌ Dashboard container failed to start. Logs:"
-              docker compose logs dashboard
+              echo "❌ Containers failed to start. Logs:"
+              docker compose logs dashboard frontend
               exit 1
             fi
 
-            # API health check
+            # API health check via frontend proxy on port 80
             API_UP=false
-            for i in $(seq 1 5); do
-              HEALTH=$(curl -sf http://127.0.0.1:8090/api/health || echo "FAIL")
+            for i in $(seq 1 10); do
+              HEALTH=$(curl -sf http://127.0.0.1/api/health || echo "FAIL")
               if echo "$HEALTH" | grep -q '"ok"'; then
                 echo "✅ API health check passed: $HEALTH"
                 API_UP=true
                 break
               fi
-              echo "⏳ Waiting for API to respond... ($i/5)"
+              echo "⏳ Waiting for API response... ($i/10)"
               sleep 3
             done
 
@@ -253,5 +173,6 @@ jobs:
               exit 1
             fi
 
-            echo "🎉 Dashboard deploy completed!"
+            echo "🎉 Dashboard deploy completed successfully!"
+
 

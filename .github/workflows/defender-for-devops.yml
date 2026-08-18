@@ -1,4 +1,4 @@
-﻿name: Defender for DevOps
+name: Defender for DevOps
 
 on:
   push:
@@ -19,7 +19,7 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
 
       - name: Run Microsoft Security DevOps
         uses: microsoft/security-devops-action@v1

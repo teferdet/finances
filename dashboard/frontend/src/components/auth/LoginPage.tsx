@@ -88,6 +88,21 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
     }
   }
 
+  const handleOtpPaste = (e: React.ClipboardEvent) => {
+    e.preventDefault()
+    const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6)
+    if (!pasted) return
+
+    const newOtp = [...otp]
+    for (let i = 0; i < pasted.length; i++) {
+      newOtp[i] = pasted[i]
+    }
+    setOtp(newOtp)
+
+    const nextFocusIndex = Math.min(pasted.length, 5)
+    otpInputs.current[nextFocusIndex]?.focus()
+  }
+
   const handleVerifyOtp = async (e?: React.FormEvent) => {
     if (e) e.preventDefault()
     setError(null)
@@ -167,6 +182,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                     value={digit}
                     onChange={(e) => handleOtpChange(i, e.target.value)}
                     onKeyDown={(e) => handleOtpKeyDown(i, e)}
+                    onPaste={handleOtpPaste}
                     slotProps={{ htmlInput: { maxLength: 1, style: { textAlign: 'center', fontSize: '1.25rem', fontFamily: 'monospace' } } }}
                     sx={{ width: 44 }}
                   />

@@ -7,7 +7,9 @@ __pycache__
 *.pyc
 tests
 node_modules
-dashboard/frontend/dist
+dist
+.pytest_cache
+.ruff_cache
 
 # Logs
 *.log
@@ -24,3 +26,26 @@ files/price_alerts.json
 files/portfolios.json
 PRIVACY_UK.md
 PRIVACY.md
+
+# C# / .NET Backend 
+[Bb]in/
+[Oo]bj/
+*.user
+*.suo
+*.userprefs
+*.sln.docstates
+.vs/
+.idea/
+*.ReSharper
+secrets.json
+
+# Frontend (Node.js / SPA)
+.next/
+.nuxt/
+out/
+build/
+coverage/
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local

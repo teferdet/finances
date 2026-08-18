@@ -1,4 +1,4 @@
-﻿"""
+"""
 Optional Redis client — async wrapper with MemoryCache fallback.
 
 Redis is enabled only when settings.redis.url is non-empty.
@@ -20,7 +20,7 @@ Usage:
 from __future__ import annotations
 
 import json
-from typing import Any, Optional
+from typing import Any
 
 from app.cache import cache as _mem_cache
 from app.logger import get_logger

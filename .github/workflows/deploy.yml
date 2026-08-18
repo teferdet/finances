@@ -20,7 +20,7 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
 
       # ── 1. Pull Latest Code ──────────────────────────────────────────
       - name: 📦 Pull Latest Code
@@ -71,13 +71,45 @@ jobs:
           username: ${{ secrets.SERVER_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SERVER_PORT }}
-          envs: BOT_TOKEN,MONGO_URI,CRYPTO_API_KEY,STOCKS_API_KEY,FERNET_KEY,BOT_ADMIN_IDS,URL_COMMUNICATION,URL_INVITE,URL_BUYMEACOFFEE,URL_DONATELLO,URL_BANK,URL_MINI_APP,REDIS_URL,SENTRY_DSN
+          envs: BOT_TOKEN,MONGO_URI,CRYPTO_API_KEY,STOCKS_API_KEY,FERNET_KEY,BOT_ADMIN_IDS,DASHBOARD_SECRET_KEY,URL_COMMUNICATION,URL_INVITE,URL_BUYMEACOFFEE,URL_DONATELLO,URL_BANK,URL_MINI_APP,REDIS_URL
           script: |
             export PATH=$PATH:/usr/local/bin:/usr/bin:/bin:/snap/bin
             set -e
             APP_DIR="/home/ubuntu/finances"
 
-            echo "🔐 Generating settings.json from secrets..."
+            echo "🔐 Generating unified .env and settings.json from secrets..."
+            
+            # Clean up any legacy dashboard/.env file
+            rm -f "$APP_DIR/dashboard/.env" "$APP_DIR/dashboard/API/.env"
+
+            cat > "$APP_DIR/.env" << EOF
+            BOT_TOKEN=${BOT_TOKEN}
+            BOT_ADMIN_IDS=${BOT_ADMIN_IDS}
+            BACKUP_ENABLED=true
+            MONGO_URI=${MONGO_URI}
+            MONGO_DATABASE=finances
+            DB_POOL_MIN=5
+            DB_POOL_MAX=50
+            JWT_SECRET=${JWT_SECRET:-${DASHBOARD_SECRET_KEY}}
+            CRYPTO_API_KEY=${CRYPTO_API_KEY}
+            STOCKS_API_KEY=${STOCKS_API_KEY}
+            FERNET_KEY=${FERNET_KEY}
+            RATE_LIMIT_REQUESTS=30
+            RATE_LIMIT_WINDOW_SEC=60
+            REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
+            MINI_APP_ENABLED=false
+            GROUPS_ENABLED=true
+            INLINE_MODE_ENABLED=true
+            URL_COMMUNICATION=${URL_COMMUNICATION}
+            URL_INVITE=${URL_INVITE}
+            URL_BUYMEACOFFEE=${URL_BUYMEACOFFEE}
+            URL_DONATELLO=${URL_DONATELLO}
+            URL_BANK=${URL_BANK}
+            URL_MINI_APP=${URL_MINI_APP}
+            EOF
+
+            chmod 600 "$APP_DIR/.env"
+
             python3 -c "
             import json, os
 
@@ -90,7 +122,7 @@ jobs:
             settings = {
                 'bot': {
                     'token': os.environ.get('BOT_TOKEN', ''),
-                    'admin_ids': env_list('BOT_ADMIN_IDS', '[1693890078]'),
+                    'admin_ids': env_list('BOT_ADMIN_IDS', '[]'),
                     'backup_enabled': True,
                     'version': 'finances 6.6.0'
                 },
@@ -130,10 +162,6 @@ jobs:
                 'redis': {
                     'url': os.environ.get('REDIS_URL', 'redis://redis:6379/0')
                 },
-                'sentry': {
-                    'dsn': os.environ.get('SENTRY_DSN', ''),
-                    'environment': 'production'
-                },
                 'draft': {
                     'enabled': True,
                     'loading_threshold_sec': 0.05,
@@ -147,7 +175,6 @@ jobs:
                 json.dump(settings, f, indent=2, ensure_ascii=False)
             print('✅ settings.json generated successfully')
             "
-            touch "$APP_DIR/.env"
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           MONGO_URI: ${{ secrets.MONGO_URI }}
@@ -155,6 +182,7 @@ jobs:
           STOCKS_API_KEY: ${{ secrets.STOCKS_API_KEY }}
           FERNET_KEY: ${{ secrets.FERNET_KEY }}
           BOT_ADMIN_IDS: ${{ secrets.BOT_ADMIN_IDS }}
+          DASHBOARD_SECRET_KEY: ${{ secrets.DASHBOARD_SECRET_KEY }}
           URL_COMMUNICATION: ${{ vars.URL_COMMUNICATION }}
           URL_INVITE: ${{ vars.URL_INVITE }}
           URL_BUYMEACOFFEE: ${{ vars.URL_BUYMEACOFFEE }}
@@ -162,7 +190,6 @@ jobs:
           URL_BANK: ${{ vars.URL_BANK }}
           URL_MINI_APP: ${{ vars.URL_MINI_APP }}
           REDIS_URL: ${{ secrets.REDIS_URL }}
-          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
 
       # ── 3. Deploy with Docker Compose ────────────────────────────────
       - name: 🚀 Deploy Services
@@ -179,8 +206,8 @@ jobs:
             APP_DIR="/home/ubuntu/finances"
             cd "$APP_DIR"
             
-            echo "🐳 Starting Docker Compose for bot..."
-            docker compose up -d --build bot
+            echo "🐳 Starting Docker Compose for bot & redis..."
+            docker compose up -d --build bot redis
             
             # Prune old images to save space
             docker image prune -f

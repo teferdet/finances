@@ -1,4 +1,4 @@
-﻿name: Pyre Type Check
+name: Pyre Type Check
 
 on:
   push:
@@ -20,7 +20,7 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v5

@@ -149,6 +149,7 @@ async def cmd_rate(message: Message, i18n: I18n, lang: str) -> None:
     for code, amount in data:
         ci = info_map.get(code, {})
         emoji = ci.get("emoji", "") or cd_map.get(code, {}).get("emoji", "")
+        symbol = ci.get("symbol", "") or cd_map.get(code, {}).get("symbol", "")
         sym_str = symbol if index == 1 else ""
         info_parts.append(f"{emoji} {code} {amount}{sym_str}")
 

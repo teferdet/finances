@@ -1022,6 +1022,10 @@ async def _delayed_broadcast(
 
 @router.message(StateFilter(AdminManagementStates.waiting_for_new_admin_id))
 async def process_new_admin_id(message: Message, state: FSMContext, i18n: I18n, lang: str) -> None:
+    if message.from_user is None or not _is_admin(message.from_user.id) or message.from_user.id not in get_settings().bot.admin_ids:
+        await state.clear()
+        return
+
     try:
         new_admin_id = int(message.text)
     except (ValueError, TypeError):
@@ -1046,6 +1050,10 @@ async def process_new_admin_id(message: Message, state: FSMContext, i18n: I18n, 
 
 @router.message(StateFilter(AdminManagementStates.waiting_for_remove_admin_id))
 async def process_remove_admin_id(message: Message, state: FSMContext, i18n: I18n, lang: str) -> None:
+    if message.from_user is None or not _is_admin(message.from_user.id) or message.from_user.id not in get_settings().bot.admin_ids:
+        await state.clear()
+        return
+
     try:
         remove_admin_id = int(message.text)
     except (ValueError, TypeError):

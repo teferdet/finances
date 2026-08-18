@@ -1,55 +1,36 @@
 # syntax=docker/dockerfile:1
 
-# ── Stage 1: Dependencies ──────────────────────────────────────────────────────
-FROM python:3.11-slim AS deps
+# ── Stage 1: Build (Компільована стадія) ───────────────────────────────────────
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
 
+COPY ["dashboard/API/API.csproj", "dashboard/API/"]
+RUN dotnet restore "dashboard/API/API.csproj"
+
+COPY dashboard/API/ dashboard/API/
+WORKDIR "/src/dashboard/API"
+
+RUN dotnet publish "API.csproj" -c Release -o /app/publish /p:UseAppHost=false
+
+# ── Stage 2: Runtime (Стадія виконання) ────────────────────────────────────────
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc \
-    libffi-dev \
-    && rm -rf /var/lib/apt/lists/*
-
-COPY dashboard/requirements.txt .
-RUN pip install --no-cache-dir --upgrade pip \
-    && pip install --no-cache-dir -r requirements.txt
-
-# ── Stage 2: Runtime ───────────────────────────────────────────────────────────
-FROM python:3.11-slim AS runtime
-
-RUN apt-get update && apt-get install -y --no-install-recommends libjemalloc2 \
+RUN apt-get update && apt-get install -y --no-install-recommends curl \
     && rm -rf /var/lib/apt/lists/*
 
 RUN addgroup --system finances && adduser --system --ingroup finances finances
 
-WORKDIR /app
+COPY --from=build /app/publish .
 
-COPY --from=deps /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
-COPY --from=deps /usr/local/bin /usr/local/bin
-
-# Copy only the dashboard package
-COPY dashboard/api/ ./dashboard/api/
-COPY dashboard/__init__.p[y] ./dashboard/
-
-# Create empty __init__ if it doesn't exist
-RUN python -c "open('dashboard/__init__.py', 'a').close()" 2>/dev/null || true
-
+RUN chown -R finances:finances /app
 USER finances
 
-ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONPATH=/app \
-    LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libjemalloc.so.2 \
-    MALLOC_ARENA_MAX=2
-
+ENV ASPNETCORE_URLS=http://0.0.0.0:8090
 EXPOSE 8090
 
+# Healthcheck directly querying the endpoint via curl
 HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
-    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8090/api/health')" || exit 1
+    CMD curl -f http://localhost:8090/api/health || exit 1
 
-CMD ["uvicorn", "dashboard.api.main:app", \
-     "--host", "0.0.0.0", \
-     "--port", "8090", \
-     "--workers", "1", \
-     "--no-access-log", \
-     "--timeout-keep-alive", "30"]
+CMD ["dotnet", "API.dll"]
