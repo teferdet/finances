@@ -3,7 +3,7 @@ import { defineConfig } from 'vitepress'
 export default defineConfig({
   title: 'Finances Bot',
   description: 'Official documentation for Finances Telegram Bot — Real-time financial market tracking, portfolio management, and admin diagnostics.',
-  base: '/',
+  base: '/finances/',
 
   head: [
     ['meta', { name: 'viewport', content: 'width=device-width, initial-scale=1.0, viewport-fit=cover' }],
