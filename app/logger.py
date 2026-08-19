@@ -191,6 +191,7 @@ class AsyncTelegramErrorHandler(logging.Handler):
         self.bot = bot
         self.db = db
         self.last_sent: dict[int, float] = {}  # chat_id → timestamp (debounce)
+        self._tasks = set()
 
     def emit(self, record: logging.LogRecord) -> None:
         if record.levelno < logging.WARNING:
@@ -212,7 +213,7 @@ class AsyncTelegramErrorHandler(logging.Handler):
             tb_short = "".join(tb_lines[-4:]) if len(tb_lines) >= 4 else "".join(tb_lines)
             exc_text = tb_short
 
-        asyncio.create_task(
+        task = asyncio.create_task(
             self._send_to_groups(
                 record.levelno,
                 level_name,
@@ -225,6 +226,8 @@ class AsyncTelegramErrorHandler(logging.Handler):
                 time.time(),
             )
         )
+        self._tasks.add(task)
+        task.add_done_callback(self._tasks.discard)
 
     async def _send_to_groups(
         self,

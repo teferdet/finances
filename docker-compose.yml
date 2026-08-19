@@ -92,7 +92,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.dashboard
-    container_name: finances-dashboard
+    container_name: finances-backend
     restart: unless-stopped
     networks:
       - finances_net
@@ -114,7 +114,7 @@ services:
     volumes:
       - ./logs/api:/app/logs
       - ./config:/app/config
-    # ports:
+      # ports:
       # Expose dashboard on localhost only; put NGINX in front for production
       # - "127.0.0.1:8090:8090"
     healthcheck:

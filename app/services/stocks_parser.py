@@ -48,7 +48,7 @@ def _fetch_stocks_sync() -> Optional[dict]:
 
         try:
             tickers_str = " ".join(stocks_list)
-            data = yf.download(tickers_str, period="5d", group_by="ticker", threads=True)
+            data = yf.download(tickers_str, period="5d", group_by="ticker", threads=False)
         finally:
             yf_logger.setLevel(prev_level)
 

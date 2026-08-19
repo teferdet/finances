@@ -106,6 +106,7 @@ class FiatParser:
                     from app.services.error_tracking import report_source_error
 
                     await report_source_error(f"fiat_{code}", "No rates parsed from HTML")
+                    await asyncio.sleep(self._parser_cfg.retry_delay_sec * attempt)
 
             except Exception as exc:
                 log.error("[%s] Error (attempt %d): %s", code, attempt, exc)

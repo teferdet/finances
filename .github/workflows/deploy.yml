@@ -124,7 +124,7 @@ jobs:
                     'token': os.environ.get('BOT_TOKEN', ''),
                     'admin_ids': env_list('BOT_ADMIN_IDS', '[1693890078]'),
                     'backup_enabled': True,
-                    'version': 'finances 6.6.0'
+                    'version': 'finances v6.6.1'
                 },
                 'database': {
                     'mongo_uri': os.environ.get('MONGO_URI', ''),
@@ -180,7 +180,7 @@ jobs:
                     'url': os.environ.get('REDIS_URL', 'redis://redis:6379/0')
                 },
                 'draft': {
-                    'enabled': True,
+                    'enabled': False,
                     'loading_threshold_sec': 0.05,
                     'animation_interval_sec': 0.25,
                     'preview_delay_sec': 0.15
