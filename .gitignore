@@ -21,3 +21,7 @@ files/stats.json
 files/price_alerts.json
 files/portfolios.json
 
+# Node / VitePress
+node_modules/
+.vitepress/dist/
+.vitepress/cache/
