@@ -1,14 +1,20 @@
 import { ref, computed } from 'vue'
 import { type Lang, UI_STRINGS, DOCS_DATA } from '../data/docs-data'
 
-const lang = ref<Lang>(
-  typeof window !== 'undefined'
-    ? ((localStorage.getItem('finances_lang') as Lang) ??
-       (navigator.language.startsWith('uk') ? 'uk' : 'en'))
-    : 'en'
-)
+const lang = ref<Lang>('en')
 
 export function useLang() {
+  function init() {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('finances_lang') as Lang
+      if (saved) {
+        lang.value = saved
+      } else if (navigator.language.startsWith('uk')) {
+        lang.value = 'uk'
+      }
+    }
+  }
+
   function toggle() {
     lang.value = lang.value === 'en' ? 'uk' : 'en'
     localStorage.setItem('finances_lang', lang.value)
@@ -28,5 +34,5 @@ export function useLang() {
     return groups
   })
 
-  return { lang, strings, docs, categories, toggle }
+  return { lang, strings, docs, categories, toggle, init }
 }

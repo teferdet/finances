@@ -53,8 +53,8 @@ hljs.registerLanguage('ini', ini)
 hljs.registerLanguage('toml', ini)
 
 // ── State ───────────────────────────────────────────────────────────────────
-const { theme } = useTheme()
-const { lang, strings, docs } = useLang()
+const { theme, init: initTheme } = useTheme()
+const { lang, strings, docs, init: initLang } = useLang()
 
 type Page = 'home' | 'docs'
 const currentPage = ref<Page>('home')
@@ -162,7 +162,13 @@ async function postRender() {
   const btnLabel = strings.value.btnCopy
   area.querySelectorAll('pre').forEach(pre => {
     if (pre.querySelector('code.language-mermaid')) return
-    if (pre.querySelector('.copy-code-btn')) return
+    if (pre.parentElement?.classList.contains('code-wrapper')) return
+    
+    const wrapper = document.createElement('div')
+    wrapper.className = 'code-wrapper'
+    pre.parentNode?.insertBefore(wrapper, pre)
+    wrapper.appendChild(pre)
+
     const btn = document.createElement('button')
     btn.className = 'copy-code-btn'
     btn.textContent = btnLabel
@@ -173,7 +179,7 @@ async function postRender() {
         setTimeout(() => { btn.textContent = btnLabel }, 2000)
       })
     })
-    pre.appendChild(btn)
+    wrapper.appendChild(btn)
   })
 
   // Internal .md link interception with capture to prevent VitePress router interference
@@ -489,6 +495,8 @@ watch(sidebarOpen, (open) => {
 
 // ── Lifecycle ───────────────────────────────────────────────────────────────
 onMounted(() => {
+  initTheme()
+  initLang()
   handleHash()
   window.addEventListener('hashchange', handleHash)
   window.addEventListener('keydown', onGlobalKey)

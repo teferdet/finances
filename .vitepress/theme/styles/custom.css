@@ -314,7 +314,7 @@ body {
   border-radius: 10px; padding: 1.25rem;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
-  margin-bottom: 1.75rem;
+  margin-bottom: 0;
   position: relative; max-width: 100%;
   font-family: var(--font-mono); font-size: 0.9em;
   line-height: 1.65;
@@ -437,7 +437,12 @@ body {
   background: #f8fafc;
 }
 
-/* ── Copy Button ───────────────────────────────────────────────────────── */
+/* ── Copy Button & Code Wrapper ────────────────────────────────────────── */
+.code-wrapper {
+  position: relative;
+  margin-bottom: 1.75rem;
+  max-width: 100%;
+}
 .copy-code-btn {
   position: absolute; top: 0.65rem; right: 0.65rem;
   background: var(--bg-secondary); border: 1px solid var(--border-color);
@@ -644,8 +649,7 @@ body.sidebar-open .sidebar-backdrop { opacity: 1; pointer-events: auto; }
 @media (max-width: 880px) {
   .docs-sidebar { left: 0; }
   .docs-viewport {
-    grid-template-columns: 1fr;
-    padding-left: 0;
+    grid-template-columns: minmax(0, 1fr);
     max-width: 100%;
   }
   .docs-toc { display: none; }

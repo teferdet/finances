@@ -2,11 +2,7 @@ import { ref, watchEffect } from 'vue'
 
 export type Theme = 'dark' | 'light'
 
-const theme = ref<Theme>(
-  (typeof window !== 'undefined'
-    ? (localStorage.getItem('theme') as Theme)
-    : null) ?? 'dark'
-)
+const theme = ref<Theme>('dark')
 
 watchEffect(() => {
   if (typeof window === 'undefined') return
@@ -15,8 +11,14 @@ watchEffect(() => {
 })
 
 export function useTheme() {
+  function init() {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('theme') as Theme
+      if (saved) theme.value = saved
+    }
+  }
   function toggle() {
     theme.value = theme.value === 'dark' ? 'light' : 'dark'
   }
-  return { theme, toggle }
+  return { theme, toggle, init }
 }
