@@ -1,8 +1,8 @@
 import { defineConfig } from 'vitepress'
 
 export default defineConfig({
-  title: 'Finances Bot',
-  description: 'Official documentation for Finances Telegram Bot — Real-time financial market tracking, portfolio management, and admin diagnostics.',
+  title: 'finance project documentation',
+  description: 'Official documentation for finances Telegram Bot — Real-time financial market tracking, portfolio management, and admin diagnostics.',
   base: '/finances/',
 
   head: [
