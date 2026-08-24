@@ -17,7 +17,7 @@ psutil>=7.2.2
 
 # Optional: Redis distributed cache + FSM storage
 # Set settings.redis.url to enable; falls back to MemoryCache if not configured
-redis>=5.0.0
+redis>=8.1.0
 
 # Optional: Sentry error tracking
 # Set settings.sentry.dsn to enable; no-op if dsn is empty
