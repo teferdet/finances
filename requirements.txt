@@ -21,4 +21,4 @@ redis>=8.1.0
 
 # Optional: Sentry error tracking
 # Set settings.sentry.dsn to enable; no-op if dsn is empty
-sentry-sdk>=2.68.0
+sentry-sdk>=2.68.1
