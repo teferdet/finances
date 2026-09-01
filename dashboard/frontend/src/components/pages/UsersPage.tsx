@@ -4,7 +4,7 @@ import {
   TextField, InputAdornment, IconButton, Button, Select,
   MenuItem, FormControl, InputLabel, Dialog, DialogTitle,
   DialogContent, DialogActions, DialogContentText, Alert,
-  Tooltip, CircularProgress, Divider, Stack, Badge,
+  Tooltip, CircularProgress, Divider, Badge,
   ToggleButtonGroup, ToggleButton,
 } from '@mui/material'
 import {
@@ -480,10 +480,10 @@ export const UsersPage: React.FC<UsersPageProps> = ({ initialData }) => {
         </DialogTitle>
         <DialogContent>
           <DialogContentText sx={{ mb: 2 }}>
-            Export all data for <strong>{selectedUser?.name ?? `@${selectedUser?.username}` ?? `ID ${selectedUser?.id}`}</strong>.
+            Export all data for <strong>{selectedUser?.name || (selectedUser?.username ? `@${selectedUser.username}` : `ID ${selectedUser?.id}`)}</strong>.
             Includes profile, portfolio, alerts, and API key metadata (secrets excluded).
           </DialogContentText>
-          <Stack direction="row" spacing={1.5}>
+          <Box sx={{ display: 'flex', gap: 1.5 }}>
             <Button
               fullWidth
               variant="contained"
@@ -504,7 +504,7 @@ export const UsersPage: React.FC<UsersPageProps> = ({ initialData }) => {
             >
               Download CSV
             </Button>
-          </Stack>
+          </Box>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setExportDialog(false)} color="inherit">Cancel</Button>

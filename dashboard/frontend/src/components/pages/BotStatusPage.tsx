@@ -3,7 +3,7 @@ import { BotStatus, api } from '@/api/client'
 import {
   Box, Card, Typography, Grid, LinearProgress, Divider,
   Button, CircularProgress, Alert, ToggleButtonGroup, ToggleButton,
-  IconButton, Tooltip, Stack, Chip,
+  IconButton, Tooltip, Chip,
 } from '@mui/material'
 import {
   SmartToy as BotIcon,
@@ -219,7 +219,7 @@ export const BotStatusPage: React.FC<BotStatusPageProps> = ({ status }) => {
               <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, textTransform: 'uppercase', display: 'block', mb: 1.5 }}>
                 Database Maintenance
               </Typography>
-              <Stack direction="row" spacing={2} alignItems="center">
+              <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
                 <Button
                   variant="outlined"
                   color="warning"
@@ -231,7 +231,7 @@ export const BotStatusPage: React.FC<BotStatusPageProps> = ({ status }) => {
                 >
                   Clear Expired OTP Tokens
                 </Button>
-              </Stack>
+              </Box>
               {otpMessage && (
                 <Alert severity={otpMessage.type} sx={{ mt: 1.5, py: 0 }}>
                   {otpMessage.text}
