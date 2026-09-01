@@ -43,11 +43,16 @@ public class AuthController : ControllerBase
         }
 
         
+        // Secure flag only when actually on HTTPS (direct TLS or behind nginx with X-Forwarded-Proto).
+        // Without this, browsers silently drop the cookie over HTTP → 401 on every API call.
+        var isHttps = Request.IsHttps ||
+                      Request.Headers["X-Forwarded-Proto"].ToString() == "https";
+
         var cookieOptions = new CookieOptions
         {
             HttpOnly = true,
             SameSite = SameSiteMode.Strict,
-            Secure = true, 
+            Secure = isHttps,
             MaxAge = TimeSpan.FromDays(7),
             Path = "/"
         };
@@ -60,12 +65,15 @@ public class AuthController : ControllerBase
     [HttpPost("logout")]
     public IActionResult Logout()
     {
+        var isHttpsLogout = Request.IsHttps ||
+                            Request.Headers["X-Forwarded-Proto"].ToString() == "https";
+
         Response.Cookies.Delete("dash_session", new CookieOptions
         {
             Path = "/",
             HttpOnly = true,
             SameSite = SameSiteMode.Strict,
-            Secure = true
+            Secure = isHttpsLogout
         });
         return Ok(new { ok = true });
     }

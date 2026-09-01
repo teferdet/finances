@@ -73,6 +73,7 @@ builder.Services.AddSingleton<MongoContext>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<StatsService>();
 builder.Services.AddScoped<ConfigService>();
+builder.Services.AddScoped<UserDataService>();
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>

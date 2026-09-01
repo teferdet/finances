@@ -241,4 +241,34 @@ export const api = {
     }),
   restartBot: () =>
     req<{ ok: boolean; message: string }>('/api/actions/restart', { method: 'POST' }),
+
+  // User management (admin)
+  exportUserJson: (userId: number) =>
+    req<Blob>(`/api/users/${userId}/export`),
+
+  exportUserCsv: (userId: number) =>
+    req<Blob>(`/api/users/${userId}/export/csv`),
+
+  deleteUser: (userId: number) =>
+    req<{
+      ok: boolean
+      user_id: number
+      alerts_deleted: number
+      api_keys_deleted: number
+      otps_deleted: number
+      message: string
+    }>(`/api/users/${userId}`, { method: 'DELETE' }),
+}
+
+/** Trigger a file download for user data export (opens browser save dialog). */
+export function downloadUserExport(userId: number, format: 'json' | 'csv' = 'json') {
+  const url = format === 'csv'
+    ? `/api/users/${userId}/export/csv`
+    : `/api/users/${userId}/export`
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `user_${userId}_export.${format}`
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
 }
