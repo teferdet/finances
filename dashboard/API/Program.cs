@@ -69,12 +69,12 @@ try
 
     // ── JWT Auth ──────────────────────────────────────────────────────────────
     var jwtSecret = builder.Configuration["JWT_SECRET"]
-        ?? builder.Configuration["DASHBOARD_SECRET_KEY"]
-        ?? (builder.Environment.IsDevelopment() ? "ThisIsADefaultSecretKeyForDevelopmentOnly123!" : null);
+        ?? builder.Configuration["DASHBOARD_SECRET_KEY"];
 
     if (string.IsNullOrWhiteSpace(jwtSecret) || jwtSecret.Length < 32)
         throw new InvalidOperationException(
-            "JWT_SECRET (or DASHBOARD_SECRET_KEY) is not configured or is too short (minimum 32 characters required).");
+            "JWT_SECRET (or DASHBOARD_SECRET_KEY) is not configured or is too short (minimum 32 characters required). " +
+            "Generate a strong random secret with: openssl rand -hex 32");
 
     builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         .AddJwtBearer(options =>
@@ -129,6 +129,7 @@ try
         });
 
     // ── DI ────────────────────────────────────────────────────────────────────
+    builder.Services.AddHttpClient();
     builder.Services.AddSingleton<MongoContext>();
     builder.Services.AddScoped<AuthService>();
     builder.Services.AddScoped<StatsService>();

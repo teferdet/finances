@@ -172,14 +172,14 @@ export const BotStatusPage: React.FC<BotStatusPageProps> = ({ status }) => {
               <Grid size={{ xs: 6 }}>
                 <Box sx={{ p: 2, borderRadius: 2, border: '1px solid', borderColor: 'divider', bgcolor: 'rgba(255,255,255,0.02)' }}>
                   <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>Host CPU Usage</Typography>
-                  <Typography variant="h6" sx={{ fontFamily: 'monospace', fontWeight: 'bold', my: 0.5 }}>{status.sys_cpu_pct}%</Typography>
-                  <Typography variant="caption" color="text.secondary">{status.sys_cpu_cores} Physical Cores</Typography>
+                  <Typography variant="h6" sx={{ fontFamily: 'monospace', fontWeight: 'bold', my: 0.5 }}>{status.sys_cpu_pct ?? 0}%</Typography>
+                  <Typography variant="caption" color="text.secondary">{status.sys_cpu_cores ?? 1} Physical Cores</Typography>
                 </Box>
               </Grid>
               <Grid size={{ xs: 6 }}>
                 <Box sx={{ p: 2, borderRadius: 2, border: '1px solid', borderColor: 'divider', bgcolor: 'rgba(255,255,255,0.02)' }}>
                   <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>Load Avg (1m / 5m)</Typography>
-                  <Typography variant="h6" sx={{ fontFamily: 'monospace', fontWeight: 'bold', my: 0.5 }}>{status.load_avg_1m} / {status.load_avg_5m}</Typography>
+                  <Typography variant="h6" sx={{ fontFamily: 'monospace', fontWeight: 'bold', my: 0.5 }}>{status.load_avg_1m != null ? status.load_avg_1m : '—'} / {status.load_avg_5m != null ? status.load_avg_5m : '—'}</Typography>
                   <Typography variant="caption" color="text.secondary">System scheduler load</Typography>
                 </Box>
               </Grid>

@@ -24,7 +24,7 @@ public class ConfigService
         var json = await File.ReadAllTextAsync(_configPath);
         var configNode = JsonNode.Parse(json);
 
-        // Hide sensitive data like the Python API did
+        // Hide sensitive data (tokens, DB URIs, encryption keys, external API keys)
         if (configNode?["bot"] is JsonObject botObj && botObj["token"] != null)
         {
             botObj["token"] = "**********************";
@@ -32,6 +32,17 @@ public class ConfigService
         if (configNode?["database"] is JsonObject dbObj && dbObj["mongo_uri"] != null)
         {
             dbObj["mongo_uri"] = "mongodb://**********************";
+        }
+        if (configNode?["security"] is JsonObject secObj && secObj["fernet_key"] != null)
+        {
+            secObj["fernet_key"] = "**********************";
+        }
+        if (configNode?["api_keys"] is JsonObject apiObj)
+        {
+            foreach (var key in apiObj.Select(k => k.Key).ToList())
+            {
+                apiObj[key] = "**********************";
+            }
         }
 
         return configNode;

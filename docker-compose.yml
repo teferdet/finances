@@ -2,9 +2,9 @@
 #
 # Services:
 #   bot        — Telegram bot (Python/aiogram)
-#   dashboard  — Admin dashboard (FastAPI/uvicorn)
+#   dashboard  — Admin dashboard (.NET 8 Web API)
+#   frontend   — NGINX reverse proxy with Auto-generated SSL (Self-signed 2048-bit with SAN for IP/localhost)
 #   redis      — Optional cache (disabled by default — set REDIS_URL to enable)
-#   mongo      — MongoDB (use 'external' profile for managed/Atlas MongoDB)
 #
 # Quick start:
 #   cp .env.example .env   # fill in required secrets
@@ -13,15 +13,17 @@
 # Healthchecks: all services have healthchecks defined.
 # Logs: docker compose logs -f bot
 #       docker compose logs -f dashboard
+#       docker compose logs -f frontend
 
 name: finances
 
 # ── Volumes ────────────────────────────────────────────────────────────────────
 volumes:
-
   redis_data:
     driver: local
   app_logs:
+    driver: local
+  ssl_data:
     driver: local
 
 # ── Networks ───────────────────────────────────────────────────────────────────
@@ -87,7 +89,7 @@ services:
       retries: 3
       start_period: 30s
 
-  # ── Dashboard (FastAPI) ───────────────────────────────────────────────────────
+  # ── Dashboard (.NET API) ──────────────────────────────────────────────────────
   dashboard:
     build:
       context: .
@@ -106,6 +108,7 @@ services:
       MONGO_DATABASE: "${MONGO_DATABASE:-finances}"
       REDIS_URL: "${REDIS_URL:-redis://redis:6379/0}"
       CONFIG_PATH: "/app/config/settings.json"
+      ASPNETCORE_ENVIRONMENT: "Production"
     deploy:
       resources:
         limits:
@@ -114,9 +117,6 @@ services:
     volumes:
       - ./logs/api:/app/logs
       - ./config:/app/config
-      # ports:
-      # Expose dashboard on localhost only; put NGINX in front for production
-      # - "127.0.0.1:8090:8090"
     healthcheck:
       test: [ "CMD-SHELL", "curl -f http://localhost:8090/api/health || exit 1" ]
       interval: 30s
@@ -124,7 +124,7 @@ services:
       retries: 3
       start_period: 20s
 
-  # ── Frontend (NGINX) ──────────────────────────────────────────────────────────
+  # ── Frontend (NGINX + Auto-SSL for IP) ─────────────────────────────────────────
   frontend:
     build:
       context: ./dashboard/frontend
@@ -137,12 +137,12 @@ services:
       - dashboard
     volumes:
       - ./logs/frontend:/var/log/nginx
-      - /etc/ssl/finances:/etc/ssl/finances:ro
+      - ssl_data:/etc/ssl/finances
     ports:
       - "80:80"
       - "443:443"
     healthcheck:
-      test: [ "CMD-SHELL", "curl -f http://localhost/ || exit 1" ]
+      test: [ "CMD-SHELL", "curl -k -f https://localhost/ || exit 1" ]
       interval: 30s
       timeout: 10s
       retries: 3

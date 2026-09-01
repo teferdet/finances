@@ -71,77 +71,41 @@ public class StatsController : ControllerBase
 
     // GET /api/stats/bot
     [HttpGet("bot")]
-    public IActionResult GetBotStats()
+    public async Task<IActionResult> GetBotStats()
     {
-        return Ok(new
-        {
-            serviceStatus = "running",
-            startedAt = DateTime.UtcNow.AddDays(-1).ToString("O"),
-            botRamMb = 150,
-            botCpuPct = 5.0,
-            botPid = 1234,
-            botThreads = 10,
-            sysRamUsedGb = 2.5,
-            sysRamTotalGb = 8.0,
-            sysRamPct = 31.0,
-            sysCpuPct = 15.0,
-            sysCpuCores = 4,
-            loadAvg1m = 0.5,
-            loadAvg5m = 0.6,
-            diskUsedGb = 20.0,
-            diskTotalGb = 100.0,
-            diskPct = 20.0,
-            os = "Linux",
-            pythonVersion = "3.11.0",
-            hostname = "docker-node",
-            botVersion = "2.0.0"
-        });
+        var result = await _statsService.GetBotStatsAsync();
+        return Ok(result);
     }
 
     // GET /api/stats/parser
     [HttpGet("parser")]
-    public IActionResult GetParserStats()
+    public async Task<IActionResult> GetParserStats()
     {
-        return Ok(new
-        {
-            fiat   = new { count = 10, lastUpdated = DateTime.UtcNow.ToString("O") },
-            crypto = new { lastUpdated = DateTime.UtcNow.ToString("O") },
-            stocks = new { lastUpdated = DateTime.UtcNow.ToString("O") },
-            parserErrors = new List<object>(),
-            cyclesToday = 24
-        });
+        var result = await _statsService.GetParserStatsAsync();
+        return Ok(result);
     }
 
     // GET /api/stats/alerts
     [HttpGet("alerts")]
-    public IActionResult GetAlertsStats()
+    public async Task<IActionResult> GetAlertsStats()
     {
-        return Ok(new
-        {
-            total = 100,
-            active = 50,
-            triggered = 10,
-            topCurrencies = new List<object> { new { currency = "BTC", count = 5 } }
-        });
+        var result = await _statsService.GetAlertsStatsAsync();
+        return Ok(result);
     }
 
     // GET /api/stats/groups
     [HttpGet("groups")]
-    public IActionResult GetGroupsStats()
+    public async Task<IActionResult> GetGroupsStats()
     {
-        return Ok(new
-        {
-            total = 50,
-            active = 40,
-            inactive = 10,
-            recent = new List<object>()
-        });
+        var result = await _statsService.GetGroupsStatsAsync();
+        return Ok(result);
     }
 
     // GET /api/stats/errors
     [HttpGet("errors")]
-    public IActionResult GetErrors()
+    public async Task<IActionResult> GetErrors()
     {
-        return Ok(new { errors = new List<object>() });
+        var result = await _statsService.GetErrorsAsync();
+        return Ok(new { errors = result });
     }
 }

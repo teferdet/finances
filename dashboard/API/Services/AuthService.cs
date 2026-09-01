@@ -14,11 +14,13 @@ public class AuthService
 {
     private readonly IConfiguration _configuration;
     private readonly MongoContext _mongoContext;
+    private readonly IHttpClientFactory _httpClientFactory;
 
-    public AuthService(IConfiguration configuration, MongoContext mongoContext)
+    public AuthService(IConfiguration configuration, MongoContext mongoContext, IHttpClientFactory httpClientFactory)
     {
         _configuration = configuration;
         _mongoContext = mongoContext;
+        _httpClientFactory = httpClientFactory;
     }
 
     public async Task<(bool Success, string Message)> RequestOtpAsync(OtpRequestDto request, string ipAddress)
@@ -74,7 +76,7 @@ public class AuthService
         var telegramUrl = $"https://api.telegram.org/bot{botToken}/sendMessage";
         var messageText = $"🔐 <b>Dashboard Login Request</b>\n\nYour OTP is: <code>{otp}</code>\nIP: {ipAddress}";
 
-        using var client = new HttpClient();
+        var client = _httpClientFactory.CreateClient();
         var payload = new
         {
             chat_id = request.TelegramId,

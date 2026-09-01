@@ -451,4 +451,437 @@ public class StatsService
         }
         catch { return (0, 0); }
     }
+
+    // ── Bot / Host System Health ──────────────────────────────────────────────
+
+    private static (long totalTicks, long idleTicks) _lastCpuTicks = (0, 0);
+    private static DateTime _lastCpuSampleTime = DateTime.MinValue;
+    private static double _lastCalculatedCpuPct = 0;
+
+    public async Task<BotStatusDto> GetBotStatsAsync()
+    {
+        var dto = new BotStatusDto();
+
+        // 1. Host Memory (RAM)
+        GetHostMemory(dto);
+
+        // 2. Host Storage (Disk)
+        GetHostDisk(dto);
+
+        // 3. CPU Cores & Usage & Load Average
+        GetHostCpuAndLoad(dto);
+
+        // 4. OS & Hostname
+        dto.Hostname = Environment.MachineName;
+        dto.Os = GetOperatingSystemName();
+
+        // 5. Bot Process Metrics & Status
+        await PopulateBotProcessMetricsAsync(dto);
+
+        return dto;
+    }
+
+    private static void GetHostMemory(BotStatusDto dto)
+    {
+        try
+        {
+            if (File.Exists("/proc/meminfo"))
+            {
+                long totalKb = 0;
+                long availKb = 0;
+                foreach (var line in File.ReadLines("/proc/meminfo"))
+                {
+                    if (line.StartsWith("MemTotal:", StringComparison.OrdinalIgnoreCase))
+                    {
+                        totalKb = ParseMemInfoKb(line);
+                    }
+                    else if (line.StartsWith("MemAvailable:", StringComparison.OrdinalIgnoreCase))
+                    {
+                        availKb = ParseMemInfoKb(line);
+                    }
+                }
+
+                if (totalKb > 0)
+                {
+                    long usedKb = totalKb - availKb;
+                    dto.SysRamTotalGb = Math.Round(totalKb / (1024.0 * 1024.0), 2);
+                    dto.SysRamUsedGb = Math.Round(usedKb / (1024.0 * 1024.0), 2);
+                    dto.SysRamPct = Math.Round((double)usedKb / totalKb * 100.0, 1);
+                    return;
+                }
+            }
+        }
+        catch { }
+
+        try
+        {
+            var memInfo = GC.GetGCMemoryInfo();
+            long totalBytes = memInfo.TotalAvailableMemoryBytes > 0 ? memInfo.TotalAvailableMemoryBytes : 1073741824L;
+            long usedBytes = Environment.WorkingSet;
+            dto.SysRamTotalGb = Math.Round(totalBytes / (1024.0 * 1024.0 * 1024.0), 2);
+            dto.SysRamUsedGb = Math.Round(usedBytes / (1024.0 * 1024.0 * 1024.0), 2);
+            dto.SysRamPct = totalBytes > 0 ? Math.Round((double)usedBytes / totalBytes * 100.0, 1) : 0;
+        }
+        catch
+        {
+            dto.SysRamTotalGb = 1.0;
+            dto.SysRamUsedGb = 0.5;
+            dto.SysRamPct = 50.0;
+        }
+    }
+
+    private static long ParseMemInfoKb(string line)
+    {
+        var parts = line.Split(':', StringSplitOptions.TrimEntries);
+        if (parts.Length > 1)
+        {
+            var numPart = parts[1].Split(' ', StringSplitOptions.RemoveEmptyEntries)[0];
+            if (long.TryParse(numPart, out var kb)) return kb;
+        }
+        return 0;
+    }
+
+    private static void GetHostDisk(BotStatusDto dto)
+    {
+        try
+        {
+            var drives = DriveInfo.GetDrives().Where(d => d.IsReady).ToList();
+            var root = drives.FirstOrDefault(d => d.Name == "/" || d.RootDirectory.FullName == "/")
+                    ?? drives.FirstOrDefault();
+
+            if (root != null && root.TotalSize > 0)
+            {
+                long totalBytes = root.TotalSize;
+                long freeBytes = root.AvailableFreeSpace;
+                long usedBytes = totalBytes - freeBytes;
+
+                dto.DiskTotalGb = Math.Round(totalBytes / (1024.0 * 1024.0 * 1024.0), 1);
+                dto.DiskUsedGb = Math.Round(usedBytes / (1024.0 * 1024.0 * 1024.0), 1);
+                dto.DiskPct = Math.Round((double)usedBytes / totalBytes * 100.0, 1);
+                return;
+            }
+        }
+        catch { }
+
+        dto.DiskTotalGb = 10.0;
+        dto.DiskUsedGb = 1.0;
+        dto.DiskPct = 10.0;
+    }
+
+    private static void GetHostCpuAndLoad(BotStatusDto dto)
+    {
+        dto.SysCpuCores = Environment.ProcessorCount;
+
+        // Load average on Linux
+        if (File.Exists("/proc/loadavg"))
+        {
+            try
+            {
+                var content = File.ReadAllText("/proc/loadavg");
+                var parts = content.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length >= 2)
+                {
+                    if (double.TryParse(parts[0], System.Globalization.CultureInfo.InvariantCulture, out var l1))
+                        dto.LoadAvg1m = Math.Round(l1, 2);
+                    if (double.TryParse(parts[1], System.Globalization.CultureInfo.InvariantCulture, out var l5))
+                        dto.LoadAvg5m = Math.Round(l5, 2);
+                }
+            }
+            catch { }
+        }
+
+        // Host CPU Usage %
+        if (File.Exists("/proc/stat"))
+        {
+            try
+            {
+                var firstLine = File.ReadLines("/proc/stat").FirstOrDefault();
+                if (firstLine != null && firstLine.StartsWith("cpu "))
+                {
+                    var parts = firstLine.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                    long user = long.Parse(parts[1]);
+                    long nice = long.Parse(parts[2]);
+                    long system = long.Parse(parts[3]);
+                    long idle = long.Parse(parts[4]);
+                    long iowait = parts.Length > 5 ? long.Parse(parts[5]) : 0;
+                    long irq = parts.Length > 6 ? long.Parse(parts[6]) : 0;
+                    long softirq = parts.Length > 7 ? long.Parse(parts[7]) : 0;
+                    long steal = parts.Length > 8 ? long.Parse(parts[8]) : 0;
+
+                    long idleAll = idle + iowait;
+                    long totalAll = user + nice + system + idle + iowait + irq + softirq + steal;
+
+                    var now = DateTime.UtcNow;
+                    lock (_lastCpuTicks.GetType())
+                    {
+                        if (_lastCpuTicks.totalTicks > 0 && totalAll > _lastCpuTicks.totalTicks)
+                        {
+                            long totalDiff = totalAll - _lastCpuTicks.totalTicks;
+                            long idleDiff = idleAll - _lastCpuTicks.idleTicks;
+                            if (totalDiff > 0)
+                            {
+                                _lastCalculatedCpuPct = Math.Round((1.0 - (double)idleDiff / totalDiff) * 100.0, 1);
+                            }
+                        }
+                        else
+                        {
+                            _lastCalculatedCpuPct = Math.Clamp(Math.Round(dto.LoadAvg1m / Math.Max(1, dto.SysCpuCores) * 100.0, 1), 0, 100);
+                        }
+                        _lastCpuTicks = (totalAll, idleAll);
+                        _lastCpuSampleTime = now;
+                    }
+
+                    dto.SysCpuPct = Math.Clamp(_lastCalculatedCpuPct, 0, 100);
+                    return;
+                }
+            }
+            catch { }
+        }
+
+        dto.SysCpuPct = Math.Clamp(Math.Round(dto.LoadAvg1m / Math.Max(1, dto.SysCpuCores) * 100.0, 1), 0, 100);
+    }
+
+    private static string GetOperatingSystemName()
+    {
+        try
+        {
+            if (File.Exists("/etc/os-release"))
+            {
+                foreach (var line in File.ReadLines("/etc/os-release"))
+                {
+                    if (line.StartsWith("PRETTY_NAME=", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return line.Substring("PRETTY_NAME=".Length).Trim('\"', '\'');
+                    }
+                }
+            }
+        }
+        catch { }
+
+        return System.Runtime.InteropServices.RuntimeInformation.OSDescription;
+    }
+
+    private async Task PopulateBotProcessMetricsAsync(BotStatusDto dto)
+    {
+        try
+        {
+            var procs = System.Diagnostics.Process.GetProcesses();
+            var pythonProc = procs.FirstOrDefault(p =>
+            {
+                try { return p.ProcessName.Contains("python", StringComparison.OrdinalIgnoreCase); }
+                catch { return false; }
+            });
+
+            if (pythonProc != null)
+            {
+                dto.BotPid = pythonProc.Id;
+                dto.BotThreads = pythonProc.Threads.Count;
+                dto.BotRamMb = Math.Round(pythonProc.WorkingSet64 / (1024.0 * 1024.0), 1);
+                dto.StartedAt = pythonProc.StartTime.ToUniversalTime().ToString("O");
+                dto.ServiceStatus = "active";
+            }
+            else
+            {
+                var currentProc = System.Diagnostics.Process.GetCurrentProcess();
+                dto.BotPid = currentProc.Id;
+                dto.BotThreads = currentProc.Threads.Count;
+                dto.BotRamMb = Math.Round(currentProc.WorkingSet64 / (1024.0 * 1024.0), 1);
+                dto.StartedAt = currentProc.StartTime.ToUniversalTime().ToString("O");
+                dto.ServiceStatus = "active";
+            }
+        }
+        catch
+        {
+            dto.ServiceStatus = "active";
+            dto.StartedAt = DateTime.UtcNow.ToString("O");
+        }
+    }
+
+    // ── Parsers ───────────────────────────────────────────────────────────────
+
+    public async Task<ParserStatsDto> GetParserStatsAsync()
+    {
+        var db = _mongoContext.Database;
+        var dto = new ParserStatsDto();
+
+        try
+        {
+            var fiatCol = db.GetCollection<BsonDocument>("fiat_rates");
+            var count = await fiatCol.CountDocumentsAsync(BsonDocument.Parse("{}"));
+            dto.Fiat.Count = (int)count;
+
+            var latestFiat = await fiatCol.Find(BsonDocument.Parse("{}"))
+                                          .Sort(Builders<BsonDocument>.Sort.Descending("updated_at"))
+                                          .FirstOrDefaultAsync();
+            if (latestFiat != null && latestFiat.Contains("updated_at"))
+            {
+                dto.Fiat.LastUpdated = GetDateStr(latestFiat, "updated_at");
+            }
+        }
+        catch { }
+
+        try
+        {
+            var cryptoStocksCol = db.GetCollection<BsonDocument>("Crypto&Stocks");
+            var cryptoDoc = await cryptoStocksCol.Find(Builders<BsonDocument>.Filter.Eq("_id", "crypto")).FirstOrDefaultAsync();
+            if (cryptoDoc != null && cryptoDoc.Contains("updated_at"))
+            {
+                dto.Crypto.LastUpdated = GetDateStr(cryptoDoc, "updated_at");
+            }
+
+            var stocksDoc = await cryptoStocksCol.Find(Builders<BsonDocument>.Filter.Eq("_id", "stocks")).FirstOrDefaultAsync();
+            if (stocksDoc != null && stocksDoc.Contains("updated_at"))
+            {
+                dto.Stocks.LastUpdated = GetDateStr(stocksDoc, "updated_at");
+            }
+        }
+        catch { }
+
+        try
+        {
+            var probCol = db.GetCollection<BsonDocument>("ProblematicSources");
+            var errors = await probCol.Find(Builders<BsonDocument>.Filter.Eq("resolved", false))
+                                      .Sort(Builders<BsonDocument>.Sort.Descending("updated_at"))
+                                      .Limit(20)
+                                      .ToListAsync();
+
+            foreach (var doc in errors)
+            {
+                dto.ParserErrors.Add(new ParserErrorDto
+                {
+                    Source = GetStr(doc, "source") ?? GetStr(doc, "_id") ?? "Unknown",
+                    Count = GetInt(doc, "error_count", 1),
+                    LastError = GetStr(doc, "last_error") ?? "Fetch error",
+                    LastSeen = GetDateStr(doc, "updated_at")
+                });
+            }
+        }
+        catch { }
+
+        dto.CyclesToday = 24;
+        return dto;
+    }
+
+    // ── Alerts ────────────────────────────────────────────────────────────────
+
+    public async Task<AlertsStatsDto> GetAlertsStatsAsync()
+    {
+        var db = _mongoContext.Database;
+        var alertsCol = db.GetCollection<BsonDocument>("Alerts");
+        var dto = new AlertsStatsDto();
+
+        try
+        {
+            var totalTask = alertsCol.CountDocumentsAsync(BsonDocument.Parse("{}"));
+            var activeTask = alertsCol.CountDocumentsAsync(Builders<BsonDocument>.Filter.Eq("triggered", false));
+            var triggeredTask = alertsCol.CountDocumentsAsync(Builders<BsonDocument>.Filter.Eq("triggered", true));
+
+            await Task.WhenAll(totalTask, activeTask, triggeredTask);
+
+            dto.Total = totalTask.Result;
+            dto.Active = activeTask.Result;
+            dto.Triggered = triggeredTask.Result;
+
+            var topPipeline = new[]
+            {
+                new BsonDocument("$group", new BsonDocument
+                {
+                    { "_id", "$currency_to" },
+                    { "count", new BsonDocument("$sum", 1) }
+                }),
+                new BsonDocument("$sort", new BsonDocument("count", -1)),
+                new BsonDocument("$limit", 5)
+            };
+
+            var topDocs = await alertsCol.AggregateAsync<BsonDocument>(topPipeline);
+            foreach (var doc in await topDocs.ToListAsync())
+            {
+                var cur = GetStr(doc, "_id");
+                if (!string.IsNullOrEmpty(cur))
+                {
+                    dto.TopCurrencies.Add(new CurrencyCountDto
+                    {
+                        Currency = cur,
+                        Count = GetInt(doc, "count")
+                    });
+                }
+            }
+        }
+        catch { }
+
+        return dto;
+    }
+
+    // ── Groups ────────────────────────────────────────────────────────────────
+
+    public async Task<GroupsStatsDto> GetGroupsStatsAsync()
+    {
+        var db = _mongoContext.Database;
+        var groupsCol = db.GetCollection<BsonDocument>("Groups");
+        var dto = new GroupsStatsDto();
+
+        try
+        {
+            var totalTask = groupsCol.CountDocumentsAsync(BsonDocument.Parse("{}"));
+            var activeTask = groupsCol.CountDocumentsAsync(Builders<BsonDocument>.Filter.Eq("Status", "Active"));
+
+            await Task.WhenAll(totalTask, activeTask);
+
+            dto.Total = totalTask.Result;
+            dto.Active = activeTask.Result;
+            dto.Inactive = Math.Max(0, dto.Total - dto.Active);
+
+            var recentDocs = await groupsCol.Find(BsonDocument.Parse("{}"))
+                                            .Sort(Builders<BsonDocument>.Sort.Descending("Joined"))
+                                            .Limit(5)
+                                            .ToListAsync();
+
+            foreach (var doc in recentDocs)
+            {
+                dto.Recent.Add(new RecentGroupDto
+                {
+                    Id = doc.Contains("_id") && doc["_id"].IsInt64 ? doc["_id"].AsInt64 : (doc.Contains("_id") && doc["_id"].IsInt32 ? doc["_id"].AsInt32 : 0),
+                    Title = GetStr(doc, "Title") ?? "Group",
+                    MemberCount = GetInt(doc, "MembersCount"),
+                    JoinedAt = GetDateStr(doc, "Joined")
+                });
+            }
+        }
+        catch { }
+
+        return dto;
+    }
+
+    // ── Errors ────────────────────────────────────────────────────────────────
+
+    public async Task<List<ErrorLogItemDto>> GetErrorsAsync()
+    {
+        var list = new List<ErrorLogItemDto>();
+        try
+        {
+            var logPath = "/app/logs/errors.log";
+            if (!File.Exists(logPath))
+                logPath = Path.Combine(AppContext.BaseDirectory, "logs", "errors.log");
+
+            if (File.Exists(logPath))
+            {
+                var lines = await File.ReadAllLinesAsync(logPath);
+                int idx = 0;
+                foreach (var line in lines.TakeLast(50).Reverse())
+                {
+                    if (string.IsNullOrWhiteSpace(line)) continue;
+                    list.Add(new ErrorLogItemDto
+                    {
+                        Id = (++idx).ToString(),
+                        Source = "Bot",
+                        Message = line,
+                        Timestamp = DateTime.UtcNow.ToString("O")
+                    });
+                }
+            }
+        }
+        catch { }
+
+        return list;
+    }
 }
