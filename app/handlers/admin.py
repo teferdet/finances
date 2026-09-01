@@ -4,6 +4,7 @@ Admin panel handler — admin-only commands and inline controls.
 
 from __future__ import annotations
 import os
+import re
 import sys
 import time
 import platform
@@ -26,7 +27,7 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.filters import StateFilter
 import asyncio
 
-from app.config import get_settings, save_settings, CONFIG_DIR
+from app.config import get_settings, save_settings
 from app.db import get_db, get_broadcast_audience_stats
 from app.i18n import I18n
 from app.logger import get_logger
@@ -58,6 +59,51 @@ def _is_admin(user_id: int) -> bool:
     return user_id in get_settings().bot.admin_ids or user_id in dynamic_admin_ids
 
 
+async def _log_admin_action(
+    actor_id: int, action: str, target_id: int | None = None, extra: dict | None = None
+) -> None:
+    """Write an immutable audit record to the admin_audit collection.
+
+    This log is append-only and never modified after insertion. It records every
+    privileged admin action (promotions, demotions) with full actor/target context.
+    """
+    try:
+        db = get_db()
+        doc: dict = {
+            "actor_id": actor_id,
+            "action": action,
+            "timestamp": datetime.utcnow(),
+        }
+        if target_id is not None:
+            doc["target_id"] = target_id
+        if extra:
+            doc.update(extra)
+        await db["admin_audit"].insert_one(doc)
+    except Exception as exc:
+        log.warning("Failed to write admin audit log: %s", exc)
+
+
+# Allowed HTML tags in Telegram HTML parse mode (excludes <a> to prevent phishing)
+_SAFE_BROADCAST_TAG_RE = re.compile(
+    r"</?(?:b|strong|i|em|u|ins|s|strike|del|code|pre|tg-spoiler|tg-emoji)(?:\s[^>]*)?>\Z",
+    re.IGNORECASE,
+)
+
+
+def _sanitize_broadcast_html(text: str) -> str:
+    """Strip HTML tags that are not in Telegram's safe HTML subset.
+
+    Removes <a href=...> and any other non-allowlisted tags from broadcast text to
+    prevent a compromised admin account from sending phishing links to all users.
+    Allowed: <b>, <i>, <u>, <s>, <code>, <pre>, <tg-spoiler>, <tg-emoji> and their
+    closing variants.
+    """
+    def _keep_safe(m: re.Match) -> str:
+        return m.group(0) if _SAFE_BROADCAST_TAG_RE.match(m.group(0)) else ""
+
+    return re.sub(r"<[^>]+>", _keep_safe, text)
+
+
 def _admin_kb(i18n: I18n, lang: str, user_id: int) -> InlineKeyboardMarkup:
     t = lambda k: str(i18n.get(f"admin.{k}", lang))
 
@@ -72,9 +118,6 @@ def _admin_kb(i18n: I18n, lang: str, user_id: int) -> InlineKeyboardMarkup:
 
     if user_id in get_settings().bot.admin_ids:
         builder.button(text=str(i18n.get("admin.manage_admins_btn", lang)), callback_data="admin_manage_admins")
-
-    builder.button(text=t("restart_bot"), callback_data="admin_restart")
-    builder.button(text=t("shutdown_bot"), callback_data="admin_shutdown")
 
     builder.adjust(2)
     return builder.as_markup()
@@ -218,86 +261,6 @@ async def cb_admin(call: CallbackQuery, i18n: I18n, lang: str, state: FSMContext
 
     db = get_db()
 
-    # Restart logic
-    if action == "restart":
-        kb = InlineKeyboardMarkup(
-            inline_keyboard=[
-                [
-                    InlineKeyboardButton(text=t("restart_yes"), callback_data="admin_confirm_restart"),
-                    InlineKeyboardButton(text=t("restart_no"), callback_data="admin_cancel_restart"),
-                ]
-            ]
-        )
-        await call.message.edit_text(t("restart_prompt"), reply_markup=kb, parse_mode="HTML")
-        await call.answer()
-        return
-
-    if action == "confirm_restart":
-        await call.message.edit_text(t("restarting"), parse_mode="HTML")
-        log.info("Restart command initiated by admin %s", call.from_user.id)
-
-        state_path = CONFIG_DIR / ".restart_state.json"
-        try:
-            with open(state_path, "w", encoding="utf-8") as f:
-                json.dump(
-                    {
-                        "chat_id": call.message.chat.id,
-                        "message_id": call.message.message_id,
-                    },
-                    f,
-                )
-        except Exception as e:
-            log.error("Failed to save restart state: %s", e)
-
-        try:
-            from app.db import close_db
-
-            await close_db()
-        except Exception as exc:
-            log.warning("Error during pre-restart cleanup: %s", exc)
-
-        try:
-            await call.bot.session.close()
-        except Exception:
-            pass
-
-        os.execv(sys.executable, [sys.executable, "-m", "app"] + sys.argv[1:])
-        await call.answer()
-        return
-
-    if action == "shutdown":
-        kb = InlineKeyboardMarkup(
-            inline_keyboard=[
-                [
-                    InlineKeyboardButton(text=t("restart_yes"), callback_data="admin_confirm_shutdown"),
-                    InlineKeyboardButton(text=t("restart_no"), callback_data="admin_cancel_restart"),
-                ]
-            ]
-        )
-        await call.message.edit_text(t("shutdown_prompt"), reply_markup=kb, parse_mode="HTML")
-        await call.answer()
-        return
-
-    if action == "confirm_shutdown":
-        await call.message.edit_text(t("shutting_down"), parse_mode="HTML")
-        log.info("Shutdown command initiated by admin %s", call.from_user.id)
-
-        try:
-            from app.db import close_db
-
-            await close_db()
-        except Exception as exc:
-            log.warning("Error during pre-shutdown cleanup: %s", exc)
-
-        try:
-            await call.bot.session.close()
-        except Exception:
-            pass
-
-        os._exit(0)
-        await call.answer()
-        return
-
     if action == "manage_admins":
         if call.from_user.id not in get_settings().bot.admin_ids:
             await call.answer(str(i18n.get("admin.access_denied", lang)), show_alert=True)
@@ -350,12 +313,6 @@ async def cb_admin(call: CallbackQuery, i18n: I18n, lang: str, state: FSMContext
         )
         return
 
-    if action == "cancel_restart":
-        await call.message.edit_text(
-            t("panel"), reply_markup=_admin_kb(i18n, lang, call.from_user.id), parse_mode="HTML"
-        )
-        await call.answer()
-        return
 
     if action == "back":
         await state.clear()
@@ -889,7 +846,8 @@ async def broadcast_confirmed(call: CallbackQuery, state: FSMContext, i18n: I18n
         await call.answer(str(i18n.get("admin.access_denied", lang)), show_alert=True)
         return
     fsm_data = await state.get_data()
-    broadcast_text: str = fsm_data.get("broadcast_text", "")
+    # M-1 fix: strip disallowed HTML (e.g. <a href=...> phishing links) before sending
+    broadcast_text: str = _sanitize_broadcast_html(fsm_data.get("broadcast_text", ""))
     target: str = fsm_data.get("target", "all")
     admin_id: int = call.from_user.id
 
@@ -1038,6 +996,8 @@ async def process_new_admin_id(message: Message, state: FSMContext, i18n: I18n, 
 
     dynamic_admin_ids.add(new_admin_id)
     await db["Settings"].update_one({"_id": "dynamic_admins"}, {"$addToSet": {"admin_ids": new_admin_id}}, upsert=True)
+    # H-3 fix: immutable audit trail for every privilege escalation
+    await _log_admin_action(message.from_user.id, "add_dynamic_admin", target_id=new_admin_id)
 
     await state.clear()
     kb = InlineKeyboardMarkup(
@@ -1066,6 +1026,8 @@ async def process_remove_admin_id(message: Message, state: FSMContext, i18n: I18
 
     dynamic_admin_ids.discard(remove_admin_id)
     await db["Settings"].update_one({"_id": "dynamic_admins"}, {"$pull": {"admin_ids": remove_admin_id}})
+    # H-3 fix: immutable audit trail for every privilege de-escalation
+    await _log_admin_action(message.from_user.id, "remove_dynamic_admin", target_id=remove_admin_id)
 
     await state.clear()
     kb = InlineKeyboardMarkup(

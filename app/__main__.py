@@ -17,6 +17,7 @@ from __future__ import annotations
 import asyncio
 import importlib
 import logging
+import os
 import sys
 from pathlib import Path
 
@@ -111,43 +112,6 @@ async def on_startup(bot) -> None:
     log.info("=" * 60)
     log.info("finances bot v%s starting", settings.bot.version)
     log.info("=" * 60)
-
-    # Check for restart state
-    from app.config import CONFIG_DIR
-    import json
-
-    state_path = CONFIG_DIR / ".restart_state.json"
-    if state_path.exists():
-        try:
-            with open(state_path, "r", encoding="utf-8") as f:
-                data = json.load(f)
-
-            chat_id = data.get("chat_id")
-            message_id = data.get("message_id")
-
-            from app.i18n import get_i18n
-            from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-
-            i18n = get_i18n()
-            lang = settings.i18n.default_language
-
-            kb = InlineKeyboardMarkup(
-                inline_keyboard=[
-                    [InlineKeyboardButton(text=str(i18n.get("admin.main_menu", lang)), callback_data="admin_back")]
-                ]
-            )
-            text = str(i18n.get("admin.restart_success", lang))
-
-            try:
-                await bot.edit_message_text(
-                    chat_id=chat_id, message_id=message_id, text=text, reply_markup=kb, parse_mode="HTML"
-                )
-            except Exception as e:
-                log.warning("Could not edit restart message: %s", e)
-
-            state_path.unlink()
-        except Exception as e:
-            log.warning("Error handling restart state: %s", e)
 
     # Ensure DB indexes
     await ensure_indexes()
@@ -300,7 +264,10 @@ async def main() -> None:
     cache_task = asyncio.create_task(run_cache_cleanup_loop())
     background_tasks.append(("cache_cleanup", cache_task))
 
-    if "--debug" in sys.argv or "debug" in sys.argv:
+    # M-3 fix: require both --debug flag AND APP_DEBUG_CLI=true env var.
+    # The bare 'debug' string check (without '--') was too broad and could be matched
+    # accidentally. The env var gate prevents activation on production servers.
+    if "--debug" in sys.argv and os.environ.get("APP_DEBUG_CLI", "").lower() == "true":
         from app.debug_cli import run_debug_cli
 
         debug_cli_task = asyncio.create_task(run_debug_cli())

@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using API.Repositories;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -21,39 +20,23 @@ public class ActionsController : ControllerBase
         _config = config;
     }
 
-    // POST /api/actions/restart
-    [HttpPost("restart")]
-    public async Task<IActionResult> RestartService()
+    // H-4: Per-token sliding-window rate limiter for the sensitive log endpoint
+    // (max 10 requests per 60 seconds per JWT subject).
+    private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, Queue<DateTime>>
+        _logRequests = new();
+
+    private static bool IsLogRateLimited(string subject)
     {
-        try
+        var now = DateTime.UtcNow;
+        var queue = _logRequests.GetOrAdd(subject, _ => new Queue<DateTime>());
+        lock (queue)
         {
-            var process = new Process
-            {
-                StartInfo = new ProcessStartInfo
-                {
-                    FileName               = "sudo",
-                    Arguments              = "systemctl restart finances-bot.service",
-                    RedirectStandardOutput = true,
-                    RedirectStandardError  = true,
-                    UseShellExecute        = false,
-                    CreateNoWindow         = true,
-                }
-            };
-
-            process.Start();
-            await process.WaitForExitAsync();
-
-            if (process.ExitCode != 0)
-            {
-                var error = await process.StandardError.ReadToEndAsync();
-                return StatusCode(500, new { ok = false, error = $"Restart failed: {error}" });
-            }
-
-            return Ok(new { ok = true, message = "Bot restarted successfully" });
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new { ok = false, error = ex.Message });
+            while (queue.Count > 0 && (now - queue.Peek()).TotalSeconds > 60)
+                queue.Dequeue();
+            if (queue.Count >= 10)
+                return true;
+            queue.Enqueue(now);
+            return false;
         }
     }
 
@@ -93,6 +76,12 @@ public class ActionsController : ControllerBase
         [FromQuery] string source = "api",
         [FromQuery] int lines = 100)
     {
+        // H-4 fix: rate-limit this endpoint to prevent continuous log scraping
+        // by a stolen JWT (max 10 requests per minute per token subject).
+        var subject = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "unknown";
+        if (IsLogRateLimited(subject))
+            return StatusCode(429, new { ok = false, error = "Too many log requests. Maximum 10 per minute." });
+
         lines = Math.Clamp(lines, 10, 500);
 
         var logDir = "/app/logs";

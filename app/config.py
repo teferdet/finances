@@ -226,14 +226,39 @@ def _load_json(path: Path) -> dict:
         return json.load(f)
 
 
+# ── M-2: Allowed external data-source hosts ────────────────────────────────────
+# Only these hostnames may be used as fiat_source_url. Any other value found in
+# settings.json is silently reverted to the safe default, preventing an attacker
+# with write-access to settings.json from redirecting the parser to a rogue server.
+_ALLOWED_FIAT_HOSTS: frozenset[str] = frozenset({"fx-rate.net"})
+_DEFAULT_FIAT_SOURCE_URL: str = "https://fx-rate.net"
+
+
 def _build_settings(raw: dict, data_json: dict) -> Settings:
+    # Validate fiat_source_url against the host allowlist before constructing Settings.
+    parser_raw: dict = dict(raw.get("parser", {}))
+    fiat_url: str = parser_raw.get("fiat_source_url", _DEFAULT_FIAT_SOURCE_URL)
+    if fiat_url:
+        from urllib.parse import urlparse
+        import logging as _logging
+        _host = urlparse(fiat_url).hostname or ""
+        if _host not in _ALLOWED_FIAT_HOSTS:
+            _logging.getLogger(__name__).warning(
+                "fiat_source_url host '%s' is not in the allowlist %s — "
+                "reverting to default '%s'.",
+                _host,
+                set(_ALLOWED_FIAT_HOSTS),
+                _DEFAULT_FIAT_SOURCE_URL,
+            )
+            parser_raw["fiat_source_url"] = _DEFAULT_FIAT_SOURCE_URL
+
     return Settings(
         bot=_from_dict(BotSettings, raw.get("bot", {})),
         database=_from_dict(DatabaseSettings, raw.get("database", {})),
         api_keys=_from_dict(ApiKeysSettings, raw.get("api_keys", {})),
         urls=_from_dict(UrlsSettings, raw.get("urls", {})),
         i18n=_from_dict(I18nSettings, raw.get("i18n", {})),
-        parser=_from_dict(ParserSettings, raw.get("parser", {})),
+        parser=_from_dict(ParserSettings, parser_raw),
         security=_from_dict(SecuritySettings, raw.get("security", {})),
         features=_from_dict(FeaturesSettings, raw.get("features", {})),
         draft=_from_dict(DraftSettings, raw.get("draft", {})),

@@ -58,8 +58,22 @@ class FiatParser:
         Fetch exchange rates for a single currency and save to MongoDB.
         Returns True on success.
         """
+        from urllib.parse import urlparse as _urlparse
+
         code = currency_code.upper()
-        url = f"{self._parser_cfg.fiat_source_url}/{code}/"
+        base_url = self._parser_cfg.fiat_source_url
+
+        # M-2 secondary defence: validate host even if config validation was bypassed
+        _host = _urlparse(base_url).hostname or ""
+        if _host not in {"fx-rate.net"}:
+            log.error(
+                "[%s] Blocked fetch — fiat_source_url host '%s' is not in the allowlist. "
+                "Update config.py _ALLOWED_FIAT_HOSTS if this is intentional.",
+                code, _host,
+            )
+            return False
+
+        url = f"{base_url}/{code}/"
         log.info("Fetching rates for %s …", code)
 
         # Random delay to avoid rate limiting

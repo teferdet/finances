@@ -265,8 +265,6 @@ export const api = {
       method: 'PATCH',
       body: JSON.stringify({ feature, value }),
     }),
-  restartBot: () =>
-    req<{ ok: boolean; message: string }>('/api/actions/restart', { method: 'POST' }),
 
   clearOtps: () =>
     req<{ ok: boolean; deleted: number; message: string }>('/api/actions/clear-otps', { method: 'POST' }),

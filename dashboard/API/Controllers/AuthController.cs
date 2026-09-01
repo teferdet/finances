@@ -1,6 +1,10 @@
 using API.Models.Requests;
+using API.Repositories;
 using API.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
+using MongoDB.Bson;
+using MongoDB.Driver;
 
 namespace API.Controllers;
 
@@ -9,13 +13,16 @@ namespace API.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly AuthService _authService;
+    private readonly MongoContext _mongoContext;
 
-    public AuthController(AuthService authService)
+    public AuthController(AuthService authService, MongoContext mongoContext)
     {
         _authService = authService;
+        _mongoContext = mongoContext;
     }
 
     [HttpPost("request-otp")]
+    [EnableRateLimiting("otp")]  // Fix #1: max 5 requests per 5 minutes per IP
     public async Task<IActionResult> RequestOtp([FromBody] OtpRequestDto request)
     {
         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "0.0.0.0";
@@ -31,6 +38,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("verify-otp")]
+    [EnableRateLimiting("otp")]  // Fix #1: same 5/5-min limit; DB-layer attempt counter adds depth
     public async Task<IActionResult> VerifyOtp([FromBody] OtpVerifyDto request)
     {
         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "0.0.0.0";
@@ -79,9 +87,22 @@ public class AuthController : ControllerBase
     }
 
     [HttpGet("check-status")]
-    public IActionResult CheckStatus([FromQuery] string req_id)
+    public async Task<IActionResult> CheckStatus([FromQuery] string req_id)
     {
-        
-        return Ok(new { ok = true, status = "pending" });
+        // M-5 fix: reads the real approval status from the dash_auth_requests collection.
+        // The Python bot's cb_dash_auth callback sets status to "approved" or "blocked"
+        // when the admin clicks the inline approval button sent via Telegram.
+        if (string.IsNullOrWhiteSpace(req_id))
+            return BadRequest(new { ok = false, error = "req_id is required" });
+
+        var col = _mongoContext.Database.GetCollection<BsonDocument>("dash_auth_requests");
+        var doc = await col.Find(Builders<BsonDocument>.Filter.Eq("_id", req_id))
+                           .FirstOrDefaultAsync();
+
+        string status = "pending";
+        if (doc != null && doc.TryGetValue("status", out var statusVal))
+            status = statusVal.AsString;
+
+        return Ok(new { ok = true, status });
     }
 }

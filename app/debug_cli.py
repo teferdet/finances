@@ -22,8 +22,9 @@ async def run_debug_cli():
                     print("No dynamic admins found. Actions will be logged as System.")
                     current_admin_id = "System"
                 else:
-                    for i, aid in enumerate(admins, 1):
-                        print(f"[{i}] Admin ID: {aid}")
+                    for i, _aid in enumerate(admins, 1):
+                        # M-3 fix: do not print actual Telegram IDs to stdout
+                        print(f"[{i}] Admin slot #{i}")
                     print("[0] Run as System (No dynamic admin logging)")
 
                     print("Select Admin by number:")

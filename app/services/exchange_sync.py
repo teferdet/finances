@@ -12,7 +12,7 @@ import aiohttp
 
 from app.db import get_db
 from app.logger import get_logger
-from app.services.security import decrypt_data
+from app.services.security import decrypt_data, encrypt_data
 from app.services.portfolio_service import add_asset
 
 log = get_logger("exchange_sync")
@@ -123,7 +123,31 @@ async def sync_exchange_portfolio(user_id: int, exchange: str) -> dict:
         minutes_left = int((SYNC_COOLDOWN_SEC - (current_time - last_sync)) / 60) + 1
         return {"status": "cooldown", "minutes": minutes_left}
 
-    api_key = api_key_doc["api_key"]
+    # C-3 fix: resolve API key — new records store 'api_key_encrypted'; legacy records
+    # store plain 'api_key'. Auto-migrate on first access so no manual DB query is needed.
+    api_key_encrypted = api_key_doc.get("api_key_encrypted")
+    if api_key_encrypted:
+        try:
+            api_key = decrypt_data(api_key_encrypted)
+        except Exception as e:
+            log.error("Failed to decrypt API key for user %s: %s", user_id, e)
+            return {"status": "error", "message": "Decryption failed."}
+    else:
+        # Legacy plain-text key — transparently encrypt and save, then continue
+        raw_key = api_key_doc.get("api_key", "")
+        if not raw_key:
+            return {"status": "error", "message": "API key not found. Please re-bind your exchange."}
+        api_key = raw_key
+        try:
+            migrated_key = encrypt_data(raw_key)
+            await db["ApiKeys"].update_one(
+                {"_id": api_key_doc["_id"]},
+                {"$set": {"api_key_encrypted": migrated_key}, "$unset": {"api_key": ""}},
+            )
+            log.info("Auto-migrated plain-text api_key to encrypted form for user %s / %s", user_id, exchange)
+        except Exception as mig_exc:
+            log.warning("Failed to migrate api_key for user %s: %s", user_id, mig_exc)
+
     api_secret_encrypted = api_key_doc["api_secret"]
 
     try:

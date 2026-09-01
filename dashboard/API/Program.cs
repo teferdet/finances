@@ -29,9 +29,26 @@ try
     builder.Services.Configure<ForwardedHeadersOptions>(options =>
     {
         options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
-        // Trust the nginx container / loopback proxy only
         options.KnownNetworks.Clear();
         options.KnownProxies.Clear();
+    });
+
+    // Fix #1 (HTTP layer): fixed-window rate limiter for OTP endpoints.
+    // Limits /api/auth/request-otp and /api/auth/verify-otp to 5 requests per
+    // 5-minute window per client IP. This is a first-layer defence; the DB-layer
+    // per-OTP failed-attempt counter in AuthService.VerifyOtpAsync is the second layer
+    // (handles distributed brute-force via many IPs sharing the same telegramId).
+    builder.Services.AddRateLimiter(options =>
+    {
+        options.AddFixedWindowLimiter("otp", opt =>
+        {
+            opt.PermitLimit   = 5;
+            opt.Window        = TimeSpan.FromMinutes(5);
+            opt.QueueLimit    = 0;  // reject immediately rather than queue
+            opt.QueueProcessingOrder =
+                System.Threading.RateLimiting.QueueProcessingOrder.OldestFirst;
+        });
+        options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
     });
 
     // ── CORS ──────────────────────────────────────────────────────────────────
@@ -80,6 +97,32 @@ try
                     if (context.Request.Cookies.ContainsKey("dash_session"))
                         context.Token = context.Request.Cookies["dash_session"];
                     return Task.CompletedTask;
+                },
+                // Fix #3: re-validate the JWT subject against the *current* admin list on
+                // every authenticated request. Without this, a revoked admin's 7-day JWT
+                // remains valid indefinitely until natural expiry — there is no server-side
+                // revocation mechanism. This closure enforces live admin-list membership.
+                OnTokenValidated = context =>
+                {
+                    var cfg = context.HttpContext.RequestServices
+                                     .GetRequiredService<IConfiguration>();
+                    var idsStr = cfg["BOT_ADMIN_IDS"] ?? "";
+                    var adminSet = idsStr
+                        .Replace("[", "").Replace("]", "")
+                        .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                        .ToHashSet();
+
+                    var sub = context.Principal
+                        ?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                        ?? context.Principal
+                        ?.FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub)?.Value;
+
+                    // If admin list is configured and the token subject is no longer in it,
+                    // reject the request (403 — avoids leaking the reason to the client).
+                    if (adminSet.Count > 0 && (sub == null || !adminSet.Contains(sub)))
+                        context.Fail("Token subject is not in the current admin list.");
+
+                    return Task.CompletedTask;
                 }
             };
         });
@@ -105,6 +148,9 @@ try
 
     // Must be first: trust X-Forwarded-* headers from nginx
     app.UseForwardedHeaders();
+
+    // Fix #1: enforce OTP rate limit
+    app.UseRateLimiter();
 
     if (app.Environment.IsDevelopment())
     {

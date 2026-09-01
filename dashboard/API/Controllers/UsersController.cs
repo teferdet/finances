@@ -142,12 +142,25 @@ public class UsersController : ControllerBase
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 
-    /// <summary>CSV-safe field: wraps in quotes if value contains comma, quote, or newline.</summary>
+    /// <summary>
+    /// CSV-safe field encoder.
+    /// 1. Prefixes formula-injection characters (=, +, -, @, tab, CR) with a single-quote
+    ///    to prevent spreadsheet formula / DDE injection from user-controlled Telegram data.
+    /// 2. Wraps in double-quotes if the value contains a comma, quote, or newline.
+    /// </summary>
     private static string CsvEscape(string? value)
     {
         if (string.IsNullOrEmpty(value)) return string.Empty;
+
+        // Fix #5: neutralise formula-injection prefixes before any quoting.
+        // Excel, LibreOffice and Google Sheets evaluate cells starting with =, +, -, @
+        // as formulas — including DDE payloads and HYPERLINK exfiltration.
+        if ("=+-@\t\r".IndexOf(value[0]) >= 0)
+            value = "'" + value;
+
         if (value.Contains(',') || value.Contains('"') || value.Contains('\n'))
             return $"\"{value.Replace("\"", "\"\"")}\"";
+
         return value;
     }
 }

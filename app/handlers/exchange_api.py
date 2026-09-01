@@ -114,17 +114,22 @@ async def process_api_secret(message: Message, state: FSMContext, i18n: I18n, la
     exchange_name = data["exchange_name"]
     api_key = data["api_key"]
 
+    # C-3 fix: encrypt BOTH the API key and secret before storing. Previously, only the
+    # secret was encrypted; the public API key was stored in plain text, exposing which
+    # exchange accounts exist to anyone with MongoDB read access.
+    encrypted_key = encrypt_data(api_key)
     encrypted_secret = encrypt_data(api_secret)
 
-    # Save to DB
+    # Save to DB — both fields are Fernet-encrypted at rest
     db = get_db()
     await db["ApiKeys"].update_one(
         {"user_id": message.from_user.id, "exchange": exchange_name},
         {
             "$set": {
-                "api_key": api_key,
+                "api_key_encrypted": encrypted_key,
                 "api_secret": encrypted_secret,
-            }
+            },
+            "$unset": {"api_key": ""},  # remove legacy plain-text field if present
         },
         upsert=True,
     )

@@ -147,13 +147,6 @@ export const App: React.FC = () => {
     }
   }
 
-  const handleRestartBot = async () => {
-    await api.restartBot()
-    setTimeout(() => {
-      fetchPageData()
-    }, 3000)
-  }
-
   // Loading initial state
   if (isAuthenticated === null) {
     return (
@@ -185,7 +178,6 @@ export const App: React.FC = () => {
           currentPage={currentPage}
           onRefresh={fetchPageData}
           onLogout={handleLogout}
-          onRestartBot={handleRestartBot}
           isRefreshing={isRefreshing}
           lastRefreshTime={lastRefreshTime}
         />
