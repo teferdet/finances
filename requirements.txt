@@ -6,10 +6,10 @@ aiohttp>=3.14.3
 beautifulsoup4>=4.12.0
 pymongo>=4.9.0
 cryptography>=50.0.0
-python-dotenv>=1.2.3
+python-dotenv>=1.0.0
 colorama>=0.4.6
 # Stocks Data
-yfinance>=1.6.0
+yfinance>=1.7.0
 pandas>=3.0.5
 
 # System Monitoring (Admin panel)
@@ -17,8 +17,8 @@ psutil>=7.2.2
 
 # Optional: Redis distributed cache + FSM storage
 # Set settings.redis.url to enable; falls back to MemoryCache if not configured
-redis>=8.1.0
+redis>=5.0.0
 
 # Optional: Sentry error tracking
 # Set settings.sentry.dsn to enable; no-op if dsn is empty
-sentry-sdk>=2.68.0
+sentry-sdk>=2.68.1

@@ -1,4 +1,4 @@
-name: Deploy Dashboard to Oracle VPS
+name: Deploy Dashboard part 
 
 on:
   push:

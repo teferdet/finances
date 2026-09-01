@@ -21,6 +21,7 @@ logs/
 config/settings.json
 config/.encryption_key
 .env
+.vitepress
 
 # Data
 files/stats.json

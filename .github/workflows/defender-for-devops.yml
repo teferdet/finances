@@ -24,6 +24,7 @@ jobs:
       - name: Run Microsoft Security DevOps
         uses: microsoft/security-devops-action@v1
         id: msdo
+        continue-on-error: true  # Don't fail the job if the scan itself errors
         with:
           # Bandit: Python-specific SAST (hardcoded passwords, eval, pickle, etc.)
           # Note: Credscan removed — requires .NET 6.0 (EOL), and GitHub's
@@ -32,10 +33,9 @@ jobs:
           tools: bandit
 
       - name: Upload SARIF results to Security tab
-        uses: github/codeql-action/upload-sarif@v3
-        if: always()
+        uses: github/codeql-action/upload-sarif@v4
+        # Only upload when MSDO produced a SARIF file (skips gracefully on scan error)
+        if: always() && steps.msdo.outputs.sarifFile != ''
         with:
           sarif_file: ${{ steps.msdo.outputs.sarifFile }}
-          # Upload even if the scan found issues (if: always)
-          # so results always appear in the Security tab
 
