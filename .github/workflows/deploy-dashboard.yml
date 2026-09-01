@@ -215,7 +215,7 @@ jobs:
             # API health check via frontend proxy on port 80
             API_UP=false
             for i in $(seq 1 10); do
-              HEALTH=$(curl -sf http://127.0.0.1/api/health || echo "FAIL")
+              HEALTH=$(curl -sfkL http://127.0.0.1/api/health || echo "FAIL")
               if echo "$HEALTH" | grep -q '"ok"'; then
                 echo "✅ API health check passed: $HEALTH"
                 API_UP=true
