@@ -42,6 +42,17 @@ public class AuthService
         var otp = RandomNumberGenerator.GetInt32(100000, 1000000).ToString();
         
         var otpsCol = _mongoContext.Database.GetCollection<BsonDocument>("Otps");
+
+        // Auto-cleanup: remove stale OTPs for this user (used or older than 10 min)
+        var staleFilter = Builders<BsonDocument>.Filter.And(
+            Builders<BsonDocument>.Filter.Eq("telegramId", request.TelegramId),
+            Builders<BsonDocument>.Filter.Or(
+                Builders<BsonDocument>.Filter.Eq("used", true),
+                Builders<BsonDocument>.Filter.Lt("createdAt", DateTime.UtcNow.AddMinutes(-10))
+            )
+        );
+        await otpsCol.DeleteManyAsync(staleFilter);
+
         await otpsCol.InsertOneAsync(new BsonDocument
         {
             { "telegramId", request.TelegramId },

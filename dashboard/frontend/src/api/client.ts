@@ -4,6 +4,9 @@ export interface OverviewStats {
   wau: number
   mau: number
   premium: number
+  new_users_today: number
+  new_users_week: number
+  total_portfolios: number
   total_groups: number
   active_alerts: number
   requests_today: number
@@ -16,7 +19,7 @@ export interface OverviewStats {
 export interface ActivityPoint {
   date: string
   dau: number
-  requests: number
+  new_users: number
 }
 
 export interface UserLanguageStat {
@@ -26,11 +29,16 @@ export interface UserLanguageStat {
 
 export interface TopUser {
   id: number
-  username: string
+  username: string | null
+  name: string | null
   language: string
   premium: boolean
-  requests: number
+  total_requests: number
   last_active: string | null
+  first_seen: string | null
+  is_active: boolean
+  alerts_count: number
+  portfolio_assets: number
 }
 
 export interface CollectionStat {
@@ -219,7 +227,25 @@ export const api = {
   // Stats
   getOverview: () => req<OverviewStats>('/api/stats/overview'),
   getActivity: (days: number = 30) => req<{ days: ActivityPoint[] }>(`/api/stats/activity?days=${days}`),
-  getUsers: () => req<{ by_language: UserLanguageStat[]; top_users: TopUser[] }>('/api/stats/users'),
+  getUsers: (params?: {
+    page?: number
+    limit?: number
+    search?: string
+    language?: string
+    premium?: boolean
+    sort?: 'last_active' | 'requests' | 'premium' | 'language'
+    order?: 'asc' | 'desc'
+  }) => {
+    const q = new URLSearchParams()
+    if (params?.page)     q.set('page',     String(params.page))
+    if (params?.limit)    q.set('limit',    String(params.limit))
+    if (params?.search)   q.set('search',   params.search)
+    if (params?.language) q.set('language', params.language)
+    if (params?.premium !== undefined) q.set('premium', String(params.premium))
+    if (params?.sort)     q.set('sort',     params.sort)
+    if (params?.order)    q.set('order',    params.order)
+    return req<{ by_language: UserLanguageStat[]; top_users: { items: TopUser[]; total: number; page: number; limit: number; pages: number } }>(`/api/stats/users?${q}`)
+  },
   getDatabase: () => req<DatabaseStats>('/api/stats/database'),
   getBotStatus: () => req<BotStatus>('/api/stats/bot'),
   getParserStatus: () => req<ParserStatus>('/api/stats/parser'),
@@ -241,6 +267,14 @@ export const api = {
     }),
   restartBot: () =>
     req<{ ok: boolean; message: string }>('/api/actions/restart', { method: 'POST' }),
+
+  clearOtps: () =>
+    req<{ ok: boolean; deleted: number; message: string }>('/api/actions/clear-otps', { method: 'POST' }),
+
+  getLogs: (source: 'api' | 'bot' = 'api', lines = 100) =>
+    req<{ ok: boolean; source: string; file: string; lines: number; content: string[] }>(
+      `/api/actions/logs?source=${source}&lines=${lines}`
+    ),
 
   // User management (admin)
   exportUserJson: (userId: number) =>

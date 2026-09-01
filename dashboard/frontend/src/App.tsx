@@ -23,13 +23,14 @@ export const App: React.FC = () => {
   // Data stores
   const [overview, setOverview] = useState<OverviewStats | null>(null)
   const [activity, setActivity] = useState<ActivityPoint[]>([])
+  const [chartDays, setChartDays] = useState<number>(30)
   const [botStatus, setBotStatus] = useState<BotStatus | null>(null)
   const [databaseStats, setDatabaseStats] = useState<DatabaseStats | null>(null)
   const [parserStatus, setParserStatus] = useState<ParserStatus | null>(null)
   const [alertsStats, setAlertsStats] = useState<AlertsStats | null>(null)
   const [groupsStats, setGroupsStats] = useState<GroupsStats | null>(null)
   const [errors, setErrors] = useState<ErrorLogEntry[]>([])
-  const [usersData, setUsersData] = useState<{ by_language: UserLanguageStat[]; top_users: TopUser[] } | null>(null)
+  const [usersData, setUsersData] = useState<{ by_language: UserLanguageStat[]; top_users: { items: TopUser[]; total: number; page: number; limit: number; pages: number } } | null>(null)
   const [config, setConfig] = useState<ConfigData | null>(null)
 
   // Sync hash routing
@@ -50,6 +51,16 @@ export const App: React.FC = () => {
     window.location.hash = page
   }
 
+  const handleChartDaysChange = async (days: number) => {
+    setChartDays(days)
+    try {
+      const act = await api.getActivity(days)
+      setActivity(act.days || [])
+    } catch (e) {
+      console.error('Failed to load activity', e)
+    }
+  }
+
   // Fetch data for the currently active page
   const fetchPageData = useCallback(async () => {
     if (!isAuthenticated) return
@@ -65,7 +76,7 @@ export const App: React.FC = () => {
 
       // Page-specific fetches
       if (currentPage === 'overview') {
-        const act = await api.getActivity(30)
+        const act = await api.getActivity(chartDays)
         setActivity(act.days || [])
       } else if (currentPage === 'database') {
         const db = await api.getDatabase()
@@ -83,7 +94,7 @@ export const App: React.FC = () => {
         const errs = await api.getErrors()
         setErrors(errs.errors || [])
       } else if (currentPage === 'users') {
-        const u = await api.getUsers()
+        const u = await api.getUsers({ page: 1, limit: 50 })
         setUsersData(u)
       } else if (currentPage === 'config') {
         const cfg = await api.getConfig()
@@ -97,7 +108,7 @@ export const App: React.FC = () => {
     } finally {
       setIsRefreshing(false)
     }
-  }, [isAuthenticated, currentPage])
+  }, [isAuthenticated, currentPage, chartDays])
 
   // Initial Auth Check
   useEffect(() => {
@@ -146,7 +157,7 @@ export const App: React.FC = () => {
   // Loading initial state
   if (isAuthenticated === null) {
     return (
-      <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2 }}>
+      <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2, bgcolor: '#080f1a' }}>
         <CircularProgress color="primary" />
         <Typography variant="caption" sx={{ fontFamily: 'monospace' }} color="text.secondary">
           Initializing Finances Dashboard...
@@ -161,7 +172,7 @@ export const App: React.FC = () => {
   }
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh' }}>
+    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
       <Sidebar
         currentPage={currentPage}
         onSelectPage={handleSelectPage}
@@ -179,16 +190,23 @@ export const App: React.FC = () => {
           lastRefreshTime={lastRefreshTime}
         />
 
-        <Box component="main" sx={{ flexGrow: 1, p: 3, overflowY: 'auto' }}>
-          <Box sx={{ maxWidth: 'lg', mx: 'auto', width: '100%' }}>
-            {currentPage === 'overview' && <OverviewPage overview={overview} activity={activity} />}
+        <Box component="main" sx={{ flexGrow: 1, p: { xs: 2, sm: 3 }, overflowY: 'auto' }}>
+          <Box sx={{ maxWidth: 'xl', mx: 'auto', width: '100%' }}>
+            {currentPage === 'overview' && (
+              <OverviewPage
+                overview={overview}
+                activity={activity}
+                chartDays={chartDays}
+                onChartDaysChange={handleChartDaysChange}
+              />
+            )}
             {currentPage === 'bot' && <BotStatusPage status={botStatus} />}
             {currentPage === 'database' && <DatabasePage stats={databaseStats} />}
             {currentPage === 'parser' && <ParserPage status={parserStatus} />}
             {currentPage === 'alerts' && <AlertsPage stats={alertsStats} />}
             {currentPage === 'groups' && <GroupsPage stats={groupsStats} />}
             {currentPage === 'errors' && <ErrorsPage errors={errors} />}
-            {currentPage === 'users' && <UsersPage usersData={usersData} />}
+            {currentPage === 'users' && <UsersPage initialData={usersData} />}
             {currentPage === 'config' && <ConfigPage config={config} onConfigUpdated={fetchPageData} />}
           </Box>
         </Box>
