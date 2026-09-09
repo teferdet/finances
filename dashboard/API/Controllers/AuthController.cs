@@ -61,7 +61,7 @@ public class AuthController : ControllerBase
             HttpOnly = true,
             SameSite = SameSiteMode.Strict,
             Secure = isHttps,
-            MaxAge = TimeSpan.FromDays(7),
+            MaxAge = TimeSpan.FromHours(24),
             Path = "/"
         };
         
@@ -87,13 +87,14 @@ public class AuthController : ControllerBase
     }
 
     [HttpGet("check-status")]
+    [EnableRateLimiting("status-poll")]
     public async Task<IActionResult> CheckStatus([FromQuery] string req_id)
     {
         // M-5 fix: reads the real approval status from the dash_auth_requests collection.
         // The Python bot's cb_dash_auth callback sets status to "approved" or "blocked"
         // when the admin clicks the inline approval button sent via Telegram.
-        if (string.IsNullOrWhiteSpace(req_id))
-            return BadRequest(new { ok = false, error = "req_id is required" });
+        if (string.IsNullOrWhiteSpace(req_id) || req_id.Length > 64)
+            return BadRequest(new { ok = false, error = "req_id is required and must be valid" });
 
         var col = _mongoContext.Database.GetCollection<BsonDocument>("dash_auth_requests");
         var doc = await col.Find(Builders<BsonDocument>.Filter.Eq("_id", req_id))

@@ -70,8 +70,8 @@ services:
     env_file:
       - .env
     environment:
-      # Use provided env variables or default to internal services
-      MONGO_URI: "${MONGO_URI:-mongodb://mongo:27017/finances}"
+      # Use provided env variables from .env
+      MONGO_URI: "${MONGO_URI}"
       REDIS_URL: "${REDIS_URL:-redis://redis:6379/0}"
       PYTHONUNBUFFERED: "1"
     deploy:
@@ -104,7 +104,7 @@ services:
     env_file:
       - .env
     environment:
-      MONGO_URI: "${MONGO_URI:-mongodb://mongo:27017}"
+      MONGO_URI: "${MONGO_URI}"
       MONGO_DATABASE: "${MONGO_DATABASE:-finances}"
       REDIS_URL: "${REDIS_URL:-redis://redis:6379/0}"
       CONFIG_PATH: "/app/config/settings.json"

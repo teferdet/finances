@@ -49,6 +49,14 @@ try
             opt.QueueProcessingOrder =
                 System.Threading.RateLimiting.QueueProcessingOrder.OldestFirst;
         });
+        options.AddFixedWindowLimiter("status-poll", opt =>
+        {
+            opt.PermitLimit   = 60;  // Up to 60 requests per minute per IP (polling is every 2.5s = 24 req/min)
+            opt.Window        = TimeSpan.FromMinutes(1);
+            opt.QueueLimit    = 0;
+            opt.QueueProcessingOrder =
+                System.Threading.RateLimiting.QueueProcessingOrder.OldestFirst;
+        });
         options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
     });
 

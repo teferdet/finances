@@ -39,10 +39,12 @@ class RateLimitMiddleware(BaseMiddleware):
         limit: int = 20,
         window: int = 60,
         admin_ids: list[int] | None = None,
+        max_message_length: int = 1000,
     ) -> None:
         self.limit = limit
         self.window = window
         self.admin_ids: set[int] = set(admin_ids or [])
+        self.max_message_length = max_message_length
         # Fallback in-memory buckets: user_id → deque of monotonic timestamps
         self._buckets: dict[int, deque] = defaultdict(deque)
         # Track users who already received a rate-limit warning (suppress repeats)
@@ -125,6 +127,17 @@ class RateLimitMiddleware(BaseMiddleware):
 
         if user_id is None or user_id in self.admin_ids or user_id in dynamic_admin_ids:
             return await handler(event, data)
+
+        # Enforce max message length for incoming user messages
+        if isinstance(event, Message) and event.text:
+            if self.max_message_length > 0 and len(event.text) > self.max_message_length:
+                logger.warning(
+                    "Message dropped: length %d exceeds max_message_length=%d for user_id=%s",
+                    len(event.text),
+                    self.max_message_length,
+                    user_id,
+                )
+                return None
 
         allowed = await self._redis_is_allowed(user_id)
 

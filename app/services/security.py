@@ -11,16 +11,18 @@ from app.logger import get_logger
 log = get_logger("security")
 
 _fernet: Fernet | None = None
+_cached_key: str | None = None
 
 
 def get_fernet() -> Fernet:
-    global _fernet
-    if _fernet is None:
-        settings = get_settings()
-        key = settings.security.fernet_key
-        if not key:
-            raise ValueError("security.fernet_key is not configured in settings.json")
+    global _fernet, _cached_key
+    settings = get_settings()
+    key = settings.security.fernet_key
+    if not key:
+        raise ValueError("security.fernet_key is not configured in settings.json")
+    if _fernet is None or _cached_key != key:
         _fernet = Fernet(key.encode("utf-8"))
+        _cached_key = key
     return _fernet
 
 

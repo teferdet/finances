@@ -1,3 +1,12 @@
+"""
+DEBUG CLI — Local diagnostic console for administrative actions.
+
+SECURITY NOTICE:
+This module provides interactive administrative operations without network authentication.
+It is intended strictly for local development, diagnostic testing, and emergency console recovery.
+DO NOT enable debug CLI mode in production or public-facing environments.
+"""
+
 import asyncio
 from app.state import dynamic_admin_ids
 from app.logger import get_d_admin_logger
@@ -7,9 +16,11 @@ async def run_debug_cli():
     # Wait for bot to initialize and dynamic admins to load
     await asyncio.sleep(8)
 
-    print("\n" + "=" * 40)
-    print("Debug CLI Mode Activated")
-    print("=" * 40)
+    print("\n" + "=" * 50)
+    print("⚠️  SECURITY WARNING: Debug CLI Mode Activated")
+    print("This mode provides console administrative actions without network auth.")
+    print("Never enable this mode in production environments.")
+    print("=" * 50)
 
     current_admin_id = None
 

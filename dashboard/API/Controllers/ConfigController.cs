@@ -31,9 +31,11 @@ public class ConfigController : ControllerBase
         if (request.Section == "api_keys" || 
             request.Section == "bot" || 
             request.Section == "database" || 
-            request.Section == "security")
+            request.Section == "security" ||
+            request.Section == "redis" ||
+            request.Section == "sentry")
         {
-            return StatusCode(403, new { ok = false, error = "Editing API keys and security tokens via dashboard is restricted" });
+            return StatusCode(403, new { ok = false, error = "Editing sensitive infrastructure, API keys, and security settings via dashboard is restricted" });
         }
 
         var ok = await _configService.UpdateSectionAsync(request.Section, request.Settings);

@@ -68,6 +68,7 @@ def create_dispatcher() -> Dispatcher:
         limit=s.security.rate_limit_requests,
         window=s.security.rate_limit_window_sec,
         admin_ids=s.bot.admin_ids,
+        max_message_length=s.security.max_message_length,
     )
     dp.message.outer_middleware(rate_limit)
     dp.callback_query.outer_middleware(rate_limit)

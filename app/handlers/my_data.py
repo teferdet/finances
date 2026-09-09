@@ -4,6 +4,8 @@ My Data handler — /my_data command to view user settings and reset them.
 
 from __future__ import annotations
 
+import html
+
 from aiogram import Router, F
 from aiogram.types import (
     CallbackQuery,
@@ -78,11 +80,11 @@ async def _build_my_data_text_and_kb(uid: int, i18n: I18n, lang: str) -> tuple[s
     lines = [
         md.get("title", "📋 <b>Your Data</b>"),
         "",
-        f"{md.get('name', '👤 Name')}: <b>{user.get('Name', none_text)}</b>",
-        f"{md.get('username', '🆔 Username')}: @{user.get('Username', none_text)}",
-        f"{md.get('language', '🌐 Language')}: <b>{user.get('Language', none_text)}</b>",
+        f"{md.get('name', '👤 Name')}: <b>{html.escape(str(user.get('Name', none_text)))}</b>",
+        f"{md.get('username', '🆔 Username')}: @{html.escape(str(user.get('Username', none_text)))}",
+        f"{md.get('language', '🌐 Language')}: <b>{html.escape(str(user.get('Language', none_text)))}</b>",
         f"{md.get('premium', '⭐ Premium')}: {yes_text if user.get('Premium') else no_text}",
-        f"{md.get('signed_up', '📅 Signed up')}: <b>{user.get('Sign up', none_text)}</b>",
+        f"{md.get('signed_up', '📅 Signed up')}: <b>{html.escape(str(user.get('Sign up', none_text)))}</b>",
         "",
         f"{md.get('fiat', '💶 Fiat')}: {_format_list(fiat, default_text)}",
         f"{md.get('crypto', '💵 Crypto')}: {_format_list(crypto, default_text)}",

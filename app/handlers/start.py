@@ -70,7 +70,8 @@ async def cmd_start(message: Message, i18n: I18n, lang: str) -> None:
     name_parts = [user.first_name]
     if user.last_name:
         name_parts.append(user.last_name)
-    name = " ".join(name_parts)
+    import html
+    name = html.escape(" ".join(name_parts))
 
     # Time-of-day greeting as first separate message
     hour = int(strftime("%H"))
