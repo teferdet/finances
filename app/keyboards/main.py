@@ -41,14 +41,13 @@ async def get_main_keyboard(user_id: int | None = None) -> ReplyKeyboardMarkup:
 
     if user_id:
         try:
-            db = get_db()
-            doc = await db["Users"].find_one({"_id": user_id}, {"MainMenu": 1, "BigButtons": 1})
-            if doc:
-                if doc.get("MainMenu"):
-                    custom_codes: list[str] = doc["MainMenu"]
-                    currencies = _map_codes(custom_codes)
-                if doc.get("BigButtons"):
-                    resize = False  # big buttons = resize disabled
+            from app.cqrs.read.users import get_user_view
+
+            user_view = await get_user_view(user_id)
+            if user_view.main_menu:
+                currencies = _map_codes(user_view.main_menu)
+            if user_view.big_buttons:
+                resize = False  # big buttons = resize disabled
         except Exception:
             pass
 

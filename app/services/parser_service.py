@@ -32,15 +32,10 @@ log = get_logger("parser.service")
 
 
 async def is_currency_stale(code: str, ttl_hours: int = 5) -> bool:
-    """Check if a currency's data in MongoDB is older than ttl_hours."""
-    db = get_db()
-    doc = await db[get_fiat_collection_name()].find_one({"currency": code.upper()}, {"updated_at": 1})
-    if not doc or "updated_at" not in doc:
-        return True
-    updated = doc["updated_at"]
-    if updated.tzinfo is None:
-        updated = updated.replace(tzinfo=timezone.utc)
-    return (datetime.now(timezone.utc) - updated) > timedelta(hours=ttl_hours)
+    """Check if a currency's data is older than ttl_hours via FiatRates read model."""
+    from app.cqrs.read.fiat import fiat_store
+
+    return await fiat_store.is_stale(code, ttl_hours=ttl_hours)
 
 
 # ── On-demand fetch (called from handlers) ─────────────────────────
@@ -78,17 +73,16 @@ async def ensure_currency(code: str, force: bool = False) -> bool:
 
 
 async def get_fiat_rate(base: str, target: str) -> Optional[dict]:
-    """Get exchange rate dict from MongoDB."""
+    """Get exchange rate dict from FiatRates read model."""
     base = base.upper()
     target = target.upper()
-    # Trigger background fetch if stale (non-blocking)
-    asyncio.create_task(_bg_ensure(base))
 
-    db = get_db()
-    doc = await db[get_fiat_collection_name()].find_one({"currency": base}, {"rates": 1})
-    if doc and "rates" in doc:
-        return doc["rates"].get(target)
-    return None
+    # Trigger background fetch if stale (safe tracked background task)
+    from app.cqrs.tasks import spawn
+    spawn(_bg_ensure(base), name=f"bg_ensure_{base}")
+
+    from app.cqrs.read.fiat import fiat_store
+    return await fiat_store.get_rate(base, target)
 
 
 async def _bg_ensure(code: str) -> None:

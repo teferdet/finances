@@ -5,7 +5,18 @@ on:
     branches:
       - main
     paths-ignore:
-      - 'dashboard/**'
+      - 'docs/**'
+      - '*.md'
+      - '.gitignore'
+      - '.dockerignore'
+      - '.github/workflows/health.yml'
+      - '.github/workflows/locales.yml'
+      - '.github/workflows/pyre.yml'
+      - '.github/workflows/security.yml'
+      - '.github/workflows/stale.yml'
+      - '.github/workflows/wiki-sync.yml'
+      - '.github/workflows/defender-for-devops.yml'
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -71,7 +82,7 @@ jobs:
           username: ${{ secrets.SERVER_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SERVER_PORT }}
-          envs: BOT_TOKEN,MONGO_URI,CRYPTO_API_KEY,STOCKS_API_KEY,FERNET_KEY,BOT_ADMIN_IDS,DASHBOARD_SECRET_KEY,URL_COMMUNICATION,URL_INVITE,URL_BUYMEACOFFEE,URL_DONATELLO,URL_BANK,URL_MINI_APP,REDIS_URL
+          envs: BOT_TOKEN,MONGO_URI,CRYPTO_API_KEY,STOCKS_API_KEY,FERNET_KEY,BOT_ADMIN_IDS,URL_COMMUNICATION,URL_INVITE,URL_BUYMEACOFFEE,URL_DONATELLO,URL_BANK,URL_MINI_APP,REDIS_URL
           script: |
             export PATH=$PATH:/usr/local/bin:/usr/bin:/bin:/snap/bin
             set -e
@@ -79,8 +90,8 @@ jobs:
 
             echo "🔐 Generating unified .env and settings.json from secrets..."
             
-            # Clean up any legacy dashboard/.env file
-            rm -f "$APP_DIR/dashboard/.env" "$APP_DIR/dashboard/API/.env"
+            # Clean up legacy dashboard leftovers (dashboard was removed)
+            rm -rf "$APP_DIR/dashboard"
 
             cat > "$APP_DIR/.env" << EOF
             BOT_TOKEN=${BOT_TOKEN}
@@ -90,7 +101,6 @@ jobs:
             MONGO_DATABASE=finances
             DB_POOL_MIN=5
             DB_POOL_MAX=50
-            JWT_SECRET=${JWT_SECRET:-${DASHBOARD_SECRET_KEY}}
             CRYPTO_API_KEY=${CRYPTO_API_KEY}
             STOCKS_API_KEY=${STOCKS_API_KEY}
             FERNET_KEY=${FERNET_KEY}
@@ -124,7 +134,7 @@ jobs:
                     'token': os.environ.get('BOT_TOKEN', ''),
                     'admin_ids': env_list('BOT_ADMIN_IDS', '[1693890078]'),
                     'backup_enabled': True,
-                    'version': 'finances v6.6.1'
+                    'version': 'finances v6.7.0'
                 },
                 'database': {
                     'mongo_uri': os.environ.get('MONGO_URI', ''),
@@ -199,7 +209,6 @@ jobs:
           STOCKS_API_KEY: ${{ secrets.STOCKS_API_KEY }}
           FERNET_KEY: ${{ secrets.FERNET_KEY }}
           BOT_ADMIN_IDS: ${{ secrets.BOT_ADMIN_IDS }}
-          DASHBOARD_SECRET_KEY: ${{ secrets.DASHBOARD_SECRET_KEY }}
           URL_COMMUNICATION: ${{ vars.URL_COMMUNICATION }}
           URL_INVITE: ${{ vars.URL_INVITE }}
           URL_BUYMEACOFFEE: ${{ vars.URL_BUYMEACOFFEE }}
@@ -223,12 +232,17 @@ jobs:
             APP_DIR="/home/ubuntu/finances"
             cd "$APP_DIR"
             
-            echo "📁 Ensuring log directories and permissions..."
-            mkdir -p "$APP_DIR/logs/bot" "$APP_DIR/logs/api" "$APP_DIR/config"
-            chmod -R 777 "$APP_DIR/logs" 2>/dev/null || true
+            echo "📁 Ensuring log/backup directories and permissions..."
+            mkdir -p "$APP_DIR/logs/bot" "$APP_DIR/config" "$APP_DIR/backups"
+            chmod -R 777 "$APP_DIR/logs" "$APP_DIR/backups" 2>/dev/null || true
+
+            echo "🧹 Removing legacy dashboard / NGINX containers (if any)..."
+            docker rm -f finances-backend finances-frontend 2>/dev/null || true
+            docker volume rm finances_ssl_data 2>/dev/null || true
+            rm -rf "$APP_DIR/logs/api" "$APP_DIR/logs/frontend"
 
             echo "🐳 Starting Docker Compose for bot & redis..."
-            docker compose up -d --build bot redis
+            docker compose up -d --build --remove-orphans bot redis
             
             # Prune old images to save space
             docker image prune -f
@@ -252,7 +266,7 @@ jobs:
 
             STARTED=false
             for i in $(seq 1 10); do
-              if docker compose ps bot | grep -q "Up"; then
+              if docker compose ps bot | grep -qiE "Up|running"; then
                 echo "✅ finances-bot container is running! (attempt $i/10)"
                 STARTED=true
                 break

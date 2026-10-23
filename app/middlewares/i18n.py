@@ -11,12 +11,13 @@ from typing import Any, Awaitable, Callable, Dict
 from aiogram import BaseMiddleware
 from aiogram.types import TelegramObject, Message, CallbackQuery
 
-from app.db import get_db
+from app.cqrs.read.users import get_user_view
+from app.cqrs.write.activity import activity_buffer
 from app.i18n import get_i18n
 
 
 class I18nMiddleware(BaseMiddleware):
-    """Outer middleware that sets lang + i18n for every update."""
+    """Outer middleware that sets lang + i18n for every update using CQRS read model and write-behind."""
 
     async def __call__(
         self,
@@ -36,30 +37,15 @@ class I18nMiddleware(BaseMiddleware):
 
         lang = i18n.default_lang
         if user:
-            # Add activity tracking in the background
-            import asyncio
-            from datetime import datetime
+            # 1) Non-blocking in-memory activity tracking (write-behind)
+            await activity_buffer.record_activity(user.id)
 
-            async def _track_activity(uid: int) -> None:
-                now = datetime.now()
-                today_str = now.strftime("%Y-%m-%d")
-                db_ = get_db()
-                try:
-                    await db_["Users"].update_one(
-                        {"_id": uid}, {"$set": {"last_active": now}, "$inc": {"stats.total_requests": 1}}
-                    )
-                    await db_["DailyStats"].update_one({"_id": today_str}, {"$inc": {"requests": 1}}, upsert=True)
-                except Exception:
-                    pass
-
-            asyncio.create_task(_track_activity(user.id))
-
-            # 1) Check DB for saved preference
-            db = get_db()
+            # 2) Fast in-memory UserView read model (CQRS)
             try:
-                doc = await db["Users"].find_one({"_id": user.id}, {"Language": 1})
-                if doc and doc.get("Language") in i18n.supported:
-                    lang = doc["Language"]
+                user_view = await get_user_view(user.id)
+                data["user_view"] = user_view
+                if user_view.language in i18n.supported:
+                    lang = user_view.language
                 elif user.language_code and user.language_code in i18n.supported:
                     lang = user.language_code
             except Exception:

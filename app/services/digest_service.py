@@ -111,11 +111,10 @@ async def _send_weekly_digest() -> None:
 
     log.info("Building digest for %d users...", len(users))
 
-    # Fetch current prices
-    current_prices: dict[str, float] = {}
-    cursor = db["current_prices"].find({}, {"price_usd": 1})
-    async for doc in cursor:
-        current_prices[doc["_id"]] = float(doc.get("price_usd", 0))
+    # Fetch current prices from in-memory PriceSnapshot
+    from app.cqrs.read.prices import get_price_snapshot
+
+    current_prices: dict[str, float] = await get_price_snapshot()
 
     # Get 7-day-ago snapshot for comparison
     week_ago = datetime.now(timezone.utc) - timedelta(days=7)

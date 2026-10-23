@@ -1,6 +1,6 @@
 # Setup & Administration Guide (v6.6.0)
 
-Welcome to the **Finances Bot** deployment guide. The project now uses a robust **Docker Compose** architecture containing both the Telegram Bot and a web-based Admin Dashboard.
+Welcome to the **Finances Bot** deployment guide. The project uses a lightweight **Docker Compose** setup: the Telegram Bot plus an optional Redis cache. Administration is done in Telegram via `/admin`.
 
 ## 📌 Prerequisites
 - **Docker** and **Docker Compose** installed on your server/machine.
@@ -30,9 +30,9 @@ The recommended and easiest way to deploy the new version is via Docker. This en
    - `MONGO_URI=mongodb+srv://...` *(If you use external Mongo, otherwise leave it to use internal)*
 
 3. **Start the services:**
-   Build and run the bot and dashboard in the background:
+   Build and run the bot (and Redis) in the background:
    ```bash
-   docker compose up -d --build
+   docker compose up -d --build --remove-orphans
    ```
 
 4. **Verify it's running:**
@@ -59,24 +59,6 @@ When you run `docker compose up`, a script (`docker/entrypoint-bot.sh`) automati
 
 ---
 
-## 🖥 Admin Dashboard (New!)
-
-Version 6.0+ introduces a standalone **React + FastAPI Web Dashboard**.
-
-- **URL:** `http://localhost:8090` (by default).
-- **Authentication:** The dashboard is secured via a Telegram OTP (One-Time Password).
-  1. Open the dashboard in your browser.
-  2. Enter your Telegram User ID (it must be listed in `BOT_ADMIN_IDS`).
-  3. The bot will send you a 6-digit code in Telegram.
-  4. Enter the code to log in.
-
-### Dashboard Features:
-- **Overview:** Real-time DAU, requests, and performance metrics.
-- **DataGrids:** View Users, Error Logs, and Groups with advanced sorting and filtering.
-- **Config Management:** Toggle parsers and features directly from the web interface.
-
----
-
 ## 🛠 Local Development (Without Docker)
 
 If you want to run the project locally for development without Docker:
@@ -96,18 +78,6 @@ If you want to run the project locally for development without Docker:
    python -m app
    ```
 
-4. **Start the Dashboard:**
-   ```bash
-   # Backend
-   cd dashboard
-   uvicorn api.main:app --host 0.0.0.0 --port 8090
-   
-   # Frontend
-   cd frontend
-   npm install
-   npm run dev
-   ```
-
 ---
 
 ## ❓ Troubleshooting
@@ -115,5 +85,5 @@ If you want to run the project locally for development without Docker:
 | Issue | Possible Cause | Solution |
 |-------|---------------|----------|
 | **Bot keeps restarting** | Invalid `.env` or Mongo URL | Check logs using `docker compose logs -f bot`. Ensure `BOT_TOKEN` is correct. |
-| **Cannot log into Dashboard** | ID not in `BOT_ADMIN_IDS` | Ensure your numeric Telegram ID is in the `.env` file array. Restart the bot container to apply. |
+| **`/admin` not responding** | ID not in `BOT_ADMIN_IDS` | Ensure your numeric Telegram ID is in the `.env` file array. Restart the bot container to apply. |
 | **High Memory Usage** | Normal Python behavior | The Docker containers use `libjemalloc2` and strict limits (400MB for bot). Do not worry if the image size is ~600MB; runtime RAM is capped. |

@@ -13,9 +13,6 @@
 
 ---
 
-* 📊 **[Dashboard](DASHBOARD.md)**
-* 🔌 **[Dashboard API](DASHBOARD_API.md)**
-* 🖥️ **[Dashboard Frontend](DASHBOARD_FRONTEND.md)**
 
 ---
 

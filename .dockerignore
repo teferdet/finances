@@ -1,8 +1,6 @@
 .git
 .gitignore
 .env
-dashboard/.env
-dashboard/API/.env
 config/settings.json
 config/.encryption_key
 *.encryption_key
@@ -12,10 +10,6 @@ __pycache__
 *.pyc
 tests
 node_modules
-dashboard/frontend/node_modules
-dashboard/API/bin
-dashboard/API/obj
-dashboard/venv
 .venv
 logs
 

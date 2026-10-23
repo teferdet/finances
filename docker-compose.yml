@@ -2,18 +2,14 @@
 #
 # Services:
 #   bot        — Telegram bot (Python/aiogram)
-#   dashboard  — Admin dashboard (.NET 8 Web API)
-#   frontend   — NGINX reverse proxy with Auto-generated SSL (Self-signed 2048-bit with SAN for IP/localhost)
 #   redis      — Optional cache (disabled by default — set REDIS_URL to enable)
 #
 # Quick start:
 #   cp .env.example .env   # fill in required secrets
-#   docker compose up -d
+#   docker compose up -d --remove-orphans
 #
 # Healthchecks: all services have healthchecks defined.
 # Logs: docker compose logs -f bot
-#       docker compose logs -f dashboard
-#       docker compose logs -f frontend
 
 name: finances
 
@@ -22,8 +18,6 @@ volumes:
   redis_data:
     driver: local
   app_logs:
-    driver: local
-  ssl_data:
     driver: local
 
 # ── Networks ───────────────────────────────────────────────────────────────────
@@ -36,7 +30,7 @@ services:
 
   # ── Redis ─────────────────────────────────────────────────────────────────────
   # Optional cache. Only used when REDIS_URL is set in .env.
-  # Bot and dashboard gracefully fall back to in-memory cache if Redis is not available.
+  # Bot gracefully falls back to in-memory cache if Redis is not available.
   redis:
     image: redis:7-alpine
     container_name: finances-redis
@@ -82,67 +76,10 @@ services:
     volumes:
       - ./logs/bot:/app/logs
       - ./config:/app/config
+      - ./backups:/app/backups
     healthcheck:
       test: [ "CMD", "python", "-c", "import app; print('ok')" ]
       interval: 60s
       timeout: 15s
       retries: 3
       start_period: 30s
-
-  # ── Dashboard (.NET API) ──────────────────────────────────────────────────────
-  dashboard:
-    build:
-      context: .
-      dockerfile: Dockerfile.dashboard
-    container_name: finances-backend
-    restart: unless-stopped
-    networks:
-      - finances_net
-    depends_on:
-      bot:
-        condition: service_started
-    env_file:
-      - .env
-    environment:
-      MONGO_URI: "${MONGO_URI}"
-      MONGO_DATABASE: "${MONGO_DATABASE:-finances}"
-      REDIS_URL: "${REDIS_URL:-redis://redis:6379/0}"
-      CONFIG_PATH: "/app/config/settings.json"
-      ASPNETCORE_ENVIRONMENT: "Production"
-    deploy:
-      resources:
-        limits:
-          cpus: '0.6'
-          memory: 200M
-    volumes:
-      - ./logs/api:/app/logs
-      - ./config:/app/config
-    healthcheck:
-      test: [ "CMD-SHELL", "curl -f http://localhost:8090/api/health || exit 1" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 20s
-
-  # ── Frontend (NGINX + Auto-SSL for IP) ─────────────────────────────────────────
-  frontend:
-    build:
-      context: ./dashboard/frontend
-      dockerfile: Dockerfile.frontend
-    container_name: finances-frontend
-    restart: unless-stopped
-    networks:
-      - finances_net
-    depends_on:
-      - dashboard
-    volumes:
-      - ./logs/frontend:/var/log/nginx
-      - ssl_data:/etc/ssl/finances
-    ports:
-      - "80:80"
-      - "443:443"
-    healthcheck:
-      test: [ "CMD-SHELL", "curl -k -f https://localhost/ || exit 1" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3

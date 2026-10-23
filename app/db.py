@@ -18,14 +18,15 @@ import sys
 log = get_logger("db")
 
 _client: AsyncIOMotorClient | None = None
-_db: AsyncIOMotorDatabase | None = None
+_raw_db: AsyncIOMotorDatabase | None = None
+_intercepted_db: Any | None = None
 
 
-def get_db() -> AsyncIOMotorDatabase:
-    """Return the shared MotorDatabase instance (lazy init)."""
-    global _client, _db
-    if _db is not None:
-        return _db
+def get_raw_db() -> AsyncIOMotorDatabase:
+    """Return the raw underlying MotorDatabase instance without interception."""
+    global _client, _raw_db
+    if _raw_db is not None:
+        return _raw_db
 
     settings = get_settings()
     _client = AsyncIOMotorClient(
@@ -37,9 +38,22 @@ def get_db() -> AsyncIOMotorDatabase:
         connectTimeoutMS=5000,
         socketTimeoutMS=20_000,
     )
-    _db = _client[settings.database.mongo_database]
+    _raw_db = _client[settings.database.mongo_database]
     log.info("MongoDB connection established -> %s", settings.database.mongo_database)
-    return _db
+    return _raw_db
+
+
+def get_db() -> Any:
+    """Return the InterceptedDatabase instance (lazy init). Emits CQRS events on writes."""
+    global _intercepted_db
+    if _intercepted_db is not None:
+        return _intercepted_db
+
+    raw = get_raw_db()
+    from app.cqrs.interceptor import InterceptedDatabase
+
+    _intercepted_db = InterceptedDatabase(raw)
+    return _intercepted_db
 
 
 def get_fiat_collection_name() -> str:
@@ -77,11 +91,12 @@ async def ensure_indexes() -> None:
 
 async def close_db() -> None:
     """Close the Motor client (call on shutdown)."""
-    global _client, _db
+    global _client, _raw_db, _intercepted_db
     if _client is not None:
         _client.close()
         _client = None
-        _db = None
+        _raw_db = None
+        _intercepted_db = None
         log.info("MongoDB connection closed")
 
 

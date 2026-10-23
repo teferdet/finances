@@ -27,7 +27,7 @@ settings = {
         "token": os.environ.get("BOT_TOKEN", ""),
         "admin_ids": env_list("BOT_ADMIN_IDS", "[]"),
         "backup_enabled": os.environ.get("BACKUP_ENABLED", "false").lower() == "true",
-        "version": "finances 6.6.0",
+        "version": "finances 6.7.0",
     },
     "database": {
         "mongo_uri": os.environ.get("MONGO_URI", ""),

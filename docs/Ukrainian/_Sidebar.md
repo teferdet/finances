@@ -13,9 +13,6 @@
 
 ---
 
-* 📊 **[Дашборд](DASHBOARD.md)**
-* 🔌 **[API дашборда](DASHBOARD_API.md)**
-* 🖥️ **[Фронтенд дашборда](DASHBOARD_FRONTEND.md)**
 
 ---
 

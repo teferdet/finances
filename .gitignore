@@ -13,9 +13,11 @@ dist
 .ruff_cache
 inDevParts
 
-# Logs
+# Logs & Backups
 *.log
 logs/
+backups/
+*.gz
 
 # Configuration (keep examples)
 config/settings.json
@@ -30,27 +32,7 @@ files/portfolios.json
 PRIVACY_UK.md
 PRIVACY.md
 
-# C# / .NET Backend 
-[Bb]in/
-[Oo]bj/
-publish/
-dashboard/API/publish/
-*.user
-*.suo
-*.userprefs
-*.sln.docstates
+# Misc
 .vs/
-.idea/
-*.ReSharper
 secrets.json
-
-# Frontend (Node.js / SPA)
-.next/
-.nuxt/
-out/
-build/
-coverage/
 .env.local
-.env.development.local
-.env.test.local
-.env.production.local

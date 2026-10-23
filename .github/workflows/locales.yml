@@ -5,6 +5,7 @@ on:
     paths: ['locales/**']
   pull_request:
     paths: ['locales/**']
+  workflow_dispatch:
 
 permissions:
   contents: read

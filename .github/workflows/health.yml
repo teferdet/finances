@@ -31,7 +31,7 @@ jobs:
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
             # Service status
-            if docker compose ps bot | grep -q "Up"; then
+            if docker compose ps bot | grep -qiE "Up|running"; then
               echo "✅ Service: RUNNING"
             else
               echo "❌ Service: DOWN"

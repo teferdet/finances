@@ -41,12 +41,11 @@ def get_bot() -> Optional[Bot]:
 
 
 async def _get_user_lang(user_id: int) -> str:
-    """Fetch user's language from DB, fallback to 'en'."""
-    db = get_db()
-    doc = await db["Users"].find_one({"_id": user_id}, {"Language": 1})
-    if doc and doc.get("Language"):
-        return doc["Language"]
-    return "en"
+    """Fetch user's language via UserView read model."""
+    from app.cqrs.read.users import get_user_view
+
+    view = await get_user_view(user_id)
+    return view.language or "en"
 
 
 async def _get_users_langs(user_ids: list[int]) -> dict[int, str]:
@@ -115,16 +114,17 @@ async def _get_pair_price(currency_from: str, currency_to: str) -> Optional[floa
     """
     db = get_db()
 
+    from app.cqrs.read.prices import get_ticker_price
+
     # Case 1: Both are in current_prices (crypto/stocks quoted in USD)
     if currency_to == "USD":
-        doc = await db["current_prices"].find_one({"_id": currency_from})
-        if doc and doc.get("price_usd"):
-            return float(doc["price_usd"])
+        price = await get_ticker_price(currency_from)
+        if price is not None:
+            return price
 
     # Case 2: currency_from is in current_prices, currency_to is fiat
-    from_doc = await db["current_prices"].find_one({"_id": currency_from})
-    if from_doc and from_doc.get("price_usd"):
-        from_usd = float(from_doc["price_usd"])
+    from_usd = await get_ticker_price(currency_from)
+    if from_usd is not None:
         if currency_to == "USD":
             return from_usd
         # Convert USD → currency_to
@@ -141,16 +141,15 @@ async def _get_pair_price(currency_from: str, currency_to: str) -> Optional[floa
 
 
 async def _get_fiat_rate(base: str, target: str) -> Optional[float]:
-    """Get fiat exchange rate from fiat_rates collection."""
-    db = get_db()
-    doc = await db[get_fiat_collection_name()].find_one({"currency": base}, {"rates": 1})
-    if doc and "rates" in doc:
-        rate_info = doc["rates"].get(target)
-        if rate_info:
-            try:
-                return float(rate_info.get("rate", 0))
-            except (ValueError, TypeError):
-                pass
+    """Get fiat exchange rate from fiat_rates via FiatRates read model."""
+    from app.cqrs.read.fiat import fiat_store
+
+    rate_info = await fiat_store.get_rate(base, target)
+    if rate_info:
+        try:
+            return float(rate_info.get("rate", 0))
+        except (ValueError, TypeError):
+            pass
     return None
 
 
@@ -290,11 +289,10 @@ async def save_price_snapshot() -> None:
         if last_ts and (now - last_ts) < timedelta(minutes=50):
             return  # Skip — too recent
 
-    # Fetch all current prices
-    cursor = db["current_prices"].find({}, {"price_usd": 1})
-    prices = {}
-    async for doc in cursor:
-        prices[doc["_id"]] = float(doc.get("price_usd", 0))
+    # Fetch all current prices from in-memory PriceSnapshot
+    from app.cqrs.read.prices import get_price_snapshot
+
+    prices = await get_price_snapshot()
 
     if not prices:
         return
@@ -357,11 +355,10 @@ async def _check_volatility() -> None:
     if not old_prices:
         return
 
-    # Get current prices
-    cursor = db["current_prices"].find({}, {"price_usd": 1})
-    current_prices: dict[str, float] = {}
-    async for doc in cursor:
-        current_prices[doc["_id"]] = float(doc.get("price_usd", 0))
+    # Get current prices from in-memory PriceSnapshot
+    from app.cqrs.read.prices import get_price_snapshot
+
+    current_prices = await get_price_snapshot()
 
     # Find volatile tickers
     volatile_tickers: dict[str, dict] = {}  # ticker -> {old, new, pct_change}

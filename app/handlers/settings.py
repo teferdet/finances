@@ -29,24 +29,15 @@ async def _cache_key(uid: int) -> str:
 
 
 async def _get_user_prefs(uid: int) -> dict:
-    db = get_db()
-    user = await db["Users"].find_one(
-        {"_id": uid},
-        {
-            "RateMode": 1,
-            "PortfolioView": 1,
-            "WeeklyDigest": 1,
-            "NumberFormat": 1,
-            "VolatilityThreshold": 1,
-        },
-    )
-    u = user or {}
+    from app.cqrs.read.users import get_user_view
+
+    view = await get_user_view(uid)
     return {
-        "rate_mode": u.get("RateMode", "direct"),
-        "view_mode": u.get("PortfolioView", "detailed"),
-        "digest": u.get("WeeklyDigest", True),
-        "num_fmt": u.get("NumberFormat", "commas"),
-        "volatility": u.get("VolatilityThreshold", 5),
+        "rate_mode": view.rate_mode,
+        "view_mode": view.portfolio_view,
+        "digest": view.weekly_digest,
+        "num_fmt": view.number_format,
+        "volatility": view.volatility_threshold,
     }
 
 
@@ -253,10 +244,9 @@ def _selected_text(stx: dict, data: list) -> str:
 @router.callback_query(F.data == "fiat")
 async def cb_fiat(call: CallbackQuery, i18n: I18n, lang: str) -> None:
     uid = call.from_user.id
-    cd = (await cache.json_get(await _cache_key(uid))) or {}
-    db = get_db()
-    user = await db["Users"].find_one({"_id": uid}, {"Fiat currency": 1})
-    cd["update data"] = (user or {}).get("Fiat currency", [])
+    from app.cqrs.read.users import get_user_view
+    user_view = await get_user_view(uid)
+    cd["update data"] = list(user_view.fiat_currencies)
     cd["update type"] = "Fiat currency"
     cd["page"] = 0
     await cache.json_set(await _cache_key(uid), cd)
@@ -272,13 +262,9 @@ async def cb_fiat(call: CallbackQuery, i18n: I18n, lang: str) -> None:
 
 @router.callback_query(F.data == "settings_base_currency")
 async def cb_base_currency(call: CallbackQuery, i18n: I18n, lang: str) -> None:
-    uid = call.from_user.id
-    cd = (await cache.json_get(await _cache_key(uid))) or {}
-    db = get_db()
-    user = await db["Users"].find_one({"_id": uid}, {"BaseCurrency": 1})
-    base_val = (user or {}).get("BaseCurrency") or "USD"
-    if isinstance(base_val, list):
-        base_val = base_val[0] if base_val else "USD"
+    from app.cqrs.read.users import get_user_view
+    user_view = await get_user_view(uid)
+    base_val = user_view.base_currency or "USD"
     cd["update data"] = [str(base_val)]
     cd["update type"] = "BaseCurrency"
     cd["page"] = 0
@@ -295,18 +281,15 @@ async def cb_base_currency(call: CallbackQuery, i18n: I18n, lang: str) -> None:
 
 @router.callback_query(F.data.in_({"settings_crypto", "stocks"}))
 async def cb_crypto_stocks(call: CallbackQuery, i18n: I18n, lang: str) -> None:
-    uid = call.from_user.id
-    cd = (await cache.json_get(await _cache_key(uid))) or {}
-    s = get_settings()
-    db = get_db()
-    user = await db["Users"].find_one({"_id": uid}, {"Crypto currency": 1, "Stocks": 1})
+    from app.cqrs.read.users import get_user_view
+    user_view = await get_user_view(uid)
 
     if call.data == "settings_crypto":
-        cd["update data"] = (user or {}).get("Crypto currency", [])
+        cd["update data"] = list(user_view.crypto_currencies)
         cd["update type"] = "Crypto currency"
         items = [{"code": c, "emoji": ""} for c in s.crypto_list]
     else:
-        cd["update data"] = (user or {}).get("Stocks", [])
+        cd["update data"] = list(user_view.stocks)
         cd["update type"] = "Stocks"
         items = [{"code": c, "emoji": ""} for c in s.company_list]
     cd["page"] = 0
@@ -453,10 +436,9 @@ async def cb_data_processing(call: CallbackQuery, i18n: I18n, lang: str) -> None
 
 @router.callback_query(F.data == "toggle_big_buttons")
 async def cb_toggle_big_buttons(call: CallbackQuery, i18n: I18n, lang: str) -> None:
-    uid = call.from_user.id
-    db = get_db()
-    user = await db["Users"].find_one({"_id": uid}, {"BigButtons": 1})
-    current = (user or {}).get("BigButtons", False)
+    from app.cqrs.read.users import get_user_view
+    user_view = await get_user_view(uid)
+    current = user_view.big_buttons
     new_value = not current
     await db["Users"].update_one({"_id": uid}, {"$set": {"BigButtons": new_value}})
 
@@ -485,12 +467,10 @@ async def cb_toggle_big_buttons(call: CallbackQuery, i18n: I18n, lang: str) -> N
 @router.callback_query(F.data == "settings_main_menu")
 async def cb_main_menu(call: CallbackQuery, i18n: I18n, lang: str) -> None:
     uid = call.from_user.id
-    key = await _cache_key(uid)
-    cd = (await cache.json_get(key)) or {}
-    db = get_db()
-    user = await db["Users"].find_one({"_id": uid}, {"MainMenu": 1})
+    from app.cqrs.read.users import get_user_view
+    user_view = await get_user_view(uid)
     cd["update type"] = "MainMenu"
-    cd["update data"] = (user or {}).get("MainMenu", [])
+    cd["update data"] = list(user_view.main_menu)
     cd["page"] = 0
     await cache.json_set(key, cd)
     currencies = get_currencies_data()

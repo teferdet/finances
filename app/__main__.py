@@ -116,6 +116,15 @@ async def on_startup(bot) -> None:
     # Ensure DB indexes
     await ensure_indexes()
 
+    # Pre-warm CQRS PriceSnapshot read model
+    try:
+        from app.cqrs.read.prices import price_store
+
+        await price_store.reload()
+        log.info("CQRS PriceSnapshot read model pre-warmed")
+    except Exception as e:
+        log.warning("Failed to pre-warm PriceSnapshot: %s", e)
+
     # Load dynamic admins
     try:
         from app.state import dynamic_admin_ids
@@ -237,43 +246,34 @@ async def main() -> None:
     # Set bot reference for alert/volatility notifications
     set_alert_bot(bot)
 
-    # Start background tasks
-    background_tasks = []
+    # ── Task Supervisor & Write-Behind Activity Flusher ───────────────────────
+    from app.cqrs.tasks import supervisor
+    from app.cqrs.write.activity import activity_buffer
 
-    parser_task = asyncio.create_task(run_parser_loop())
-    background_tasks.append(("parser", parser_task))
-
-    alert_task = asyncio.create_task(run_alert_checker(check_interval=60))
-    background_tasks.append(("alert_checker", alert_task))
-
-    volatility_task = asyncio.create_task(run_volatility_monitor(check_interval=300))
-    background_tasks.append(("volatility_monitor", volatility_task))
-
-    digest_task = asyncio.create_task(run_digest_scheduler())
-    background_tasks.append(("digest_scheduler", digest_task))
+    supervisor.register("parser", run_parser_loop)
+    supervisor.register("alert_checker", lambda: run_alert_checker(check_interval=60))
+    supervisor.register("volatility_monitor", lambda: run_volatility_monitor(check_interval=300))
+    supervisor.register("digest_scheduler", run_digest_scheduler)
 
     analytics_reporter = AnalyticsReporter(bot=bot, db=get_db())
-    analytics_task = asyncio.create_task(analytics_reporter.start())
-    background_tasks.append(("analytics_reporter", analytics_task))
+    supervisor.register("analytics_reporter", analytics_reporter.start)
 
     if settings.bot.backup_enabled:
-        backup_task = asyncio.create_task(run_daily_backup_loop(settings.database.mongo_uri))
-        background_tasks.append(("backup_scheduler", backup_task))
+        supervisor.register("backup_scheduler", lambda: run_daily_backup_loop(settings.database.mongo_uri))
 
     from app.cache import run_cache_cleanup_loop
-    cache_task = asyncio.create_task(run_cache_cleanup_loop())
-    background_tasks.append(("cache_cleanup", cache_task))
+    supervisor.register("cache_cleanup", run_cache_cleanup_loop)
+
+    # Activity write-behind buffer flusher (flushes memory updates every 5s)
+    supervisor.register("activity_flusher", activity_buffer.run_flusher_loop)
 
     # M-3 fix: require both --debug flag AND APP_DEBUG_CLI=true env var.
-    # The bare 'debug' string check (without '--') was too broad and could be matched
-    # accidentally. The env var gate prevents activation on production servers.
     if "--debug" in sys.argv and os.environ.get("APP_DEBUG_CLI", "").lower() == "true":
         from app.debug_cli import run_debug_cli
+        supervisor.register("debug_cli", run_debug_cli)
 
-        debug_cli_task = asyncio.create_task(run_debug_cli())
-        background_tasks.append(("debug_cli", debug_cli_task))
-
-    log.info("Started %d background tasks", len(background_tasks))
+    supervisor.start_all()
+    log.info("Supervisor started all background workers")
 
     # Register startup hook
     dp.startup.register(on_startup)
@@ -284,14 +284,15 @@ async def main() -> None:
     except (KeyboardInterrupt, SystemExit):
         log.info("Shutdown signal received")
     finally:
-        # Cleanup all background tasks
-        for name, task in background_tasks:
-            task.cancel()
-            try:
-                await task
-            except asyncio.CancelledError:
-                pass
-            log.info("Background task '%s' stopped", name)
+        log.info("Initiating graceful shutdown...")
+        await supervisor.stop_all()
+
+        # Final flush of write-behind activity buffer
+        try:
+            flushed = await activity_buffer.flush()
+            log.info("Final activity flush completed (%d records written)", flushed)
+        except Exception as exc:
+            log.warning("Final activity flush warning: %s", exc)
 
         await close_db()
         await close_redis()

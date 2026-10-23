@@ -3,8 +3,16 @@ name: Security Scan
 on:
   push:
     branches: [main]
+    paths:
+      - 'requirements.txt'
+      - '.github/workflows/security.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'requirements.txt'
   schedule:
     - cron: '0 9 * * 1'  # Every Monday at 9:00 UTC
+  workflow_dispatch:
 
 permissions:
   contents: read

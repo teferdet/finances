@@ -316,15 +316,12 @@ async def get_portfolio_with_pnl(
                 if isinstance(lot, dict) and "ticker" in lot:
                     all_tickers.add(lot["ticker"])
 
-    # Batch fetch current prices
+    # Batch fetch current prices from in-memory PriceSnapshot
     prices_map: dict[str, float] = {}
     if all_tickers:
-        cursor = db["current_prices"].find(
-            {"_id": {"$in": list(all_tickers)}},
-            {"price_usd": 1},
-        )
-        async for doc in cursor:
-            prices_map[doc["_id"]] = float(doc.get("price_usd", 0))
+        from app.cqrs.read.prices import price_store
+
+        prices_map = await price_store.get_prices(list(all_tickers))
 
     # For fiat tickers, try to get from fiat_rates if not in current_prices
     for section in ("fiat",):
@@ -497,9 +494,7 @@ async def _get_fiat_usd_price(fiat_currency: str) -> float | None:
 
 
 async def _get_current_usd_price(ticker: str) -> float | None:
-    """Get the current USD price of a crypto/stock asset."""
-    db = get_db()
-    doc = await db["current_prices"].find_one({"_id": ticker.upper()})
-    if doc and "price_usd" in doc:
-        return float(doc["price_usd"])
-    return None
+    """Get the current USD price of a crypto/stock asset from PriceSnapshot read model."""
+    from app.cqrs.read.prices import get_ticker_price
+
+    return await get_ticker_price(ticker)

@@ -115,6 +115,7 @@ def _admin_kb(i18n: I18n, lang: str, user_id: int) -> InlineKeyboardMarkup:
     builder.button(text=t("broadcast"), callback_data="admin_broadcast")
     builder.button(text=t("groups_btn"), callback_data="admin_groups")
     builder.button(text=t("diagnostics_btn"), callback_data="admin_diagnostics")
+    builder.button(text="⚙️ Tasks", callback_data="admin_tasks")
 
     if user_id in get_settings().bot.admin_ids:
         builder.button(text=str(i18n.get("admin.manage_admins_btn", lang)), callback_data="admin_manage_admins")
@@ -191,59 +192,6 @@ async def cmd_ping(message: Message, i18n: I18n, lang: str) -> None:
         str(i18n.get("admin.pong_details", lang)).format(ping_ms=ping_ms),
         parse_mode="HTML",
     )
-
-
-@router.callback_query(F.data.startswith("dash_"))
-async def cb_dash_auth(call: CallbackQuery) -> None:
-    msg_denied = "Access denied"
-    if not _is_admin(call.from_user.id):
-        await call.answer(text=msg_denied, show_alert=True)
-        return
-
-    data = call.data  # dash_approve:req_id or dash_block:req_id
-    if ":" not in data:
-        msg_invalid = "Invalid callback"
-        await call.answer(text=msg_invalid, show_alert=True)
-        return
-
-    action, req_id = data.split(":", 1)
-    db = get_db()
-    req = await db["dash_auth_requests"].find_one({"_id": req_id})
-    ip = req.get("ip", "unknown") if req else "unknown"
-
-    try:
-        from dashboard.api import auth as dash_auth
-        dash_auth.set_auth_status(req_id, "approved" if action == "dash_approve" else "blocked")
-    except Exception:
-        pass
-
-    if action == "dash_approve":
-        await db["dash_auth_requests"].update_one(
-            {"_id": req_id}, {"$set": {"status": "approved"}}
-        )
-        msg_approved = "✅ Login approved!"
-        await call.answer(text=msg_approved, show_alert=True)
-        try:
-            approved_text = f"✅ <b>Login Approved</b>\n\n📍 IP: <code>{ip}</code>\n👤 Admin: <code>{call.from_user.id}</code>"
-            await call.message.edit_text(text=approved_text, parse_mode="HTML")
-        except Exception:
-            pass
-    elif action == "dash_block":
-        await db["dash_auth_requests"].update_one(
-            {"_id": req_id}, {"$set": {"status": "blocked"}}
-        )
-        await db["dash_blocked_ips"].update_one(
-            {"_id": ip},
-            {"$set": {"blocked_at": datetime.now(), "blocked_by": call.from_user.id}},
-            upsert=True
-        )
-        msg_blocked = "⛔ IP added to blacklist!"
-        await call.answer(text=msg_blocked, show_alert=True)
-        try:
-            blocked_text = f"⛔ <b>IP Address Blacklisted</b>\n\n📍 IP: <code>{ip}</code>\n👤 Blocked by: <code>{call.from_user.id}</code>"
-            await call.message.edit_text(text=blocked_text, parse_mode="HTML")
-        except Exception:
-            pass
 
 
 @router.callback_query(F.data.startswith("admin_"))
@@ -414,6 +362,8 @@ async def cb_admin(call: CallbackQuery, i18n: I18n, lang: str, state: FSMContext
         return
 
     if action == "dash_db":
+        from app.services.backup import get_latest_backup, list_backups
+
         collections = await db.list_collection_names()
         db_stats = await db.command("dbstats")
         size_mb = db_stats.get("dataSize", 0) / (1024 * 1024)
@@ -421,16 +371,80 @@ async def cb_admin(call: CallbackQuery, i18n: I18n, lang: str, state: FSMContext
         col_text = ""
         for c in collections:
             cnt = await db[c].count_documents({})
-            col_text += f" - {c}: <code>{cnt}</code>\n"
+            col_text += f" • {c}: <code>{cnt}</code>\n"
+
+        # Backup status
+        b_status = await db["Status"].find_one({"_id": "backup_status"})
+        backup_info = "<i>Never run</i>"
+        if b_status:
+            at_str = b_status.get("last_backup_at")
+            if isinstance(at_str, datetime):
+                at_str = at_str.strftime("%Y-%m-%d %H:%M UTC")
+            st_icon = "✅" if b_status.get("status") == "success" else "❌"
+            backup_info = (
+                f"{st_icon} <b>Status:</b> {b_status.get('status', 'unknown')}\n"
+                f"🕒 <b>Last Backup:</b> <code>{at_str}</code>\n"
+                f"📦 <b>Size:</b> <code>{b_status.get('size_kb', 0)} KB</code> | Docs: <code>{b_status.get('total_docs', 0)}</code>"
+            )
+
+        avail_backups = list_backups()
+        local_files_count = len(avail_backups)
 
         text = (
-            f"🗄️ <b>Database Statistics</b>\n\nTotal Data Size: <code>{size_mb:.2f} MB</code>\nCollections:\n{col_text}"
+            f"🗄️ <b>Database & Backups</b>\n\n"
+            f"💾 <b>Backup Status:</b>\n{backup_info}\n"
+            f"📁 <b>Available Archives on Disk:</b> <code>{local_files_count}</code>\n\n"
+            f"📊 <b>Database Size:</b> <code>{size_mb:.2f} MB</code>\n"
+            f"<b>Collections:</b>\n{col_text}"
         )
-        kb = InlineKeyboardMarkup(
-            inline_keyboard=[[InlineKeyboardButton(text=t("back"), callback_data="admin_dashboard")]]
-        )
+        kb_buttons = [
+            [InlineKeyboardButton(text="💾 Run Backup Now", callback_data="admin_run_backup")],
+        ]
+        if avail_backups and call.from_user.id in get_settings().bot.admin_ids:
+            kb_buttons.append([InlineKeyboardButton(text="📥 Download Latest Backup", callback_data="admin_download_backup")])
+        kb_buttons.append([InlineKeyboardButton(text=t("back"), callback_data="admin_dashboard")])
+
+        kb = InlineKeyboardMarkup(inline_keyboard=kb_buttons)
         await call.message.edit_text(text, reply_markup=kb, parse_mode="HTML")
         await call.answer()
+        return
+
+    if action == "run_backup":
+        if call.from_user.id not in get_settings().bot.admin_ids:
+            await call.answer(t("access_denied"), show_alert=True)
+            return
+
+        await call.answer("⏳ Starting backup in background...", show_alert=False)
+        from app.services.backup import daily_backup
+
+        archive = await daily_backup()
+        if archive:
+            await call.answer("✅ Backup completed successfully!", show_alert=True)
+        else:
+            await call.answer("❌ Backup failed. Check logs.", show_alert=True)
+
+        # Refresh screen
+        call.data = "admin_dash_db"
+        await cb_admin(call, i18n, lang, state)
+        return
+
+    if action == "download_backup":
+        if call.from_user.id not in get_settings().bot.admin_ids:
+            await call.answer(t("access_denied"), show_alert=True)
+            return
+
+        from app.services.backup import get_latest_backup
+
+        latest = get_latest_backup()
+        if latest and latest.exists():
+            await call.answer("📥 Sending backup archive...", show_alert=False)
+            await call.message.answer_document(
+                BufferedInputFile.from_file(latest, filename=latest.name),
+                caption=f"📦 MongoDB Backup: <code>{latest.name}</code>",
+                parse_mode="HTML",
+            )
+        else:
+            await call.answer("❌ No backup archive found on disk.", show_alert=True)
         return
 
     if action == "dash_probs":
@@ -619,6 +633,47 @@ async def cb_admin(call: CallbackQuery, i18n: I18n, lang: str, state: FSMContext
         text = f"{t('diagnostics_title')}\n\n{res_text}\n{err_text}\n\n{time_text}"
 
         kb = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text=t("back"), callback_data="admin_back")]])
+        await call.message.edit_text(text, reply_markup=kb, parse_mode="HTML")
+        await call.answer()
+        return
+
+    if action == "tasks":
+        from app.cqrs.tasks import supervisor
+        from app.cqrs.bus import bus
+        from app.cqrs.write.activity import activity_buffer
+        from app.cqrs.read.prices import price_store
+
+        tasks_info = supervisor.get_status()
+        task_lines = []
+        for t_info in tasks_info:
+            icon = "🟢" if t_info["running"] else "🔴"
+            restarts_str = f" | 🔄 {t_info['restarts']}" if t_info["restarts"] > 0 else ""
+            err_str = f"\n   └ ⚠️ {t_info['last_error']}" if t_info["last_error"] else ""
+            task_lines.append(f"{icon} <b>{t_info['name']}</b> ({t_info['uptime_sec']}s{restarts_str}){err_str}")
+
+        tasks_text = "\n".join(task_lines) if task_lines else "<i>No supervised tasks</i>"
+
+        events_str = ", ".join(f"{k}: {v}" for k, v in bus.published.items()) or "none"
+        act_stats = activity_buffer.stats()
+        pr_stats = price_store.stats()
+
+        text = (
+            "⚙️ <b>Tasks & CQRS Status</b>\n\n"
+            f"<b>Supervised Background Workers:</b>\n{tasks_text}\n\n"
+            "<b>CQRS Live Bus:</b>\n"
+            f"• Published Events: <code>{events_str}</code>\n\n"
+            "<b>CQRS Read/Write Models:</b>\n"
+            f"• PriceSnapshot Cached: <code>{pr_stats.get('cached_tickers', 0)} tickers</code>\n"
+            f"• Write-Behind Users Buffer: <code>{act_stats.get('buffered_users', 0)}</code>\n"
+            f"• Write-Behind Batches Flushed: <code>{act_stats.get('flushed_batches', 0)}</code>\n"
+        )
+
+        kb = InlineKeyboardMarkup(
+            inline_keyboard=[
+                [InlineKeyboardButton(text="🔄 Refresh", callback_data="admin_tasks")],
+                [InlineKeyboardButton(text=t("back"), callback_data="admin_back")],
+            ]
+        )
         await call.message.edit_text(text, reply_markup=kb, parse_mode="HTML")
         await call.answer()
         return
