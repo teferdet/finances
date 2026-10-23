@@ -220,7 +220,7 @@ jobs:
       # ── 3. Deploy with Docker Compose ────────────────────────────────
       - name: 🚀 Deploy Services
         uses: appleboy/ssh-action@v1.0.3
-        timeout-minutes: 10
+        timeout-minutes: 30
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USERNAME }}
