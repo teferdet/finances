@@ -91,7 +91,7 @@ jobs:
             echo "🔐 Generating unified .env and settings.json from secrets..."
             
             # Clean up legacy dashboard leftovers (dashboard was removed)
-            rm -rf "$APP_DIR/dashboard"
+            sudo rm -rf "$APP_DIR/dashboard" 2>/dev/null || rm -rf "$APP_DIR/dashboard" 2>/dev/null || true
 
             cat > "$APP_DIR/.env" << EOF
             BOT_TOKEN=${BOT_TOKEN}
@@ -239,7 +239,7 @@ jobs:
             echo "🧹 Removing legacy dashboard / NGINX containers (if any)..."
             docker rm -f finances-backend finances-frontend 2>/dev/null || true
             docker volume rm finances_ssl_data 2>/dev/null || true
-            rm -rf "$APP_DIR/logs/api" "$APP_DIR/logs/frontend"
+            sudo rm -rf "$APP_DIR/logs/api" "$APP_DIR/logs/frontend" 2>/dev/null || rm -rf "$APP_DIR/logs/api" "$APP_DIR/logs/frontend" 2>/dev/null || true
 
             echo "🐳 Starting Docker Compose for bot & redis..."
             docker compose up -d --build --remove-orphans bot redis
