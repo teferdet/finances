@@ -7,6 +7,8 @@ Usage:
     await close_db()       # call on shutdown
 """
 
+from typing import Any
+# pyrefly: ignore[invalid-syntax]
 from __future__ import annotations
 
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
