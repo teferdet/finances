@@ -184,71 +184,7 @@ async def clear_portfolio(user_id: int) -> None:
 
 
 # ── Exchange Sync (Binance) ────────────────────────────────────────
-
-
-async def sync_exchange_balances(user_id: int, balances: list[dict[str, Any]]) -> int:
-    """
-    Sync balances from an exchange. This overwrites the 'crypto' section
-    for tickers that exist in the balances list. Tickers not in the list remain.
-    Optionally, we can fetch their current prices to act as 'buy_price_usd'
-    if we don't have one, but typically exchange sync just tracks balances.
-    """
-    await _ensure_migrated(user_id)
-    db = get_db()
-
-    user = await db["Users"].find_one({"_id": user_id}, {"portfolio": 1})
-    portfolio = (user or {}).get("portfolio", {})
-    crypto_section = portfolio.get("crypto", []) if isinstance(portfolio, dict) else []
-    if not isinstance(crypto_section, list):
-        crypto_section = []
-
-    # Map current crypto by ticker
-    crypto_map = {}
-    for lot in crypto_section:
-        if isinstance(lot, dict) and "ticker" in lot:
-            crypto_map[lot["ticker"]] = lot
-
-    # Update with exchange balances
-    updated_count = 0
-    all_tickers = [b["asset"] for b in balances]
-
-    # Pre-fetch prices for new assets
-    prices_map = {}
-    if all_tickers:
-        cursor = db["current_prices"].find(
-            {"_id": {"$in": all_tickers}},
-            {"price_usd": 1},
-        )
-        async for doc in cursor:
-            prices_map[doc["_id"]] = float(doc.get("price_usd", 0))
-
-    for bal in balances:
-        ticker = bal["asset"]
-        amount = bal["free"] + bal["locked"]
-        if amount <= 0:
-            continue
-
-        if ticker in crypto_map:
-            crypto_map[ticker]["amount"] = amount
-        else:
-            crypto_map[ticker] = {
-                "ticker": ticker,
-                "amount": amount,
-                "buy_price_usd": prices_map.get(ticker),  # snapshot current price as basis
-                "buy_date": datetime.now(timezone.utc).isoformat(),
-            }
-        updated_count += 1
-
-    new_crypto_section = list(crypto_map.values())
-    await db["Users"].update_one(
-        {"_id": user_id},
-        {"$set": {"portfolio.crypto": new_crypto_section}},
-        upsert=True,
-    )
-
-    # Update current_prices with the exchange prices too if provided
-    # The balances dict might not contain price, this is handled via main parser.
-    return updated_count
+# Balance sync lives in app/services/exchange_sync.py.
 
 
 async def update_prices_from_exchange(prices: dict[str, float]) -> int:
@@ -298,8 +234,13 @@ async def get_portfolio_with_pnl(
     if not portfolio:
         return _empty_result(base_currency)
 
-    # Get USD -> base_currency rate
+    # Get USD -> base_currency rate; if unknown, show values in USD rather than
+    # labelling USD amounts with another currency's symbol.
     usd_to_base = await _get_usd_to_base_rate(base_currency)
+    if usd_to_base is None:
+        log.warning("No USD->%s rate available, falling back to USD for user %s", base_currency, user_id)
+        base_currency = "USD"
+        usd_to_base = 1.0
 
     # Find the base currency symbol
     curr_data = get_currencies_data()
@@ -338,6 +279,8 @@ async def get_portfolio_with_pnl(
     # Compute P&L
     sections_result: dict[str, list] = {}
     total_value_usd = 0.0
+    # P&L totals only over lots where both buy and current price are known
+    pnl_value_usd = 0.0
     total_cost_usd = 0.0
 
     for section in ("crypto", "stock", "fiat"):
@@ -365,7 +308,8 @@ async def get_portfolio_with_pnl(
                 pnl_pct = ((current_price - buy_price) / buy_price) * 100
 
             total_value_usd += value_usd
-            if cost_usd is not None:
+            if pnl_abs is not None and cost_usd is not None:
+                pnl_value_usd += value_usd
                 total_cost_usd += cost_usd
 
             pnl_abs_base = (pnl_abs * usd_to_base) if pnl_abs is not None else None
@@ -384,7 +328,7 @@ async def get_portfolio_with_pnl(
         if section_lots:
             sections_result[section] = section_lots
 
-    total_pnl_abs = total_value_usd - total_cost_usd if total_cost_usd > 0 else None
+    total_pnl_abs = pnl_value_usd - total_cost_usd if total_cost_usd > 0 else None
     total_pnl_pct = (total_pnl_abs / total_cost_usd * 100) if (total_cost_usd and total_pnl_abs is not None) else None
 
     # Format sections as a list for the handler
@@ -432,8 +376,8 @@ def _empty_result(base_currency: str) -> dict[str, Any]:
     }
 
 
-async def _get_usd_to_base_rate(base_currency: str) -> float:
-    """Get conversion rate from USD to the target base currency."""
+async def _get_usd_to_base_rate(base_currency: str) -> float | None:
+    """Get conversion rate from USD to the target base currency (None if unknown)."""
     if base_currency == "USD":
         return 1.0
 
@@ -459,7 +403,7 @@ async def _get_usd_to_base_rate(base_currency: str) -> float:
             if float(usd_rate_obj) > 0:
                 return 1.0 / float(usd_rate_obj)
 
-    return 1.0
+    return None
 
 
 async def _get_fiat_usd_price(fiat_currency: str) -> float | None:

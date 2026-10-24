@@ -74,14 +74,17 @@ class GroupCooldownMiddleware(BaseMiddleware):
         else:
             data["group_cooldown_ok"] = True
 
+        # Handlers receive ``data`` unpacked into **kwargs (a copy), so they can't
+        # write back into it directly. A shared mutable dict survives the unpacking:
+        # the handler sets ``kwargs["group_reply_signal"]["replied"] = True``.
+        signal: Dict[str, bool] = {"replied": False}
+        data["group_reply_signal"] = signal
+
         result = await handler(event, data)
 
-        # If the handler actually replied (result is not None or handler ran),
-        # update the timestamp. We mark it here so that only actual replies
-        # reset the cooldown — if handler returned early (no currency found),
-        # cooldown is not consumed.
-        # The handler sets data["group_did_reply"] = True when it sends a message.
-        if data.get("group_did_reply"):
+        # Only actual replies reset the cooldown — if handler returned early
+        # (no currency found), cooldown is not consumed.
+        if signal["replied"] or data.get("group_did_reply"):
             self._last_reply[chat_id] = now
 
         # Periodic cleanup of stale entries

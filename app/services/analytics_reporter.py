@@ -162,17 +162,10 @@ class AnalyticsReporter:
         top_currencies = no_data_str  # TODO: requires request_stats collection
 
         # Errors (parsing logs)
-        errors_today = 0
         from app.config import LOGS_DIR
+        from app.utils.logs import count_log_lines
 
-        error_log_path = LOGS_DIR / "errors.log"
-        if error_log_path.exists():
-            today_str = now.strftime("%Y-%m-%d")
-            try:
-                with open(error_log_path, "r", encoding="utf-8") as f:
-                    errors_today = sum(1 for line in f if line.startswith(today_str))
-            except Exception:
-                pass
+        errors_today = await count_log_lines(LOGS_DIR / "errors.log", now.strftime("%Y-%m-%d"))
 
         return {
             "total_users": f"{total_users:,}",
@@ -201,17 +194,11 @@ class AnalyticsReporter:
         top_currencies = no_data_str  # TODO: requires request_stats collection
 
         # Errors (parsing logs)
-        errors_weekly = 0
         from app.config import LOGS_DIR
+        from app.utils.logs import count_log_lines
 
-        error_log_path = LOGS_DIR / "errors.log"
-        if error_log_path.exists():
-            dates = [(now - timedelta(days=i)).strftime("%Y-%m-%d") for i in range(7)]
-            try:
-                with open(error_log_path, "r", encoding="utf-8") as f:
-                    errors_weekly = sum(1 for line in f if line[:10] in dates)
-            except Exception:
-                pass
+        dates = tuple((now - timedelta(days=i)).strftime("%Y-%m-%d") for i in range(7))
+        errors_weekly = await count_log_lines(LOGS_DIR / "errors.log", dates)
 
         return {
             "active_weekly": f"{active_weekly:,}",

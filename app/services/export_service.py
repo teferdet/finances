@@ -11,21 +11,15 @@ async def _get_extended_stats(db: Any) -> Dict[str, Any]:
     total_groups = await db["Groups"].count_documents({"Status": "Active"})
     total_fiat = await db[get_fiat_collection_name()].count_documents({})
 
-    users_list = await db["Users"].find().to_list(length=None)
-    total_reqs = sum(u.get("stats", {}).get("total_requests", 0) for u in users_list)
+    agg = await db["Users"].aggregate(
+        [{"$group": {"_id": None, "total": {"$sum": {"$ifNull": ["$stats.total_requests", 0]}}}}]
+    ).to_list(length=1)
+    total_reqs = agg[0]["total"] if agg else 0
 
-    errors_today = 0
     from app.config import LOGS_DIR
+    from app.utils.logs import count_log_lines
 
-    error_log_path = LOGS_DIR / "errors.log"
-    if error_log_path.exists():
-        today_str = datetime.now().strftime("%Y-%m-%d")
-        try:
-            with open(error_log_path, "r", encoding="utf-8") as f:
-                lines = f.readlines()
-                errors_today = sum(1 for line in lines if line.startswith(today_str))
-        except Exception:
-            pass
+    errors_today = await count_log_lines(LOGS_DIR / "errors.log", datetime.now().strftime("%Y-%m-%d"))
 
     db_stats = await db.command("dbstats")
     size_mb = db_stats.get("dataSize", 0) / (1024 * 1024)

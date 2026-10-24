@@ -7,7 +7,6 @@ from __future__ import annotations
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 
 from app.config import get_currencies_data
-from app.db import get_db
 
 DEFAULT_MAIN_CURRENCIES = [
     ("🇺🇸", "USD"),

@@ -244,6 +244,7 @@ def _selected_text(stx: dict, data: list) -> str:
 @router.callback_query(F.data == "fiat")
 async def cb_fiat(call: CallbackQuery, i18n: I18n, lang: str) -> None:
     uid = call.from_user.id
+    cd = (await cache.json_get(await _cache_key(uid))) or {}
     from app.cqrs.read.users import get_user_view
     user_view = await get_user_view(uid)
     cd["update data"] = list(user_view.fiat_currencies)
@@ -262,6 +263,8 @@ async def cb_fiat(call: CallbackQuery, i18n: I18n, lang: str) -> None:
 
 @router.callback_query(F.data == "settings_base_currency")
 async def cb_base_currency(call: CallbackQuery, i18n: I18n, lang: str) -> None:
+    uid = call.from_user.id
+    cd = (await cache.json_get(await _cache_key(uid))) or {}
     from app.cqrs.read.users import get_user_view
     user_view = await get_user_view(uid)
     base_val = user_view.base_currency or "USD"
@@ -281,6 +284,9 @@ async def cb_base_currency(call: CallbackQuery, i18n: I18n, lang: str) -> None:
 
 @router.callback_query(F.data.in_({"settings_crypto", "stocks"}))
 async def cb_crypto_stocks(call: CallbackQuery, i18n: I18n, lang: str) -> None:
+    uid = call.from_user.id
+    cd = (await cache.json_get(await _cache_key(uid))) or {}
+    s = get_settings()
     from app.cqrs.read.users import get_user_view
     user_view = await get_user_view(uid)
 
@@ -436,6 +442,8 @@ async def cb_data_processing(call: CallbackQuery, i18n: I18n, lang: str) -> None
 
 @router.callback_query(F.data == "toggle_big_buttons")
 async def cb_toggle_big_buttons(call: CallbackQuery, i18n: I18n, lang: str) -> None:
+    uid = call.from_user.id
+    db = get_db()
     from app.cqrs.read.users import get_user_view
     user_view = await get_user_view(uid)
     current = user_view.big_buttons
@@ -467,6 +475,8 @@ async def cb_toggle_big_buttons(call: CallbackQuery, i18n: I18n, lang: str) -> N
 @router.callback_query(F.data == "settings_main_menu")
 async def cb_main_menu(call: CallbackQuery, i18n: I18n, lang: str) -> None:
     uid = call.from_user.id
+    key = await _cache_key(uid)
+    cd = (await cache.json_get(key)) or {}
     from app.cqrs.read.users import get_user_view
     user_view = await get_user_view(uid)
     cd["update type"] = "MainMenu"

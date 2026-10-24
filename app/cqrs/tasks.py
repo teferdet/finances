@@ -160,12 +160,12 @@ class TaskSupervisor:
     async def stop_all(self) -> None:
         """Cancel and await all supervised tasks."""
         self._shutdown_event.set()
-        tasks_to_cancel = [item.task for item in self._tasks.values() if item.task and not item.task.done()]
-        for t in tasks_to_cancel:
-            t.cancel()
-        if tasks_to_cancel:
-            results = await asyncio.gather(*tasks_to_cancel, return_exceptions=True)
-            for item, res in zip(self._tasks.values(), results):
+        items_to_cancel = [item for item in self._tasks.values() if item.task and not item.task.done()]
+        for item in items_to_cancel:
+            item.task.cancel()
+        if items_to_cancel:
+            results = await asyncio.gather(*(item.task for item in items_to_cancel), return_exceptions=True)
+            for item, res in zip(items_to_cancel, results, strict=True):
                 if isinstance(res, Exception) and not isinstance(res, asyncio.CancelledError):
                     log.warning("Exception during stopping task '%s': %s", item.name, res)
         for item in self._tasks.values():

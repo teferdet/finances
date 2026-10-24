@@ -10,7 +10,6 @@ Lifecycle:
 
 from __future__ import annotations
 
-import asyncio
 from time import strftime
 
 from aiogram import F, Router
@@ -115,18 +114,14 @@ async def handle_group_message(message: Message, i18n: I18n, lang: str, **kwargs
 
     # Signal to GroupCooldownMiddleware that we actually replied
     # (so it resets the per-chat cooldown timer)
-    # This is injected via the middleware's data dict
-    if "group_did_reply" in kwargs or True:
-        # We need to set it in the middleware's data — kwargs IS the data dict
-        pass
-    # Mark reply for cooldown middleware (data dict is shared)
-    try:
-        message.__dict__.setdefault("_handler_data", {})
-    except Exception:
-        pass
+    signal = kwargs.get("group_reply_signal")
+    if isinstance(signal, dict):
+        signal["replied"] = True
 
     # Fire-and-forget: increment group stats
-    asyncio.create_task(increment_group_stats(message.chat.id))
+    from app.cqrs.tasks import spawn
+
+    spawn(increment_group_stats(message.chat.id), name="group_stats")
 
 
 @router.my_chat_member()

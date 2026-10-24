@@ -3,12 +3,9 @@ Admin panel handler — admin-only commands and inline controls.
 """
 
 from __future__ import annotations
-import os
 import re
-import sys
 import time
 import platform
-import json
 from datetime import datetime, timedelta
 
 from aiogram import Router, F
@@ -275,30 +272,12 @@ async def cb_admin(call: CallbackQuery, i18n: I18n, lang: str, state: FSMContext
         total_users = await db["Users"].count_documents({})
         dau = await db["Users"].count_documents({"last_active": {"$gte": today_midnight}})
 
-        errors_today = 0
         from app.config import LOGS_DIR
+        from app.utils.logs import count_log_lines
 
-        error_log_path = LOGS_DIR / "errors.log"
-        if error_log_path.exists():
-            today_str = datetime.now().strftime("%Y-%m-%d")
-            try:
-                with open(error_log_path, "r", encoding="utf-8") as f:
-                    lines = f.readlines()
-                    errors_today = sum(1 for line in lines if line.startswith(today_str))
-            except Exception:
-                pass
-
-        cycles_today = 0
-        bot_log_path = LOGS_DIR / "bot.log"
-        if bot_log_path.exists():
-            today_str = datetime.now().strftime("%Y-%m-%d")
-            try:
-                with open(bot_log_path, "r", encoding="utf-8") as f:
-                    for line in f:
-                        if line.startswith(today_str) and "Cycle done in" in line:
-                            cycles_today += 1
-            except Exception:
-                pass
+        today_str = datetime.now().strftime("%Y-%m-%d")
+        errors_today = await count_log_lines(LOGS_DIR / "errors.log", today_str)
+        cycles_today = await count_log_lines(LOGS_DIR / "bot.log", today_str, contains="Cycle done in")
 
         text = (
             f"{t('dashboard_title')}\n\n"

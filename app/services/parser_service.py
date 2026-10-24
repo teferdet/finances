@@ -14,7 +14,6 @@ from __future__ import annotations
 
 import asyncio
 import time
-from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from app.config import get_settings, get_currencies_data

@@ -17,7 +17,7 @@ from typing import Optional
 
 from aiogram import Bot
 
-from app.db import get_db, get_fiat_collection_name
+from app.db import get_db
 from app.i18n import get_i18n
 from app.logger import get_logger
 
@@ -112,8 +112,6 @@ async def _get_pair_price(currency_from: str, currency_to: str) -> Optional[floa
     Get the exchange rate for a currency pair.
     Supports crypto, stocks (via current_prices), and fiat (via fiat_rates).
     """
-    db = get_db()
-
     from app.cqrs.read.prices import get_ticker_price
 
     # Case 1: Both are in current_prices (crypto/stocks quoted in USD)
@@ -234,8 +232,8 @@ async def _check_alerts() -> int:
             # Build notification via i18n
             lang = user_langs.get(a["user_id"], "en")
 
-            def t(k):
-                return str(i18n.get(f"alerts.{k}", lang))
+            def t(k, _lang=lang):
+                return str(i18n.get(f"alerts.{k}", _lang))
 
             cond_emoji = "📈" if condition == "above" else "📉"
             text = (

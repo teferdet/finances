@@ -113,8 +113,7 @@ async def daily_backup(mongo_uri: str | None = None) -> Optional[Path]:
                     "collections": collections,
                 }
             }
-            meta_json = json.dumps(meta, ensure_ascii=False)
-            # Remove trailing closing brace from meta to keep root JSON open
+            # Write only the inner _meta object so the root JSON object stays open
             gz_out.write(f'  "_meta": {json.dumps(meta["_meta"], ensure_ascii=False)},\n')
             gz_out.write('  "collections": {\n')
 
@@ -269,14 +268,17 @@ async def restore_backup(archive_path: Path, drop_existing: bool = False) -> dic
     """
     from app.db import get_raw_db
 
-    if not archive_path.exists():
+    if not await asyncio.to_thread(archive_path.exists):
         raise FileNotFoundError(f"Backup file not found: {archive_path}")
 
     logger.info("Starting restore from %s...", archive_path.name)
     db = get_raw_db()
 
-    with gzip.open(archive_path, "rt", encoding="utf-8") as gz_in:
-        data = json.load(gz_in)
+    def _load() -> Any:
+        with gzip.open(archive_path, "rt", encoding="utf-8") as gz_in:
+            return json.load(gz_in)
+
+    data = await asyncio.to_thread(_load)
 
     # Support both new format {"_meta": ..., "collections": {...}} and legacy {"Users": [...]}
     collections_data = data.get("collections", data)

@@ -13,7 +13,7 @@ from __future__ import annotations
 import asyncio
 import time
 from dataclasses import dataclass, field
-from typing import Any, Optional
+from typing import Any
 
 from app.cqrs.bus import UserChanged, bus
 from app.cqrs.resilience import retry_transient
@@ -78,10 +78,13 @@ class UserViewStore:
         self._flights: dict[int, asyncio.Future[UserView]] = {}
         self._lock = asyncio.Lock()
         self._ttl_sec = ttl_sec
+        # Bumped on every invalidation; a fetch started before a bump must not be cached.
+        self._generation = 0
         # Subscribe to bus events
         bus.subscribe(UserChanged, self._on_user_changed)
 
     def _on_user_changed(self, event: UserChanged) -> None:
+        self._generation += 1
         if event.user_id is None:
             log.debug("Invalidating all user view caches")
             self._cache.clear()
@@ -90,6 +93,7 @@ class UserViewStore:
                 log.debug("Invalidated user view cache for uid=%s", event.user_id)
 
     def invalidate(self, user_id: int | None = None) -> None:
+        self._generation += 1
         if user_id is None:
             self._cache.clear()
         else:
@@ -118,9 +122,11 @@ class UserViewStore:
             return await flight
 
         # Leader fetches from DB
+        gen_before = self._generation
         try:
             view = await self._fetch_from_db(user_id)
-            self._cache[user_id] = (view, now + self._ttl_sec)
+            if self._generation == gen_before:
+                self._cache[user_id] = (view, time.monotonic() + self._ttl_sec)
             flight.set_result(view)
             return view
         except Exception as exc:
@@ -130,6 +136,7 @@ class UserViewStore:
                 flight.set_result(entry[0])
                 return entry[0]
             flight.set_exception(exc)
+            flight.exception()  # mark retrieved: leader re-raises it below
             raise
         finally:
             async with self._lock:
