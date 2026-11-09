@@ -46,8 +46,8 @@ async def inline_calculator(inline_query: InlineQuery, i18n: I18n, lang: str) ->
         output = ["USD", "EUR", "UAH", "GBP", "PLN"]
 
     codes = parsed.get_codes()
-    is_crypto = any(c in ["BTC", "ETH"] for c in codes)
-    index = 0 if (is_crypto or rate_mode == "reverse") else 1
+    is_crypto = parsed.has_crypto() or any(c in ["BTC", "ETH"] for c in codes)
+    index = 1 if is_crypto else (0 if rate_mode == "reverse" else 1)
 
     import asyncio
 

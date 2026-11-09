@@ -4,6 +4,8 @@ Exchange API handler — binds Binance/Bybit API keys and syncs portfolio.
 
 from __future__ import annotations
 
+import html
+
 from aiogram import Router, F
 from aiogram.types import (
     Message,
@@ -16,7 +18,7 @@ from aiogram.fsm.state import StatesGroup, State
 
 from app.db import get_db
 from app.i18n import I18n
-from app.services.security import encrypt_data
+from app.services.security import decrypt_data, encrypt_data
 from app.services.exchange_sync import sync_exchange_portfolio
 from app.handlers.portfolio import cb_portfolio_refresh
 
@@ -76,6 +78,25 @@ async def process_api_key(message: Message, state: FSMContext, i18n: I18n, lang:
     def t(k):
         return str(i18n.get(f"exchange.{k}", lang))
 
+    if message.chat.type != "private":
+        await message.answer(
+            str(i18n.get(
+                "exchange.private_only",
+                lang,
+                default="⚠️ Please bind exchange API keys in a private chat with the bot.",
+            ))
+        )
+        return
+    if not message.text:
+        await message.answer(
+            str(i18n.get(
+                "exchange.text_only",
+                lang,
+                default="⚠️ Please send the API key as text.",
+            ))
+        )
+        return
+
     api_key = message.text.strip()
 
     # Delete the user's message with the API key for security
@@ -84,10 +105,21 @@ async def process_api_key(message: Message, state: FSMContext, i18n: I18n, lang:
     except Exception:
         pass
 
-    await state.update_data(api_key=api_key)
+    # Encrypt before it enters FSM state (which is kept in process memory).
+    await state.update_data(api_key=encrypt_data(api_key))
 
     data = await state.get_data()
-    exchange_name = data["exchange_name"]
+    exchange_name = data.get("exchange_name", "")
+    if not exchange_name:
+        await state.clear()
+        await message.answer(
+            str(i18n.get(
+                "exchange.session_expired",
+                lang,
+                default="⚠️ This session expired. Please start the binding flow again.",
+            ))
+        )
+        return
 
     text = t("prompt_api_secret").replace("{exchange}", exchange_name)
     kb = InlineKeyboardMarkup(
@@ -102,6 +134,25 @@ async def process_api_secret(message: Message, state: FSMContext, i18n: I18n, la
     def t(k):
         return str(i18n.get(f"exchange.{k}", lang))
 
+    if message.chat.type != "private":
+        await message.answer(
+            str(i18n.get(
+                "exchange.private_only",
+                lang,
+                default="⚠️ Please bind exchange API keys in a private chat with the bot.",
+            ))
+        )
+        return
+    if not message.text:
+        await message.answer(
+            str(i18n.get(
+                "exchange.text_only",
+                lang,
+                default="⚠️ Please send the API secret as text.",
+            ))
+        )
+        return
+
     api_secret = message.text.strip()
 
     # Delete the user's message with the secret key for security
@@ -111,8 +162,30 @@ async def process_api_secret(message: Message, state: FSMContext, i18n: I18n, la
         pass
 
     data = await state.get_data()
-    exchange_name = data["exchange_name"]
-    api_key = data["api_key"]
+    encrypted_key = data.get("api_key", "")
+    exchange_name = data.get("exchange_name", "")
+    if not encrypted_key or not exchange_name:
+        await state.clear()
+        await message.answer(
+            str(i18n.get(
+                "exchange.session_expired",
+                lang,
+                default="⚠️ This session expired. Please start the binding flow again.",
+            ))
+        )
+        return
+    try:
+        api_key = decrypt_data(encrypted_key)
+    except Exception:
+        await state.clear()
+        await message.answer(
+            str(i18n.get(
+                "exchange.session_expired",
+                lang,
+                default="⚠️ This session expired. Please start the binding flow again.",
+            ))
+        )
+        return
 
     # C-3 fix: encrypt BOTH the API key and secret before storing. Previously, only the
     # secret was encrypted; the public API key was stored in plain text, exposing which
@@ -174,7 +247,8 @@ async def cb_exchange_sync(call: CallbackQuery, i18n: I18n, lang: str) -> None:
             text = t("sync_cooldown").replace("{minutes}", str(result["minutes"]))
             await msg.edit_text(text, parse_mode="HTML")
         elif result["status"] == "error":
-            text = t("sync_error").replace("{exchange}", exchange_name).replace("{error}", result["message"])
+            err_msg = html.escape(str(result.get("message", "Unknown error")))
+            text = t("sync_error").replace("{exchange}", html.escape(exchange_name)).replace("{error}", err_msg)
             await msg.edit_text(text, parse_mode="HTML")
         elif result["status"] == "success":
             text = t("sync_success").replace("{count}", str(result["count"]))

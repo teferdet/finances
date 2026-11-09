@@ -198,7 +198,10 @@ async def cb_toggle_volatility(call: CallbackQuery, i18n: I18n, lang: str) -> No
     # Cycle: 5% -> 10% -> 3% -> 0% (OFF) -> 5%
     cycle_map = {5: 10, 10: 3, 3: 0, 0: 5}
     new_vol = cycle_map.get(prefs["volatility"], 5)
-    await db["Users"].update_one({"_id": uid}, {"$set": {"VolatilityThreshold": new_vol}})
+    await db["Users"].update_one(
+        {"_id": uid},
+        {"$set": {"VolatilityThreshold": new_vol, "volatility_threshold_pct": new_vol}},
+    )
     prefs["volatility"] = new_vol
 
     if new_vol == 0:
@@ -353,7 +356,8 @@ async def cb_data_processing(call: CallbackQuery, i18n: I18n, lang: str) -> None
         await cache.json_set(key, cd)
         text = i18n.get("settings.menu", lang)
         text = "".join(text) if isinstance(text, list) else str(text)
-        await call.message.edit_text(text, reply_markup=settings_menu(i18n, lang))
+        prefs = await _get_user_prefs(uid)
+        await call.message.edit_text(text, reply_markup=_render_settings_kb(i18n, lang, prefs))
         return
 
     if command == "cancel":
@@ -376,7 +380,8 @@ async def cb_data_processing(call: CallbackQuery, i18n: I18n, lang: str) -> None
         await call.answer(stx.get("exit", "Cancelled"), show_alert=False)
         text = i18n.get("settings.menu", lang)
         text = "".join(text) if isinstance(text, list) else str(text)
-        await call.message.edit_text(text, reply_markup=settings_menu(i18n, lang))
+        prefs = await _get_user_prefs(uid)
+        await call.message.edit_text(text, reply_markup=_render_settings_kb(i18n, lang, prefs))
         return
 
     if command == "position":
@@ -459,8 +464,9 @@ async def cb_toggle_big_buttons(call: CallbackQuery, i18n: I18n, lang: str) -> N
     await call.answer(show_alert=False)
     text = i18n.get("settings.menu", lang)
     text = "".join(text) if isinstance(text, list) else str(text)
+    prefs = await _get_user_prefs(uid)
     try:
-        await call.message.edit_text(text, reply_markup=settings_menu(i18n, lang))
+        await call.message.edit_text(text, reply_markup=_render_settings_kb(i18n, lang, prefs))
     except TelegramBadRequest:
         pass
 
@@ -512,7 +518,8 @@ async def cb_main_menu_action(call: CallbackQuery, i18n: I18n, lang: str) -> Non
         await cache.json_set(key, cd)
         text = i18n.get("settings.menu", lang)
         text = "".join(text) if isinstance(text, list) else str(text)
-        await call.message.edit_text(text, reply_markup=settings_menu(i18n, lang))
+        prefs = await _get_user_prefs(uid)
+        await call.message.edit_text(text, reply_markup=_render_settings_kb(i18n, lang, prefs))
         kb = await get_main_keyboard(uid)
         await call.message.answer(stx.get("success", "Done!"), reply_markup=kb)
         return
@@ -523,7 +530,8 @@ async def cb_main_menu_action(call: CallbackQuery, i18n: I18n, lang: str) -> Non
         await call.answer(stx.get("exit", "Cancelled"))
         text = i18n.get("settings.menu", lang)
         text = "".join(text) if isinstance(text, list) else str(text)
-        await call.message.edit_text(text, reply_markup=settings_menu(i18n, lang))
+        prefs = await _get_user_prefs(uid)
+        await call.message.edit_text(text, reply_markup=_render_settings_kb(i18n, lang, prefs))
         return
 
     if command == "reset":
@@ -533,7 +541,8 @@ async def cb_main_menu_action(call: CallbackQuery, i18n: I18n, lang: str) -> Non
         await cache.json_set(key, cd)
         text = i18n.get("settings.menu", lang)
         text = "".join(text) if isinstance(text, list) else str(text)
-        await call.message.edit_text(text, reply_markup=settings_menu(i18n, lang))
+        prefs = await _get_user_prefs(uid)
+        await call.message.edit_text(text, reply_markup=_render_settings_kb(i18n, lang, prefs))
         kb = await get_main_keyboard(uid)
         await call.message.answer(stx.get("success", "Reset!"), reply_markup=kb)
         return

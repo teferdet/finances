@@ -19,6 +19,7 @@ TODO: Privacy Mode — the /group_settings and /rate commands always work becaus
 
 from __future__ import annotations
 
+import html
 from typing import Any
 from time import strftime
 
@@ -92,7 +93,6 @@ async def _check_admin_permissions(event: Message | CallbackQuery, chat_id: int,
         elif isinstance(event, CallbackQuery):
             await event.answer(strip_html(denied_msg), show_alert=True)
         return False
-        return False
 
     return True
 
@@ -132,7 +132,8 @@ async def cmd_rate(message: Message, i18n: I18n, lang: str) -> None:
     output = group_settings.get("output_currencies", ["USD", "EUR", "GBP", "JPY", "PLN", "CHF", "UAH"])
 
     codes = parsed.get_codes()
-    index = 0 if any(c in ("BTC", "ETH") for c in codes) else 1
+    is_crypto = parsed.has_crypto() or any(c in ("BTC", "ETH") for c in codes)
+    index = 1
     result = await convert_currencies(data, output, index)
 
     if result in ("server error", "bad request"):
@@ -145,13 +146,15 @@ async def cmd_rate(message: Message, i18n: I18n, lang: str) -> None:
     info_map = {i["code"]: i for i in all_info}
     cd_map = {e["code"]: e for e in get_currencies_data() if e.get("code")}
 
+    from app.handlers.exchange import format_header_item
+
     info_parts = []
     for code, amount in data:
         ci = info_map.get(code, {})
         emoji = ci.get("emoji", "") or cd_map.get(code, {}).get("emoji", "")
         symbol = ci.get("symbol", "") or cd_map.get(code, {}).get("symbol", "")
-        sym_str = symbol if index == 1 else ""
-        info_parts.append(f"{emoji} {code} {amount}{sym_str}")
+        inc_sym = (index == 1) and not (is_crypto and abs(amount - 1.0) < 1e-9)
+        info_parts.append(format_header_item(code, amount, emoji, symbol, include_symbol=inc_sym))
 
     info = ", ".join(info_parts)
     er_text = i18n.get_section("exchange rate", lang)
@@ -216,7 +219,7 @@ async def cmd_group_stats(message: Message, i18n: I18n, lang: str) -> None:
         await send_ephemeral_or_fallback(message.bot, chat_id, user_id, denied, fallback_to_regular=True)
         return
 
-    title = group.get("title", message.chat.title or f"Chat {chat_id}")
+    title = html.escape(str(group.get("title", message.chat.title or f"Chat {chat_id}")))
     stats = group.get("stats", {})
     total_reqs = stats.get("total_requests", 0)
     is_active = "✅ Active" if group.get("is_active") else "⛔ Inactive"
@@ -261,7 +264,7 @@ async def cmd_group_settings(message: Message, i18n: I18n, lang: str) -> None:
     settings = group.get("settings", {})
     group_lang = settings.get("language", lang)
 
-    title = group.get("title", message.chat.title or f"Chat {chat_id}")
+    title = html.escape(str(group.get("title", message.chat.title or f"Chat {chat_id}")))
     text = str(i18n.get("group_settings.title", group_lang)).format(title=title)
     kb = group_settings_menu_kb(chat_id, group, i18n, group_lang)
 
@@ -335,7 +338,7 @@ async def cb_menu(call: CallbackQuery, i18n: I18n, lang: str) -> None:
     settings = group.get("settings", {})
     group_lang = settings.get("language", lang)
 
-    title = group.get("title", f"Chat {chat_id}")
+    title = html.escape(str(group.get("title", f"Chat {chat_id}")))
     text = str(i18n.get("group_settings.title", group_lang)).format(title=title)
     kb = group_settings_menu_kb(chat_id, group, i18n, group_lang)
 
@@ -374,7 +377,7 @@ async def cb_cycle_mode(call: CallbackQuery, i18n: I18n, lang: str) -> None:
 
     group = await get_group(chat_id)
     group_lang = group.get("settings", {}).get("language", lang)
-    title = group.get("title", f"Chat {chat_id}")
+    title = html.escape(str(group.get("title", f"Chat {chat_id}")))
     text = str(i18n.get("group_settings.title", group_lang)).format(title=title)
     kb = group_settings_menu_kb(chat_id, group, i18n, group_lang)
 
@@ -487,7 +490,7 @@ async def cb_grp_curr_action(call: CallbackQuery, i18n: I18n, lang: str) -> None
         # Return to main group settings menu
         group = await get_group(chat_id)
         group_lang = (group or {}).get("settings", {}).get("language", lang)
-        title = (group or {}).get("title", f"Chat {chat_id}")
+        title = html.escape(str((group or {}).get("title", f"Chat {chat_id}")))
         menu_text = str(i18n.get("group_settings.title", group_lang)).format(title=title)
         kb = group_settings_menu_kb(chat_id, group or {}, i18n, group_lang)
         await _edit_message_or_ephemeral(call, menu_text, reply_markup=kb, parse_mode="HTML")
@@ -499,7 +502,7 @@ async def cb_grp_curr_action(call: CallbackQuery, i18n: I18n, lang: str) -> None
 
         group = await get_group(chat_id)
         group_lang = (group or {}).get("settings", {}).get("language", lang)
-        title = (group or {}).get("title", f"Chat {chat_id}")
+        title = html.escape(str((group or {}).get("title", f"Chat {chat_id}")))
         menu_text = str(i18n.get("group_settings.title", group_lang)).format(title=title)
         kb = group_settings_menu_kb(chat_id, group or {}, i18n, group_lang)
         await _edit_message_or_ephemeral(call, menu_text, reply_markup=kb, parse_mode="HTML")
@@ -588,7 +591,7 @@ async def cb_set_lang(call: CallbackQuery, i18n: I18n, lang: str) -> None:
 
     # Re-render main menu in new language
     group = await get_group(chat_id)
-    title = group.get("title", f"Chat {chat_id}")
+    title = html.escape(str(group.get("title", f"Chat {chat_id}")))
     menu_text = str(i18n.get("group_settings.title", new_lang)).format(title=title)
     kb = group_settings_menu_kb(chat_id, group, i18n, new_lang)
     await _edit_message_or_ephemeral(call, menu_text, reply_markup=kb, parse_mode="HTML")
@@ -647,9 +650,9 @@ async def cb_view_admins(call: CallbackQuery, i18n: I18n, lang: str) -> None:
         lines.append(str(i18n.get("group_settings.admins_list", group_lang)))
         for a in admins:
             bot_badge = " 🤖" if a["is_bot"] else ""
-            username = f" @{a['username']}" if a["username"] else ""
+            username = f" @{html.escape(str(a['username']))}" if a["username"] else ""
             status_emoji = "👑" if a["status"] == "creator" else "⭐"
-            lines.append(f"{status_emoji} {a['name']}{username}{bot_badge}")
+            lines.append(f"{status_emoji} {html.escape(str(a['name']))}{username}{bot_badge}")
     else:
         lines.append("—")
 

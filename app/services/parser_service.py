@@ -20,7 +20,6 @@ from app.config import get_settings, get_currencies_data
 from app.db import get_db, get_fiat_collection_name
 from app.cache import cache
 from app.logger import get_logger
-from app.services.fiat_parser import FiatParser
 from app.services.crypto_parser import fetch_crypto
 from app.services.stocks_parser import fetch_stocks
 
@@ -59,6 +58,8 @@ async def ensure_currency(code: str, force: bool = False) -> bool:
         # Double-check after acquiring lock
         if not force and not await is_currency_stale(code):
             return True
+
+        from app.services.fiat_parser import FiatParser
 
         parser = FiatParser()
         try:
@@ -106,6 +107,17 @@ async def get_currencies_info() -> list[dict]:
     metadata: dict[str, dict] = {}
     base_set: set[str] = set()
 
+    # Canonical fallback from currencies_data.json
+    cd_map: dict[str, dict] = {}
+    for entry in get_currencies_data():
+        c = entry.get("code", "")
+        if c:
+            cd_map[c] = {
+                "name": entry.get("name", c),
+                "emoji": entry.get("emoji", ""),
+                "symbol": entry.get("symbol", ""),
+            }
+
     for doc in docs:
         base_set.add(doc.get("currency", ""))
         for code, data in doc.get("rates", {}).items():
@@ -115,8 +127,21 @@ async def get_currencies_info() -> list[dict]:
                     "emoji": data.get("emoji", ""),
                     "symbol": data.get("symbol", ""),
                 }
-            elif not metadata[code]["emoji"] and data.get("emoji"):
-                metadata[code]["emoji"] = data["emoji"]
+            else:
+                if not metadata[code]["emoji"] and data.get("emoji"):
+                    metadata[code]["emoji"] = data["emoji"]
+                if not metadata[code]["symbol"] and data.get("symbol"):
+                    metadata[code]["symbol"] = data["symbol"]
+
+    # Ensure canonical emoji/symbol from currencies_data.json when missing or for crypto
+    for code, cd_info in cd_map.items():
+        if code in metadata:
+            if not metadata[code]["emoji"] or code in ("BTC", "ETH"):
+                metadata[code]["emoji"] = cd_info["emoji"] or metadata[code]["emoji"]
+            if not metadata[code]["symbol"] or code in ("BTC", "ETH"):
+                metadata[code]["symbol"] = cd_info["symbol"] or metadata[code]["symbol"]
+        else:
+            metadata[code] = dict(cd_info)
 
     result = []
     for doc in docs:
@@ -138,6 +163,35 @@ async def get_currencies_info() -> list[dict]:
     result.sort(key=lambda x: x["code"])
     await cache.set("currencies_info", result, ttl=3600)
     return result
+
+
+def format_header_item(code: str, amount: float, emoji: str, symbol: str, include_symbol: bool) -> str:
+    """
+    Format header item:
+      - amount == 1: omit number (e.g. "🇺🇦 UAH" or "🇺🇦 UAH₴")
+      - integer amount (e.g. 10.0): format without .0 (e.g. "🇺🇦 UAH 10" or "🇺🇦 UAH 10₴")
+      - float amount (e.g. 0.5): format cleanly (e.g. "🇺🇦 UAH 0.5" or "🇺🇦 UAH 0.5₴")
+    """
+    sym_str = symbol if (include_symbol and symbol.upper() != code.upper()) else ""
+    if abs(amount - 1.0) < 1e-9:
+        amt_str = ""
+    elif amount == int(amount):
+        amt_str = f" {int(amount)}"
+    else:
+        amt_str = f" {amount:g}"
+
+    emoji_str = f"{emoji} " if emoji else ""
+    return f"{emoji_str}{code}{amt_str}{sym_str}".strip()
+
+
+def _format_converted(val: float) -> str:
+    """Format a rounded float without scientific notation (e.g. 0.000016 instead of 1.6e-05)."""
+    if val == 0:
+        return "0"
+    if abs(val) < 1e-4:
+        formatted = f"{val:.8f}".rstrip("0").rstrip(".")
+        return formatted if formatted and formatted != "-0" else "0"
+    return str(val)
 
 
 async def convert_currencies(
@@ -181,12 +235,132 @@ async def convert_currencies(
                 "symbol": entry.get("symbol", ""),
             }
 
+    from app.utils.text_processing import TextProcessing
+
+    crypto_codes: set[str] = set(settings.crypto_list) | set(TextProcessing.CRYPTO_CODES)
+
     results: list[str] = []
 
     if index == 1:
         # Direct mode: base → targets
+        usd_doc: Optional[dict] = None
+        usd_doc_loaded = False
+
         for currency_code, amount in currencies_data:
             code = currency_code.upper()
+
+            if code in crypto_codes:
+                # Resolve fresh crypto price in USD first (via CQRS price store / USD fiat_rates)
+                from app.cqrs.read.prices import get_ticker_price
+
+                crypto_usd_price = await get_ticker_price(code)
+
+                if not usd_doc_loaded:
+                    usd_doc = await collection.find_one({"currency": "USD"}, {"rates": 1})
+                    usd_doc_loaded = True
+
+                if (not crypto_usd_price or crypto_usd_price <= 0) and usd_doc and "rates" in usd_doc:
+                    usd_rate_entry = usd_doc["rates"].get(code)
+                    if isinstance(usd_rate_entry, dict):
+                        rev = float(usd_rate_entry.get("reverse_rate", 0))
+                        if rev <= 0:
+                            r_val = float(usd_rate_entry.get("rate", 0))
+                            if r_val > 0:
+                                rev = 1.0 / r_val
+                        if rev > 0:
+                            crypto_usd_price = rev
+
+                if not crypto_usd_price or crypto_usd_price <= 0:
+                    try:
+                        crypto_doc = await db["Crypto&Stocks"].find_one({"_id": "crypto"})
+                        if crypto_doc and "USD" in crypto_doc and code in crypto_doc["USD"]:
+                            entry = crypto_doc["USD"][code]
+                            if isinstance(entry, list) and len(entry) >= 2:
+                                crypto_usd_price = float(entry[1])
+                    except Exception:
+                        pass
+
+                usd_rates = (usd_doc or {}).get("rates", {})
+
+                for out_name in output_currencies:
+                    target_code = name_to_code.get(out_name) or (out_name.upper() if out_name.upper() in _cd_map else None)
+                    if not target_code or target_code == code:
+                        continue
+
+                    rate = 0.0
+                    rate_info: dict = {}
+
+                    if target_code == "USD" and crypto_usd_price and crypto_usd_price > 0:
+                        rate = crypto_usd_price
+                    elif crypto_usd_price and crypto_usd_price > 0 and target_code in usd_rates:
+                        rate_info = usd_rates[target_code]
+                        try:
+                            usd_to_target = float(rate_info.get("rate", 0))
+                            if usd_to_target > 0:
+                                rate = crypto_usd_price * usd_to_target
+                        except (ValueError, TypeError):
+                            rate = 0.0
+
+                    if rate <= 0:
+                        # Fallback to target currency's document in DB
+                        bdoc = await collection.find_one({"currency": target_code}, {"rates": 1})
+                        if bdoc and "rates" in bdoc:
+                            if crypto_usd_price and crypto_usd_price > 0 and "USD" in bdoc["rates"]:
+                                try:
+                                    u_info = bdoc["rates"]["USD"]
+                                    usd_to_target = float(u_info.get("reverse_rate", 0))
+                                    if usd_to_target <= 0 and float(u_info.get("rate", 0)) > 0:
+                                        usd_to_target = 1.0 / float(u_info["rate"])
+                                    if usd_to_target > 0:
+                                        rate = crypto_usd_price * usd_to_target
+                                except (ValueError, TypeError):
+                                    pass
+                            if rate <= 0 and code in bdoc["rates"]:
+                                try:
+                                    c_info = bdoc["rates"][code]
+                                    rate = float(c_info.get("reverse_rate", 0))
+                                    if rate <= 0 and float(c_info.get("rate", 0)) > 0:
+                                        rate = 1.0 / float(c_info["rate"])
+                                except (ValueError, TypeError):
+                                    pass
+
+                    if rate <= 0:
+                        # Final fallback: direct crypto document in fiat_rates
+                        cdoc = await collection.find_one({"currency": code}, {"rates": 1})
+                        if cdoc and "rates" in cdoc and target_code in cdoc["rates"]:
+                            rate_info = cdoc["rates"][target_code]
+                            try:
+                                rate = float(rate_info.get("rate", 0))
+                            except (ValueError, TypeError):
+                                rate = 0.0
+
+                    if rate <= 0:
+                        continue
+
+                    converted_val = amount * rate
+                    if converted_val >= 1:
+                        converted = _format_converted(round(converted_val, 2))
+                    elif converted_val >= 0.01:
+                        converted = _format_converted(round(converted_val, 4))
+                    else:
+                        converted = _format_converted(round(converted_val, 8))
+
+                    emoji = rate_info.get("emoji", "")
+                    symbol = rate_info.get("symbol", "")
+                    if not emoji or not symbol:
+                        for info in all_info:
+                            if info["code"] == target_code:
+                                emoji = emoji or info.get("emoji", "")
+                                symbol = symbol or info.get("symbol", "")
+                                break
+                    if not emoji:
+                        emoji = _cd_map.get(target_code, {}).get("emoji", "")
+                    if not symbol:
+                        symbol = _cd_map.get(target_code, {}).get("symbol", "")
+
+                    results.append(f"{emoji} {target_code}: {converted}{symbol}")
+                continue
+
             await ensure_currency(code, force=False)
 
             doc = await collection.find_one({"currency": code}, {"rates": 1})
@@ -204,7 +378,11 @@ async def convert_currencies(
                         rate = float(rate_info.get("rate", 0))
                         if rate == 0:
                             continue
-                        converted = round(amount * rate, 4)
+                        converted_val = amount * rate
+                        if converted_val < 0.0001:
+                            converted = _format_converted(round(converted_val, 8))
+                        else:
+                            converted = _format_converted(round(converted_val, 4))
                         symbol = rate_info.get("symbol", "")
                         emoji = rate_info.get("emoji", "")
                         if not emoji:
@@ -230,7 +408,11 @@ async def convert_currencies(
                         rate = float(rate_info.get("reverse_rate", 0))
                         if rate == 0:
                             continue
-                        converted = round(amount * rate, 4)
+                        converted_val = amount * rate
+                        if converted_val < 0.0001:
+                            converted = _format_converted(round(converted_val, 8))
+                        else:
+                            converted = _format_converted(round(converted_val, 4))
 
                         target_emoji = ""
                         target_symbol = ""
@@ -259,6 +441,8 @@ async def convert_currencies(
             return "bad request"
 
         # FIRST: Check if document for target_code exists directly in DB
+        if target_code not in crypto_codes:
+            await ensure_currency(target_code, force=False)
         target_doc = await collection.find_one({"currency": target_code}, {"rates": 1})
         if target_doc and "rates" in target_doc:
             rates = target_doc["rates"]
@@ -286,12 +470,14 @@ async def convert_currencies(
                         continue
 
                     converted_val = amount_target * rev_rate
-                    if converted_val < 0.01:
-                        converted = round(converted_val, 6)
+                    if converted_val < 0.0001:
+                        converted = _format_converted(round(converted_val, 8))
+                    elif converted_val < 0.01:
+                        converted = _format_converted(round(converted_val, 6))
                     elif converted_val < 1:
-                        converted = round(converted_val, 4)
+                        converted = _format_converted(round(converted_val, 4))
                     else:
-                        converted = round(converted_val, 2)
+                        converted = _format_converted(round(converted_val, 2))
 
                     emoji = rate_data.get("emoji", "")
                     if not emoji:
@@ -336,12 +522,14 @@ async def convert_currencies(
                     if rate == 0:
                         continue
                     converted_val = amount_target * rate
-                    if converted_val < 0.01:
-                        converted = round(converted_val, 6)
+                    if converted_val < 0.0001:
+                        converted = _format_converted(round(converted_val, 8))
+                    elif converted_val < 0.01:
+                        converted = _format_converted(round(converted_val, 6))
                     elif converted_val < 1:
-                        converted = round(converted_val, 4)
+                        converted = _format_converted(round(converted_val, 4))
                     else:
-                        converted = round(converted_val, 2)
+                        converted = _format_converted(round(converted_val, 2))
 
                     emoji = ""
                     for info in all_info:
@@ -414,6 +602,8 @@ async def run_parser_loop() -> None:
 
 
 async def _initial_population() -> None:
+    from app.services.fiat_parser import FiatParser
+
     db = get_db()
     count = await db[get_fiat_collection_name()].count_documents({})
     cfg = get_settings().parser
@@ -431,6 +621,8 @@ async def _initial_population() -> None:
 
 
 async def _update_critical() -> tuple[int, int, int]:
+    from app.services.fiat_parser import FiatParser
+
     cfg = get_settings().parser
     updated = skipped = failed = 0
     parser = FiatParser()

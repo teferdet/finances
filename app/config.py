@@ -10,6 +10,8 @@ Usage:
 from __future__ import annotations
 
 import json
+import os
+import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import List
@@ -309,12 +311,49 @@ def get_currencies_data() -> list:
 
 
 def save_settings(settings: Settings) -> None:
-    """Save the settings object back to settings.json."""
+    """Save the settings object back to settings.json atomically.
+
+    The config contains live secrets (bot token, Mongo URI, Fernet key), so the
+    file is written through a 0600 temporary file and atomically replaced.  A
+    crash or concurrent reader therefore never sees a truncated/partial JSON
+    document, and the on-disk permissions stay restricted.
+    """
     import dataclasses
 
     path = CONFIG_DIR / "settings.json"
     raw = dataclasses.asdict(settings)
     # _data_json is not stored in settings.json
     raw.pop("_data_json", None)
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(raw, f, indent=2, ensure_ascii=False)
+
+    CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+    fd, tmp_name = tempfile.mkstemp(
+        prefix=".settings.", suffix=".tmp", dir=str(CONFIG_DIR)
+    )
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            json.dump(raw, f, indent=2, ensure_ascii=False)
+            f.flush()
+            try:
+                os.fsync(f.fileno())
+            except OSError:
+                # Some filesystems (e.g. network shares) do not support fsync.
+                pass
+
+        # mkstemp() is already 0600 on POSIX; keep the explicit chmod for
+        # platforms/filesystems where that is not guaranteed.
+        try:
+            os.chmod(tmp_name, 0o600)
+        except OSError:
+            pass
+
+        os.replace(tmp_name, path)
+        try:
+            os.chmod(path, 0o600)
+        except OSError:
+            pass
+    except Exception:
+        try:
+            os.unlink(tmp_name)
+        except OSError:
+            pass
+        raise

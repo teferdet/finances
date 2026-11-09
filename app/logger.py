@@ -14,7 +14,10 @@ Usage:
 
 from __future__ import annotations
 
+import html
 import logging
+import os
+import re
 import sys
 from logging.handlers import RotatingFileHandler, TimedRotatingFileHandler
 
@@ -40,6 +43,50 @@ _SILENT_LIBS: tuple[str, ...] = (
 _PARSER_INFO_SPAM: tuple[str, ...] = (
     "app.parser.fiat",   # "Fetching rates for XXX..." per currency per cycle
 )
+
+
+# ── Secret redaction for notifications sent outside the process ────────────
+# Error reports leave the server (Telegram groups), so never include raw
+# credentials, URIs with passwords, tokens or Fernet keys.
+_SECRET_PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
+    # scheme://user:password@host → scheme://user:***@host
+    (
+        re.compile(r"([a-z][a-z0-9+.-]*://)([^/\s:@]+):([^/\s@]+)@", re.IGNORECASE),
+        r"\1\2:***@",
+    ),
+    # Telegram bot tokens (123456789:AA...)
+    (re.compile(r"\b\d{6,12}:[A-Za-z0-9_-]{25,}\b"), "<telegram-token>"),
+    # GitHub PATs
+    (re.compile(r"\b(?:ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9]{20,}\b"), "<github-token>"),
+    (re.compile(r"\bgithub_pat_[A-Za-z0-9_]{20,}\b"), "<github-token>"),
+    # Fernet keys (44-char urlsafe base64)
+    (
+        re.compile(r"(?<![A-Za-z0-9_-])[A-Za-z0-9_-]{43}=(?![A-Za-z0-9_-])"),
+        "<fernet-key>",
+    ),
+    # Bearer tokens
+    (re.compile(r"(?i)\bBearer\s+[A-Za-z0-9._~+/=-]+"), "Bearer ***"),
+    # key=value / key: value pairs for common secret names
+    (
+        re.compile(
+            r"(?i)\b(token|secret|password|passwd|api[_-]?key|fernet[_-]?key|"
+            r"authorization)\b\s*[:=]\s*[\"']?[^\s\"',;]+"
+        ),
+        r"\1=***",
+    ),
+)
+
+
+def _redact(text: str, *, limit: int = 2000) -> str:
+    """Mask credentials in text that is about to leave the process."""
+    if not text:
+        return ""
+    redacted = text
+    for pattern, replacement in _SECRET_PATTERNS:
+        redacted = pattern.sub(replacement, redacted)
+    if len(redacted) > limit:
+        redacted = redacted[:limit] + "… [truncated]"
+    return redacted
 
 
 class _AppOnlyFilter(logging.Filter):
@@ -199,9 +246,9 @@ class AsyncTelegramErrorHandler(logging.Handler):
 
         import asyncio
         import time
-        from datetime import datetime
+        from datetime import datetime, timezone
 
-        dt_str = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
+        dt_str = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
         level_name = record.levelname
         emoji = "🔴" if level_name in ("ERROR", "CRITICAL") else "🟠"
 
@@ -211,23 +258,38 @@ class AsyncTelegramErrorHandler(logging.Handler):
 
             tb_lines = traceback.format_exception(*record.exc_info)
             tb_short = "".join(tb_lines[-4:]) if len(tb_lines) >= 4 else "".join(tb_lines)
-            exc_text = tb_short
+            exc_text = _redact(tb_short)
 
-        task = asyncio.create_task(
+        # Never create a task when there is no running loop (startup/shutdown
+        # or a plain CLI invocation); otherwise logging itself would fail.
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            return
+
+        task = loop.create_task(
             self._send_to_groups(
                 record.levelno,
                 level_name,
                 emoji,
                 dt_str,
-                record.pathname,
+                os.path.basename(record.pathname or ""),
                 record.lineno,
-                record.getMessage(),
+                _redact(record.getMessage()),
                 exc_text,
                 time.time(),
             )
         )
         self._tasks.add(task)
         task.add_done_callback(self._tasks.discard)
+
+    async def aclose(self) -> None:
+        """Drain in-flight Telegram notifications during graceful shutdown."""
+        if not self._tasks:
+            return
+        import asyncio
+
+        await asyncio.gather(*list(self._tasks), return_exceptions=True)
 
     async def _send_to_groups(
         self,
@@ -254,16 +316,16 @@ class AsyncTelegramErrorHandler(logging.Handler):
             traceback_part = ""
             if exc_text:
                 traceback_part = str(i18n.get("admin.groups.traceback_label", lang)).format(
-                    tb=exc_text
+                    tb=html.escape(exc_text, quote=False)
                 )
 
             text = str(i18n.get("admin.groups.error_report", lang)).format(
                 emoji=emoji,
                 level=level_name,
                 date=dt_str,
-                path=pathname,
+                path=html.escape(pathname, quote=False),
                 line=lineno,
-                message=message,
+                message=html.escape(message, quote=False),
                 traceback=traceback_part,
             )
 

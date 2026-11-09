@@ -19,7 +19,7 @@ from collections import defaultdict, deque
 from typing import Any, Awaitable, Callable
 
 from aiogram import BaseMiddleware
-from aiogram.types import CallbackQuery, Message, TelegramObject
+from aiogram.types import CallbackQuery, InlineQuery, Message, TelegramObject
 
 logger = logging.getLogger(__name__)
 
@@ -117,9 +117,17 @@ class RateLimitMiddleware(BaseMiddleware):
     ) -> Any:
         user_id: int | None = None
 
-        if isinstance(event, Message) and event.from_user:
-            user_id = event.from_user.id
+        if isinstance(event, Message):
+            if event.from_user:
+                user_id = event.from_user.id
+            else:
+                # Guest-mode messages carry the caller in a separate field.
+                guest_user = getattr(event, "guest_bot_caller_user", None)
+                if guest_user:
+                    user_id = guest_user.id
         elif isinstance(event, CallbackQuery) and event.from_user:
+            user_id = event.from_user.id
+        elif isinstance(event, InlineQuery) and event.from_user:
             user_id = event.from_user.id
 
         # Exempt admins (static settings list + runtime dynamic admins)
@@ -128,12 +136,13 @@ class RateLimitMiddleware(BaseMiddleware):
         if user_id is None or user_id in self.admin_ids or user_id in dynamic_admin_ids:
             return await handler(event, data)
 
-        # Enforce max message length for incoming user messages
-        if isinstance(event, Message) and event.text:
-            if self.max_message_length > 0 and len(event.text) > self.max_message_length:
+        # Enforce max message length for incoming user messages (text or caption)
+        if isinstance(event, Message):
+            incoming = event.text or event.caption or ""
+            if self.max_message_length > 0 and len(incoming) > self.max_message_length:
                 logger.warning(
                     "Message dropped: length %d exceeds max_message_length=%d for user_id=%s",
-                    len(event.text),
+                    len(incoming),
                     self.max_message_length,
                     user_id,
                 )

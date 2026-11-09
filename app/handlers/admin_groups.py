@@ -10,6 +10,7 @@ Fixed bugs vs. previous version:
 
 from __future__ import annotations
 
+import html
 import re
 
 from aiogram import Router, F
@@ -65,7 +66,7 @@ def _is_admin(user_id: int) -> bool:
 async def _group_settings_text(group: dict, i18n: I18n, lang: str) -> str:
     """Build the settings card text for a group — used by every settings refresh."""
     chat_id = group.get("chat_id")
-    title = group.get("title", "Unknown")
+    title = html.escape(str(group.get("title", "Unknown")))
     is_active = group.get("is_active", False)
     community_id = group.get("community_id")
 
@@ -109,7 +110,7 @@ async def _group_settings_text(group: dict, i18n: I18n, lang: str) -> str:
     if community_id:
         comm = await get_community(community_id)
         if comm:
-            community_str = f"Community: {comm.get('name', community_id)}\n"
+            community_str = f"Community: {html.escape(str(comm.get('name', community_id)))}\n"
 
     return (
         f"⚙️ <b>{title}</b>\n\n"
@@ -219,7 +220,7 @@ async def process_add_by_link(message: Message, state: FSMContext, i18n: I18n, l
         username = raw.split("t.me/")[-1].split("?")[0].strip("/")
     elif re.match(r"^-?\d+$", raw):
         # They entered a numeric ID after all
-        await process_add_by_id.__wrapped__(message, state, i18n, lang)  # type: ignore[attr-defined]
+        await _finalize_add(message, state, i18n, lang, int(raw))
         return
 
     if not username:
@@ -278,7 +279,9 @@ async def _finalize_add(
 
     success = await add_group(chat_id, title, group_type, message.from_user.id)
     if success:
-        text = str(i18n.get("admin.groups.add_success", lang)).format(title=title, chat_id=chat_id, type=group_type)
+        text = str(i18n.get("admin.groups.add_success", lang)).format(
+            title=html.escape(title), chat_id=chat_id, type=group_type
+        )
         await message.answer(text, reply_markup=admin_groups_confirm_kb(chat_id, i18n, lang), parse_mode="HTML")
         await state.clear()
         log.info("Admin %d added group '%s' (%d)", message.from_user.id, title, chat_id)

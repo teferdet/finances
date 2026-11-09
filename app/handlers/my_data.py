@@ -165,6 +165,12 @@ async def cb_reset_settings(call: CallbackQuery, i18n: I18n, lang: str) -> None:
                 "MainMenu": "",
                 "BaseCurrency": "",
                 "BigButtons": "",
+                "RateMode": "",
+                "PortfolioView": "",
+                "WeeklyDigest": "",
+                "NumberFormat": "",
+                "VolatilityThreshold": "",
+                "volatility_threshold_pct": "",
             },
         },
     )

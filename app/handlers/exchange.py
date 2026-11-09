@@ -16,7 +16,7 @@ from app.db import get_db
 from app.i18n import I18n
 from app.config import get_currencies_data
 from app.keyboards.inline import er_keypad
-from app.services.parser_service import convert_currencies, get_currencies_info
+from app.services.parser_service import convert_currencies, format_header_item, get_currencies_info
 from app.utils.draft import (
     finish_initial_message_draft,
     process_initial_message_draft,
@@ -113,25 +113,6 @@ async def _get_user_fiat_currencies(user_id: int) -> list[str]:
     return doc.get("Fiat currency", []) if doc else []
 
 
-def format_header_item(code: str, amount: float, emoji: str, symbol: str, include_symbol: bool) -> str:
-    """
-    Format header item:
-      - amount == 1: omit number (e.g. "🇺🇦 UAH" or "🇺🇦 UAH₴")
-      - integer amount (e.g. 10.0): format without .0 (e.g. "🇺🇦 UAH 10" or "🇺🇦 UAH 10₴")
-      - float amount (e.g. 0.5): format cleanly (e.g. "🇺🇦 UAH 0.5" or "🇺🇦 UAH 0.5₴")
-    """
-    sym_str = symbol if include_symbol else ""
-    if abs(amount - 1.0) < 1e-9:
-        amt_str = ""
-    elif amount == int(amount):
-        amt_str = f" {int(amount)}"
-    else:
-        amt_str = f" {amount:g}"
-
-    emoji_str = f"{emoji} " if emoji else ""
-    return f"{emoji_str}{code}{amt_str}{sym_str}".strip()
-
-
 async def _format_info(currencies_data: list, i18n: I18n, lang: str, include_symbol: bool = True) -> str:
     """Build info string like '🇺🇦 UAH 10₴' (direct mode) or '🇺🇦 UAH 10' (reverse mode)."""
     info_parts: list[str] = []
@@ -168,12 +149,16 @@ async def handle_exchange(message: Message, i18n: I18n, lang: str) -> None:
     db = get_db()
     user_doc = await db["Users"].find_one({"_id": user_id}, {"Fiat currency": 1, "RateMode": 1})
     output = (user_doc or {}).get("Fiat currency", [])
+    if not output:
+        from app.config import get_settings
+
+        output = get_settings().small_convert_currencies
     rate_mode = (user_doc or {}).get("RateMode", "direct")
     index = 0 if rate_mode == "reverse" else 1
 
-    is_crypto = any(c in ["BTC", "ETH"] for c in codes)
+    is_crypto = parsed.has_crypto() or any(c in ("BTC", "ETH") for c in codes)
     if is_crypto:
-        index = 0
+        index = 1
 
     if len(data) > 1:
         loading_text = str(i18n.get("exchange rate.loading", lang))
@@ -197,7 +182,7 @@ async def handle_exchange(message: Message, i18n: I18n, lang: str) -> None:
     if result in ("server error", "bad request"):
         text_out = str(er_text.get(result, result))
     else:
-        include_sym = (index == 1)
+        include_sym = (index == 1) and not (is_crypto and abs(data[0][1] - 1.0) < 1e-9)
         info = await _format_info(data, i18n, lang, include_symbol=include_sym)
         template = str(er_text.get("main rate", "Rate as of {}\n{}\n\n{}"))
         text_out = template.format(day, info, result)

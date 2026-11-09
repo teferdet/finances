@@ -129,11 +129,14 @@ async def cmd_alert(message: Message, command: CommandObject, i18n: I18n, lang: 
             await message.answer(t("volatility_invalid_pct"), parse_mode="HTML")
             return
 
+        from app.cqrs.read.users import invalidate_user_view
+
         db = get_db()
         await db["Users"].update_one(
             {"_id": message.from_user.id},
-            {"$set": {"volatility_threshold_pct": pct}},
+            {"$set": {"VolatilityThreshold": pct, "volatility_threshold_pct": pct}},
         )
+        invalidate_user_view(message.from_user.id)
         text = t("volatility_set").replace("{pct}", f"{pct}")
         await message.answer(text, parse_mode="HTML")
         return

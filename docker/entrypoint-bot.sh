@@ -2,6 +2,8 @@
 # entrypoint-bot.sh — Generates config/settings.json from environment variables, then starts the bot.
 # This mirrors what deploy.yml step "Generate Settings" does on the VPS.
 set -e
+# Settings contain live secrets (bot token, Mongo URI, Fernet key).
+umask 077
 
 CONFIG_DIR="/app/config"
 SETTINGS_FILE="$CONFIG_DIR/settings.json"
@@ -10,6 +12,7 @@ mkdir -p /app/logs /app/config 2>/dev/null || true
 
 if [ -s "$SETTINGS_FILE" ]; then
   echo "==> $SETTINGS_FILE already exists, skipping generation."
+  chmod 600 "$SETTINGS_FILE" 2>/dev/null || true
 else
   echo "==> Generating settings.json from environment..."
 
@@ -73,12 +76,21 @@ settings = {
     },
 }
 
+if not settings["bot"]["token"]:
+    raise SystemExit("BOT_TOKEN is empty — refusing to start")
+if not settings["bot"]["admin_ids"]:
+    raise SystemExit("BOT_ADMIN_IDS is empty — refusing to start without an administrator")
+
 with open("$SETTINGS_FILE", "w", encoding="utf-8") as f:
     json.dump(settings, f, indent=2, ensure_ascii=False)
 
 print("settings.json written successfully")
 PYEOF
+
+  chmod 600 "$SETTINGS_FILE" 2>/dev/null || true
 fi
+
+chmod 700 "$CONFIG_DIR" 2>/dev/null || true
 
 echo "==> Starting finances bot..."
 exec python -m app "$@"

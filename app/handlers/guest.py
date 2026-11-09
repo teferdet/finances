@@ -52,8 +52,8 @@ async def _build_currency_response(text: str, i18n: I18n, lang: str) -> str | No
 
     codes = parsed.get_codes()
 
-    # Determine conversion index (0 = crypto, 1 = fiat)
-    index = 0 if any(c in ("BTC", "ETH", "BNB", "SOL", "XRP") for c in codes) else 1
+    # Always convert input currency directly into target output currencies
+    index = 1
 
     # Try common output currencies
     output_candidates = [["USD", "EUR", "UAH"], ["UAH", "USD"], ["USD"]]

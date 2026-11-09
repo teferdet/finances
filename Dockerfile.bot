@@ -49,9 +49,9 @@ ENV PYTHONUNBUFFERED=1 \
     LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libjemalloc.so.2 \
     MALLOC_ARENA_MAX=2
 
-# Health check — verify the app module is importable
-HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
-    CMD python -c "import app; print('OK')" || exit 1
+# Health check — verify bot event loop, DB, and supervisor tasks
+HEALTHCHECK --interval=30s --timeout=10s --start-period=20s --retries=3 \
+    CMD python -m app.health || exit 1
 
 # Entrypoint: generate settings.json from ENV, then start bot
 COPY docker/entrypoint-bot.sh /entrypoint.sh

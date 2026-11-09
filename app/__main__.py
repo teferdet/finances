@@ -267,6 +267,10 @@ async def main() -> None:
     # Activity write-behind buffer flusher (flushes memory updates every 5s)
     supervisor.register("activity_flusher", activity_buffer.run_flusher_loop)
 
+    # Healthcheck & heartbeat recorder (updates logs/heartbeat.json for monitoring)
+    from app.health import run_heartbeat_loop
+    supervisor.register("heartbeat", run_heartbeat_loop)
+
     # M-3 fix: require both --debug flag AND APP_DEBUG_CLI=true env var.
     if "--debug" in sys.argv and os.environ.get("APP_DEBUG_CLI", "").lower() == "true":
         from app.debug_cli import run_debug_cli
@@ -293,6 +297,11 @@ async def main() -> None:
             log.info("Final activity flush completed (%d records written)", flushed)
         except Exception as exc:
             log.warning("Final activity flush warning: %s", exc)
+
+        try:
+            await telegram_error_handler.aclose()
+        except Exception as exc:
+            log.warning("Error-handler flush warning: %s", exc)
 
         await close_db()
         await close_redis()

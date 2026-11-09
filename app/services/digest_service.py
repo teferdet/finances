@@ -8,12 +8,13 @@ Sends a weekly summary of portfolio performance to each user.
 from __future__ import annotations
 
 import asyncio
+import html
 from datetime import datetime, timezone, timedelta
 from typing import Optional
 
+from app.cqrs.read.fiat import fiat_store
 from app.db import get_db
 from app.logger import get_logger
-from app.services.alert_service import _send_batched
 
 log = get_logger("digest.service")
 
@@ -133,6 +134,8 @@ async def _send_weekly_digest() -> None:
             notifications.append((user["_id"], text))
 
     if notifications:
+        from app.services.alert_service import _send_batched
+
         sent, failed = await _send_batched(notifications)
         log.info("Weekly digest: %d sent, %d failed", sent, failed)
     else:
@@ -146,12 +149,13 @@ def _build_user_digest(
 ) -> Optional[str]:
     """Build a digest message for a single user."""
     portfolio = user.get("portfolio", {})
-    name = user.get("Name", "User")
+    name = html.escape(str(user.get("Name", "User")))
 
     holdings: list[dict] = []
     total_value = 0.0
     total_old_value = 0.0
     has_old_data = bool(old_prices)
+    usd_fiat_rates = (fiat_store.get_currency_doc("USD") or {}).get("exchange_rate", {})
 
     for section in ("crypto", "stock", "fiat"):
         lots = portfolio.get(section, [])
@@ -165,8 +169,16 @@ def _build_user_digest(
             if not ticker or amount <= 0:
                 continue
 
-            cur_price = current_prices.get(ticker, 0)
-            old_price = old_prices.get(ticker, 0)
+            if section == "fiat":
+                if ticker == "USD":
+                    cur_price = 1.0
+                else:
+                    rate = usd_fiat_rates.get(ticker)
+                    cur_price = (1.0 / float(rate)) if rate and float(rate) > 0 else 0.0
+                old_price = cur_price
+            else:
+                cur_price = current_prices.get(ticker, 0)
+                old_price = old_prices.get(ticker, 0)
 
             value = cur_price * amount
             old_value = old_price * amount if old_price else 0

@@ -107,7 +107,8 @@ class FiatParser:
                     await asyncio.sleep(5)
                     continue
 
-                rates = self._parse_html(code, html)
+                # Offload CPU-heavy BeautifulSoup parsing to a thread to keep event loop responsive
+                rates = await asyncio.to_thread(self._parse_html, code, html)
                 if rates:
                     await self._save_to_db(code, rates)
                     log.info("[%s] ✓ %d rates parsed and saved", code, len(rates))

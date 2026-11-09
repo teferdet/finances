@@ -8,7 +8,7 @@ async def _get_extended_stats(db: Any) -> Dict[str, Any]:
     today_midnight = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
     total_users = await db["Users"].count_documents({})
     dau = await db["Users"].count_documents({"last_active": {"$gte": today_midnight}})
-    total_groups = await db["Groups"].count_documents({"Status": "Active"})
+    total_groups = await db["groups"].count_documents({"is_active": True})
     total_fiat = await db[get_fiat_collection_name()].count_documents({})
 
     agg = await db["Users"].aggregate(

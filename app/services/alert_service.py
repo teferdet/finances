@@ -368,7 +368,7 @@ async def _check_volatility() -> None:
             continue
 
         pct_change = ((new_price - old_price) / old_price) * 100
-        if abs(pct_change) >= 3.0:  # Pre-filter: only check users if >= 3%
+        if abs(pct_change) >= 1.0:  # Pre-filter: only check users if >= 1% (minimum user threshold)
             volatile_tickers[ticker] = {
                 "old": old_price,
                 "new": new_price,

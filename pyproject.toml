@@ -18,3 +18,9 @@ skips = [
     "B110",   # try_except_pass — standard pattern in aiogram for non-critical ops
     "B112",   # try_except_continue — same rationale as B110
 ]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+pythonpath = ["."]
+

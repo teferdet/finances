@@ -61,6 +61,13 @@ def create_dispatcher() -> Dispatcher:
     dp.my_chat_member.outer_middleware(I18nMiddleware())
     dp.chat_member.outer_middleware(I18nMiddleware())
 
+    # Guest-mode updates (Bot API 10.0+). The guest handler relies on i18n/lang
+    # injection; without ErrorMiddleware an exception there is invisible.
+    guest_observer = getattr(dp, "guest_message", None)
+    if guest_observer is not None:
+        guest_observer.outer_middleware(ErrorMiddleware())
+        guest_observer.outer_middleware(I18nMiddleware())
+
     if s.features.groups_enabled:
         dp.message.outer_middleware(GroupCooldownMiddleware())
 
@@ -72,6 +79,9 @@ def create_dispatcher() -> Dispatcher:
     )
     dp.message.outer_middleware(rate_limit)
     dp.callback_query.outer_middleware(rate_limit)
+    dp.inline_query.outer_middleware(rate_limit)
+    if guest_observer is not None:
+        guest_observer.outer_middleware(rate_limit)
 
     # Register routers (order matters — first match wins)
     dp.include_router(start.router)
@@ -87,7 +97,10 @@ def create_dispatcher() -> Dispatcher:
     dp.include_router(my_data.router)
     dp.include_router(portability.router)
     dp.include_router(exchange.router)
-    dp.include_router(guest.router)  # Handles guest_message mentions
+    if guest_observer is not None:
+        dp.include_router(guest.router)  # Handles guest_message mentions
+    else:
+        log.warning("guest_message observer is unavailable — guest mode disabled")
 
     if s.features.groups_enabled:
         dp.include_router(group_admin.router)  # /group_settings — before groups catch-all

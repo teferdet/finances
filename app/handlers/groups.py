@@ -89,7 +89,8 @@ async def handle_group_message(message: Message, i18n: I18n, lang: str, **kwargs
     if not any(c in allowed_input for c in codes):
         return
 
-    index = 0 if any(c in ("BTC", "ETH") for c in codes) else 1
+    is_crypto = parsed.has_crypto() or any(c in ("BTC", "ETH") for c in codes)
+    index = 1
     result = await convert_currencies(data, output, index)
     if result in ("server error", "bad request"):
         return
@@ -104,7 +105,8 @@ async def handle_group_message(message: Message, i18n: I18n, lang: str, **kwargs
         ci = info_map.get(code, {})
         emoji = ci.get("emoji", "") or cd_map.get(code, {}).get("emoji", "")
         symbol = ci.get("symbol", "") or cd_map.get(code, {}).get("symbol", "")
-        info_parts.append(format_header_item(code, amount, emoji, symbol, include_symbol=(index == 1)))
+        inc_sym = (index == 1) and not (is_crypto and abs(amount - 1.0) < 1e-9)
+        info_parts.append(format_header_item(code, amount, emoji, symbol, include_symbol=inc_sym))
 
     info = ", ".join(info_parts)
     er_text = i18n.get_section("exchange rate", lang)

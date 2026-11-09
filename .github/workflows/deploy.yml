@@ -68,6 +68,9 @@ jobs:
             fi
 
             cd "$APP_DIR"
+            # Never leave the PAT inside .git/config on the server. Future
+            # deploys set the authenticated URL again at the start of this step.
+            git remote set-url origin "https://github.com/${{ github.repository }}.git"
             echo "✅ Code is at commit: $(git rev-parse --short HEAD)"
             echo "📝 Latest: $(git log -1 --pretty=format:'%s')"
         env:
@@ -82,7 +85,7 @@ jobs:
           username: ${{ secrets.SERVER_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SERVER_PORT }}
-          envs: BOT_TOKEN,MONGO_URI,CRYPTO_API_KEY,STOCKS_API_KEY,FERNET_KEY,BOT_ADMIN_IDS,URL_COMMUNICATION,URL_INVITE,URL_BUYMEACOFFEE,URL_DONATELLO,URL_BANK,URL_MINI_APP,REDIS_URL
+          envs: BOT_TOKEN,MONGO_URI,CRYPTO_API_KEY,STOCKS_API_KEY,FERNET_KEY,BACKUP_ENCRYPTION_KEY,BOT_ADMIN_IDS,URL_COMMUNICATION,URL_INVITE,URL_BUYMEACOFFEE,URL_DONATELLO,URL_BANK,URL_MINI_APP,REDIS_URL
           script: |
             export PATH=$PATH:/usr/local/bin:/usr/bin:/bin:/snap/bin
             set -e
@@ -104,6 +107,7 @@ jobs:
             CRYPTO_API_KEY=${CRYPTO_API_KEY}
             STOCKS_API_KEY=${STOCKS_API_KEY}
             FERNET_KEY=${FERNET_KEY}
+            BACKUP_ENCRYPTION_KEY=${BACKUP_ENCRYPTION_KEY}
             RATE_LIMIT_REQUESTS=30
             RATE_LIMIT_WINDOW_SEC=60
             REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
@@ -132,9 +136,9 @@ jobs:
             settings = {
                 'bot': {
                     'token': os.environ.get('BOT_TOKEN', ''),
-                    'admin_ids': env_list('BOT_ADMIN_IDS', '[1693890078]'),
+                    'admin_ids': env_list('BOT_ADMIN_IDS', '[]'),
                     'backup_enabled': True,
-                    'version': 'finances v6.7.0'
+                    'version': 'finances v6.8.0'
                 },
                 'database': {
                     'mongo_uri': os.environ.get('MONGO_URI', ''),
@@ -197,17 +201,25 @@ jobs:
                 }
             }
             
+            if not settings['bot']['admin_ids']:
+                raise SystemExit('BOT_ADMIN_IDS is empty — refusing to deploy without an administrator')
+
             os.makedirs('/home/ubuntu/finances/config', exist_ok=True)
             with open('/home/ubuntu/finances/config/settings.json', 'w', encoding='utf-8') as f:
                 json.dump(settings, f, indent=2, ensure_ascii=False)
             print('✅ settings.json generated successfully')
             "
+            chown 1000:1000 "$APP_DIR/config" "$APP_DIR/config/settings.json" 2>/dev/null || \
+              sudo chown 1000:1000 "$APP_DIR/config" "$APP_DIR/config/settings.json"
+            chmod 700 "$APP_DIR/config" 2>/dev/null || sudo chmod 700 "$APP_DIR/config"
+            chmod 600 "$APP_DIR/config/settings.json" 2>/dev/null || sudo chmod 600 "$APP_DIR/config/settings.json"
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           MONGO_URI: ${{ secrets.MONGO_URI }}
           CRYPTO_API_KEY: ${{ secrets.CRYPTO_API_KEY }}
           STOCKS_API_KEY: ${{ secrets.STOCKS_API_KEY }}
           FERNET_KEY: ${{ secrets.FERNET_KEY }}
+          BACKUP_ENCRYPTION_KEY: ${{ secrets.BACKUP_ENCRYPTION_KEY }}
           BOT_ADMIN_IDS: ${{ secrets.BOT_ADMIN_IDS }}
           URL_COMMUNICATION: ${{ vars.URL_COMMUNICATION }}
           URL_INVITE: ${{ vars.URL_INVITE }}
@@ -234,7 +246,8 @@ jobs:
             
             echo "📁 Ensuring log/backup directories and permissions..."
             mkdir -p "$APP_DIR/logs/bot" "$APP_DIR/config" "$APP_DIR/backups"
-            chmod -R 777 "$APP_DIR/logs" "$APP_DIR/backups" 2>/dev/null || true
+            chown -R 1000:1000 "$APP_DIR/logs" "$APP_DIR/backups" 2>/dev/null || true
+            chmod -R 750 "$APP_DIR/logs" "$APP_DIR/backups" 2>/dev/null || true
 
             echo "🧹 Removing legacy dashboard / NGINX containers (if any)..."
             docker rm -f finances-backend finances-frontend 2>/dev/null || true

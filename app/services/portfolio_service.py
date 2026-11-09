@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 from pymongo import UpdateOne
-from app.db import get_db, get_fiat_collection_name
+from app.db import get_db
 from app.config import get_currencies_data
 
 log = logging.getLogger("portfolio")
@@ -83,9 +83,7 @@ async def add_asset(
         if asset_type == "fiat":
             used_price = await _get_fiat_usd_price(ticker)
         else:
-            doc = await db["current_prices"].find_one({"_id": ticker}, {"price_usd": 1})
-            if doc and "price_usd" in doc:
-                used_price = float(doc["price_usd"])
+            used_price = await _get_current_usd_price(ticker)
 
     user = await db["Users"].find_one({"_id": user_id}, {"portfolio": 1})
     portfolio = (user or {}).get("portfolio", {})
@@ -377,62 +375,54 @@ def _empty_result(base_currency: str) -> dict[str, Any]:
 
 
 async def _get_usd_to_base_rate(base_currency: str) -> float | None:
-    """Get conversion rate from USD to the target base currency (None if unknown)."""
+    """Get conversion rate from USD to target base currency via CQRS read model."""
     if base_currency == "USD":
         return 1.0
 
-    db = get_db()
+    from app.cqrs.read.fiat import fiat_store
 
-    # Try USD -> base_currency
-    fiat_doc = await db[get_fiat_collection_name()].find_one({"currency": "USD"})
-    if fiat_doc and "rates" in fiat_doc:
-        rate_obj = fiat_doc["rates"].get(base_currency)
-        if isinstance(rate_obj, dict) and "rate" in rate_obj:
-            return float(rate_obj["rate"])
-        elif isinstance(rate_obj, (int, float)):
-            return float(rate_obj)
+    # Direct: USD -> base_currency
+    rate_obj = await fiat_store.get_rate("USD", base_currency)
+    if isinstance(rate_obj, dict) and "rate" in rate_obj:
+        return float(rate_obj["rate"])
+    elif isinstance(rate_obj, (int, float)):
+        return float(rate_obj)
 
-    # Fallback: cross rate
-    base_doc = await db[get_fiat_collection_name()].find_one({"currency": base_currency})
-    if base_doc and "rates" in base_doc:
-        usd_rate_obj = base_doc["rates"].get("USD")
-        if isinstance(usd_rate_obj, dict) and "rate" in usd_rate_obj:
-            if float(usd_rate_obj["rate"]) > 0:
-                return 1.0 / float(usd_rate_obj["rate"])
-        elif isinstance(usd_rate_obj, (int, float)):
-            if float(usd_rate_obj) > 0:
-                return 1.0 / float(usd_rate_obj)
+    # Fallback cross rate: base_currency -> USD
+    usd_rate_obj = await fiat_store.get_rate(base_currency, "USD")
+    if isinstance(usd_rate_obj, dict) and "rate" in usd_rate_obj:
+        if float(usd_rate_obj["rate"]) > 0:
+            return 1.0 / float(usd_rate_obj["rate"])
+    elif isinstance(usd_rate_obj, (int, float)):
+        if float(usd_rate_obj) > 0:
+            return 1.0 / float(usd_rate_obj)
 
     return None
 
 
 async def _get_fiat_usd_price(fiat_currency: str) -> float | None:
-    """Get the price of 1 unit of fiat_currency in USD."""
+    """Get the price of 1 unit of fiat_currency in USD via CQRS read model."""
     fiat_currency = fiat_currency.upper()
     if fiat_currency == "USD":
         return 1.0
 
-    db = get_db()
+    from app.cqrs.read.fiat import fiat_store
 
-    # We want fiat_currency -> USD
-    doc = await db[get_fiat_collection_name()].find_one({"currency": fiat_currency})
-    if doc and "rates" in doc:
-        rate_obj = doc["rates"].get("USD")
-        if isinstance(rate_obj, dict) and "rate" in rate_obj:
-            return float(rate_obj["rate"])
-        elif isinstance(rate_obj, (int, float)):
-            return float(rate_obj)
+    # Direct: fiat_currency -> USD
+    rate_obj = await fiat_store.get_rate(fiat_currency, "USD")
+    if isinstance(rate_obj, dict) and "rate" in rate_obj:
+        return float(rate_obj["rate"])
+    elif isinstance(rate_obj, (int, float)):
+        return float(rate_obj)
 
-    # Reverse
-    usd_doc = await db[get_fiat_collection_name()].find_one({"currency": "USD"})
-    if usd_doc and "rates" in usd_doc:
-        rate_obj = usd_doc["rates"].get(fiat_currency)
-        if isinstance(rate_obj, dict) and "rate" in rate_obj:
-            if float(rate_obj["rate"]) > 0:
-                return 1.0 / float(rate_obj["rate"])
-        elif isinstance(rate_obj, (int, float)):
-            if float(rate_obj) > 0:
-                return 1.0 / float(rate_obj)
+    # Reverse: USD -> fiat_currency
+    usd_rate_obj = await fiat_store.get_rate("USD", fiat_currency)
+    if isinstance(usd_rate_obj, dict) and "rate" in usd_rate_obj:
+        if float(usd_rate_obj["rate"]) > 0:
+            return 1.0 / float(usd_rate_obj["rate"])
+    elif isinstance(usd_rate_obj, (int, float)):
+        if float(usd_rate_obj) > 0:
+            return 1.0 / float(usd_rate_obj)
 
     return None
 

@@ -3,6 +3,7 @@ Admin panel handler — admin-only commands and inline controls.
 """
 
 from __future__ import annotations
+import html
 import re
 import time
 import platform
@@ -16,6 +17,7 @@ from aiogram.types import (
     InlineKeyboardMarkup,
     InlineKeyboardButton,
     BufferedInputFile,
+    FSInputFile,
 )
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
@@ -143,8 +145,8 @@ def _get_recent_errors(hours: int = 3) -> str:
                     try:
                         log_time = datetime.strptime(match.group(1), "%Y-%m-%d %H:%M:%S")
                         if log_time >= cutoff_time:
-                            # shorten line to max 100 chars
-                            short_line = line.strip()[:100]
+                            # shorten line to max 100 chars and escape HTML entities
+                            short_line = html.escape(line.strip()[:100])
                             recent_errors.append(short_line)
                     except ValueError:
                         pass
@@ -313,8 +315,10 @@ async def cb_admin(call: CallbackQuery, i18n: I18n, lang: str, state: FSMContext
         wau = await db["Users"].count_documents({"last_active": {"$gte": wau_time}})
         mau = await db["Users"].count_documents({"last_active": {"$gte": mau_time}})
 
-        users_list = await db["Users"].find().to_list(length=None)
-        total_reqs = sum(u.get("stats", {}).get("total_requests", 0) for u in users_list)
+        agg = await db["Users"].aggregate(
+            [{"$group": {"_id": None, "total": {"$sum": {"$ifNull": ["$stats.total_requests", 0]}}}}]
+        ).to_list(length=1)
+        total_reqs = agg[0]["total"] if agg else 0
 
         # Daily/Weekly stats
         today_str = datetime.now().strftime("%Y-%m-%d")
@@ -418,7 +422,7 @@ async def cb_admin(call: CallbackQuery, i18n: I18n, lang: str, state: FSMContext
         if latest and latest.exists():
             await call.answer("📥 Sending backup archive...", show_alert=False)
             await call.message.answer_document(
-                BufferedInputFile.from_file(latest, filename=latest.name),
+                FSInputFile(latest, filename=latest.name),
                 caption=f"📦 MongoDB Backup: <code>{latest.name}</code>",
                 parse_mode="HTML",
             )
@@ -436,9 +440,11 @@ async def cb_admin(call: CallbackQuery, i18n: I18n, lang: str, state: FSMContext
         else:
             lines = ["⚠️ <b>Problematic Data Sources</b>\n"]
             for err in errors:
+                err_id = html.escape(str(err.get("_id", "")))
+                last_err = html.escape(str(err.get("last_error", "Unknown")))
                 lines.append(
-                    f"🔴 <b>{err['_id']}</b>\n"
-                    f"└ Count: {err.get('error_count', 1)} | Last error: <code>{err.get('last_error', 'Unknown')}</code>\n"
+                    f"🔴 <b>{err_id}</b>\n"
+                    f"└ Count: {err.get('error_count', 1)} | Last error: <code>{last_err}</code>\n"
                 )
             text = "\n".join(lines)
 
@@ -627,8 +633,8 @@ async def cb_admin(call: CallbackQuery, i18n: I18n, lang: str, state: FSMContext
         for t_info in tasks_info:
             icon = "🟢" if t_info["running"] else "🔴"
             restarts_str = f" | 🔄 {t_info['restarts']}" if t_info["restarts"] > 0 else ""
-            err_str = f"\n   └ ⚠️ {t_info['last_error']}" if t_info["last_error"] else ""
-            task_lines.append(f"{icon} <b>{t_info['name']}</b> ({t_info['uptime_sec']}s{restarts_str}){err_str}")
+            err_str = f"\n   └ ⚠️ {html.escape(str(t_info['last_error']))}" if t_info["last_error"] else ""
+            task_lines.append(f"{icon} <b>{html.escape(str(t_info['name']))}</b> ({t_info['uptime_sec']}s{restarts_str}){err_str}")
 
         tasks_text = "\n".join(task_lines) if task_lines else "<i>No supervised tasks</i>"
 
@@ -718,7 +724,7 @@ async def cb_admin(call: CallbackQuery, i18n: I18n, lang: str, state: FSMContext
 
         error_log_path = LOGS_DIR / "errors.log"
         if error_log_path.exists():
-            await call.message.answer_document(BufferedInputFile.from_file(error_log_path, filename="errors.log"))
+            await call.message.answer_document(FSInputFile(error_log_path, filename="errors.log"))
         else:
             await call.answer(t("error_none"))
         return
@@ -829,7 +835,7 @@ async def cancel_broadcast_cmd(message: Message, state: FSMContext, i18n: I18n, 
 async def broadcast_text_received(message: Message, state: FSMContext, i18n: I18n, lang: str) -> None:
     if not _is_admin(message.from_user.id):
         return
-    text = message.text or ""
+    text = _sanitize_broadcast_html(message.text or "")
     await state.update_data(broadcast_text=text)
     await state.set_state(BroadcastStates.confirming)
 
