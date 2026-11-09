@@ -1,6 +1,6 @@
-# Setup & Administration Guide (v6.6.0)
+# Setup & Administration Guide (v6.8.0)
 
-Welcome to the **Finances Bot** deployment guide. The project uses a lightweight **Docker Compose** setup: the Telegram Bot plus an optional Redis cache. Administration is done in Telegram via `/admin`.
+Welcome to the **Finances Bot** deployment guide. The project uses a lightweight **Docker Compose** setup: the Telegram Bot (with an internal CQRS in-memory layer and `app.health` container healthcheck) plus an optional Redis L2 cache. Administration is done directly in Telegram via `/admin`.
 
 ## 📌 Prerequisites
 - **Docker** and **Docker Compose** installed on your server/machine.
@@ -55,7 +55,8 @@ When you run `docker compose up`, a script (`docker/entrypoint-bot.sh`) automati
 | `BOT_TOKEN` | Your Telegram Bot Token. |
 | `BOT_ADMIN_IDS` | List of Telegram User IDs with admin access (e.g. `[123456789]`). |
 | `MONGO_URI` | MongoDB connection string. Defaults to internal `mongodb://mongo:27017/finances`. |
-| `REDIS_URL` | Optional Redis URL for caching. |
+| `REDIS_URL` | Optional Redis URL for L2 caching and healthcheck heartbeats (`redis://redis:6379/0`). |
+| `FERNET_KEY` | Optional 32-byte URL-safe base64 key for encrypting exchange API keys. |
 
 ---
 

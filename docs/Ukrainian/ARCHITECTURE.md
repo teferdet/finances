@@ -2,25 +2,21 @@
 
 # 🏗 Архітектура
 
-**Коротко:** Finances — це асинхронний Telegram-бот, побудований на Python (`aiogram` 3.x) та MongoDB (`motor`), з додатковим веб-дашбордом на .NET 8. Має багаторівневу архітектуру middleware, фонове збирання даних через `curl_cffi`, фонові планувальники для алертів, моніторингу волатильності, щотижневих дайджестів і системних бекапів. Опціональний Redis забезпечує спільне кешування.
+**Коротко:** Finances — це асинхронний Telegram-бот, побудований на Python (`aiogram` 3.x) та MongoDB (`motor`), із внутрішнім **CQRS-шаром** та **дворівневим кешем L1 (in-memory) + L2 (Redis)**. Має багаторівневу архітектуру middleware, фоновий парсинг даних через `curl_cffi`, контрольовані фонові воркери (`TaskSupervisor`) для алертів, моніторингу волатильності, щотижневих дайджестів і потокових бекапів, а також модуль перевірки стану контейнера (`app.health`).
 
 ## Огляд системи
 
-Проєкт складається з двох основних застосунків:
-
-### 1. Telegram-бот (Python)
+### 1. Ядро Telegram-бота (`app/`)
 - **Бот і Диспетчер (`bot.py`)**: Ініціалізує aiogram `Bot` та `Dispatcher`, впроваджуючи глобальні middleware (Error, I18n, RateLimit, GroupCooldown) та реєструючи всі роутери команд.
-- **Роутери (`handlers/`)**: Містять логіку реагування на оновлення Telegram (напр., `start`, `crypto`, `portfolio`, `admin`).
-- **Сервіси (`services/`)**: Фонові цикли, що працюють незалежно від Telegram long-polling (парсери, алерти, планувальник дайджестів).
-- **Репозиторії (`repositories/`)**: Шар доступу до бази даних для сутностей Groups та Communities.
-- **База даних (`db.py`)**: Асинхронні операції MongoDB з використанням пулу з'єднань.
-- **Конфігурація (`config.py`)**: Типізовані dataclass-и, що завантажують дані з `config/settings.json` та `config/data.json` з автоматичним перезавантаженням при зміні файлів.
-- **Кеш (`cache.py` + `redis_client.py`)**: Внутрішній TTL-кеш з опціональним Redis-бекендом. Redis вмикається через `settings.redis.url`; якщо недоступний — операції прозоро працюють через `MemoryCache`.
-
-### 2. Адмін-дашборд (C# + React)
-- **API (`dashboard/API/`)**: .NET 8 ASP.NET Core REST API для автентифікації (Telegram OTP + JWT), агрегації статистики, управління конфігурацією та операційних дій.
-- **Фронтенд (`dashboard/frontend/`)**: React 18 + MUI 9 SPA, обслуговується NGINX, спілкується з API через reverse proxy.
-- Детальніше: [Дашборд](DASHBOARD.md), [API дашборда](DASHBOARD_API.md), [Фронтенд дашборда](DASHBOARD_FRONTEND.md).
+- **CQRS та подієво-орієнтований шар (`cqrs/`)**:
+  - **Перехоплювач БД (`cqrs/interceptor.py`)**: Обгортає `AsyncIOMotorDatabase` (`InterceptedDatabase`), прозоро віддаючи часті запити (`fiat_rates`) з оперативної пам'яті та публікуючи доменні події (`UserConfigChangedEvent`, `PortfolioChangedEvent`, `RatesUpdatedEvent`) при записах.
+  - **Read-моделі (`cqrs/read/`)**: In-memory проєкції для курсів фіатних валют (`FiatSnapshot`), цін крипти й акцій (`PriceSnapshot`) та налаштувань користувачів (`UserView`).
+  - **Write-Behind буфер (`cqrs/write/activity.py`)**: Буферизує активність користувачів (`last_active`, `total_requests`) у пам'яті та скидає в MongoDB пакетним `bulk_write` кожні 15 секунд.
+  - **Супервізор задач (`cqrs/tasks.py`)**: Контролює фонові таски з автоматичним перезапуском та експоненційним backoff у разі збоїв.
+- **Роутери (`handlers/`)**: Містять логіку обробки оновлень Telegram (`start`, `exchange`, `crypto`, `stocks`, `portfolio`, `alerts`, `settings`, `admin`, `groups`, `inline_query`).
+- **Сервіси (`services/`)**: Фонові цикли та бізнес-логіка (парсери, алерти, моніторинг волатильності, планувальник дайджестів, потокові бекапи, шифрування Fernet).
+- **Дворівневий кеш (`cache.py` + `redis_client.py`)**: `TwoTierCache` поєднує швидкий L1 in-memory `MemoryCache` з опціональним L2 Redis (`settings.redis.url`), забезпечуючи прозорий fallback при недоступності Redis.
+- **Healthcheck (`health.py`)**: Викликається через `python -m app.health` у Docker `HEALTHCHECK` для перевірки heartbeat-пульсу в Redis, пінгу MongoDB та стану фонових воркерів.
 
 ## Діаграма потоку даних
 
@@ -31,48 +27,55 @@ sequenceDiagram
     participant Dispatcher as Диспетчер
     participant Middlewares
     participant Handler as Обробник
-    participant Database as База даних
+    participant CQRS as CQRS Read Model / L1-L2 Кеш
+    participant Database as MongoDB
 
-    User->>Telegram: Надсилає команду (напр. /crypto)
+    User->>Telegram: Надсилає повідомлення / команду (напр. "btc" або /portfolio)
     Telegram->>Dispatcher: Webhook/Polling Update
 
     Dispatcher->>Middlewares: Обробка оновлення
-    Note right of Middlewares: Перехоплення помилок → Rate Limit → i18n
+    Note right of Middlewares: Error → Rate Limit → i18n (UserView) + Write-Behind Activity
 
-    Middlewares->>Handler: Маршрутизація до crypto.py
+    Middlewares->>Handler: Маршрутизація до обробника
+    Handler->>CQRS: Запит FiatSnapshot / PriceSnapshot / UserView
+    alt Кеш-хіт (RAM / Redis)
+        CQRS-->>Handler: Повернення проєкції (~0мс)
+    else Кеш-промах
+        CQRS->>Database: Запит документа
+        Database-->>CQRS: Оновлення проєкції
+        CQRS-->>Handler: Повернення проєкції
+    end
 
-    Handler->>Database: Запит current_prices / Users
-    Database-->>Handler: Повернення документів
-
-    Handler->>Middlewares: Форматування відповіді (локалізація)
-    Middlewares-->>Dispatcher: Готовий payload
-
+    Handler-->>Dispatcher: Відформатована локалізована відповідь
     Dispatcher->>Telegram: Надсилання повідомлення
     Telegram->>User: Відображення UI/клавіатури
 ```
 
 ## Парсер (`curl_cffi`)
 
-Бот потребує актуальних курсів валют і цін активів. Замість стандартних `aiohttp` чи `requests`, парсер використовує **`curl_cffi`**.
-- **Чому `curl_cffi`?** Він імітує TLS/JA3-відбитки справжнього браузера. Багато джерел фінансових даних (як `fx-rate.net`) використовують Cloudflare або подібний антибот-захист. `curl_cffi` ефективно обходить ці обмеження.
-- **Потік**: Парсер працює як асинхронний фоновий цикл (`run_parser_loop()`), отримуючи дані з інтервалами, визначеними в `settings.parser.update_interval_sec`.
+Бот потребує актуальних курсів валют і цін активів. Замість стандартних `aiohttp` чи `requests`, фіатний парсер використовує **`curl_cffi`**:
+- **Чому `curl_cffi`?** Він імітує TLS/JA3-відбитки справжнього браузера для обходу антибот-захисту (`fx-rate.net`) та захищений `CircuitBreaker` і `@retry_transient`.
+- **Потік**: Парсер працює як контрольований фоновий воркер (`run_parser_loop()`), отримуючи дані з інтервалами `settings.parser.update_interval_sec` та публікуючи `RatesUpdatedEvent` для миттєвого оновлення CQRS-снепшотів у пам'яті.
 
-## Фонові планувальники
+## Контрольовані фонові воркери
 
-Точка входу (`__main__.py`) ініціює кілька асинхронних фонових задач через `asyncio.create_task()` перед запуском aiogram polling:
+Точка входу (`__main__.py`) запускає всі фонові цикли через `TaskSupervisor` (`app/cqrs/tasks.py`) перед стартом aiogram polling:
 
 | Назва задачі | Функція | Інтервал | Опис |
 |-----------|----------|----------|-------------|
-| **Парсер** | `run_parser_loop()` | `parser.update_interval_sec` | Збирає свіжі курси фіат/крипто та кешує їх у MongoDB. |
-| **Алерти** | `run_alert_checker()` | 60 секунд | Перевіряє, чи досягнуто цінових цілей користувача (колекція `Alerts`). |
-| **Волатильність** | `run_volatility_monitor()` | 300 секунд | Аналізує `price_history` для виявлення різких стрибків/падінь цін. |
-| **Дайджест** | `run_digest_scheduler()` | 30 хв / Неділя 10:00 UTC | Готує та розсилає щотижневі звіти портфелів. |
-| **Аналітика** | `AnalyticsReporter.start()` | За розкладом | Фонова агрегація метрик активності користувачів. |
-| **Бекап** | `run_daily_backup_loop()` | Щодня о 03:00 UTC | Локальний дамп MongoDB (якщо `backup_enabled` увімкнено). |
+| **parser** | `run_parser_loop()` | `parser.update_interval_sec` | Збирає свіжі курси фіат/крипто/акцій, оновлює MongoDB та CQRS-снепшоти. |
+| **alerts** | `run_alert_checker()` | 60 секунд | Перевіряє досягнення цінових цілей користувачів (колекція `Alerts`). |
+| **volatility** | `run_volatility_monitor()` | 300 секунд | Порівнює поточні ціни з годинними снепшотами (`price_history`) для активів у портфелях (`>= 1%`). |
+| **digest** | `run_digest_scheduler()` | 30 хв / Неділя 10:00 UTC | Формує та розсилає щотижневі звіти портфелів (крипта, акції, фіат). |
+| **analytics** | `AnalyticsReporter.start()` | За розкладом | Фонова агрегація та надсилання аналітичних звітів у групи. |
+| **backup** | `run_daily_backup_loop()` | Щодня о 03:00 UTC | Потоковий `.json.gz` бекап MongoDB з низьким споживанням пам'яті та ротацією 7 архівів. |
+| **activity_flusher** | `activity_buffer.run_flusher()` | 15 секунд | Пакетно записує буферизовану активність користувачів і `DailyStats` через `bulk_write`. |
+| **cache_cleanup** | `_cache_cleanup_loop()` | 300 секунд | Очищує прострочені записи з L1 in-memory кешу. |
+| **heartbeat** | `_heartbeat_loop()` | 15 секунд | Оновлює `health:heartbeat` у Redis для Docker healthcheck. |
 
 ## Архітектура конфігурації
 
-Налаштування завантажуються з `config/settings.json` у frozen Python dataclass-и через `get_settings()`. Кеш автоматично перезавантажується при зміні часу модифікації файлу. Повна типізована ієрархія:
+Налаштування завантажуються з `config/settings.json` у frozen Python dataclass-и через `get_settings()` з автоматичним перезавантаженням при зміні часу модифікації файлу:
 
 | Dataclass | Ключові поля |
 |---|---|
@@ -83,7 +86,6 @@ sequenceDiagram
 | `FeaturesSettings` | `mini_app_enabled`, `groups_enabled`, `inline_mode_enabled` |
 | `DraftSettings` | `enabled`, `loading_threshold_sec`, `animation_interval_sec` |
 | `RedisSettings` | `url`, `max_connections`, `socket_timeout` |
-| `SentrySettings` | `dsn`, `environment`, `traces_sample_rate` |
 | `I18nSettings` | `supported_languages`, `default_language` |
 
 ## Docker-архітектура
@@ -91,23 +93,18 @@ sequenceDiagram
 ```mermaid
 graph TB
     subgraph compose["Docker Compose (finances)"]
-        BOT["finances-bot<br/>Python 3.11"]
-        API["finances-dashboard<br/>.NET 8 :8090"]
-        FE["finances-frontend<br/>NGINX :80"]
-        REDIS["finances-redis<br/>Redis 7"]
+        BOT["finances-bot<br/>Python 3.11 + CQRS + app.health"]
+        REDIS["finances-redis<br/>Redis 7 (L2 Кеш & Heartbeat)"]
     end
 
     MONGO[(MongoDB)]
     TG[Telegram API]
 
-    FE -->|"proxy /api/*"| API
-    API --> MONGO
     BOT --> MONGO
     BOT --> TG
-    BOT -.-> REDIS
-    API -->|"OTP доставка"| TG
+    BOT -.->|"L2 Кеш & Heartbeat"| REDIS
 ```
 
 ---
 
-*Останнє оновлення: 2026-08-19*
+*Останнє оновлення: 2026-11-09*

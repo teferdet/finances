@@ -32,4 +32,4 @@ Full documentation in English is available in the [**English/**](English/) direc
 
 ---
 
-*Last updated / Останнє оновлення: 2026-08-19*
+*Last updated / Останнє оновлення: 2026-11-09*

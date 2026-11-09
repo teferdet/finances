@@ -4,70 +4,77 @@
   <img src="https://img.shields.io/badge/Python-3.11+-blue.svg" alt="Python Version">
   <img src="https://img.shields.io/badge/aiogram-3.x-green.svg" alt="Aiogram Version">
   <img src="https://img.shields.io/badge/MongoDB-Powered-brightgreen.svg" alt="Database">
-  <img src="https://img.shields.io/badge/License-MIT-purple.svg" alt="License">
+  <img src="https://img.shields.io/badge/Redis-L1%2FL2%20Cache-red.svg" alt="Redis Cache">
+  <img src="https://img.shields.io/badge/License-GPLv3-blue.svg" alt="License">
 </div>
 
 <br>
 
-**Finances** is a comprehensive, open-source personal financial assistant for Telegram. Built on async Python, it provides real-time fiat, crypto, and stock tracking, portfolio management, and advanced administrative capabilities directly via the Telegram interface.
+**Finances** is a comprehensive, open-source personal financial assistant for Telegram. Built on async Python (`aiogram` 3.x), it provides real-time fiat, crypto, and stock tracking, portfolio management with Binance/Bybit API sync, price & volatility alerts, and full administrative control directly via the Telegram interface.
 
 ## 🌟 Why Use Finances?
-* **Administration Without Redeploy**: Fully control your bot via the interactive `/admin` panel. Change parsing intervals, toggle features, or even restart the bot entirely without touching the server.
-* **Built-in Observability**: Real-time server diagnostics (CPU, RAM), database footprint tracking, and in-app error log viewing.
-* **i18n-First Architecture**: Custom-built, deeply integrated localization engine supporting nested JSON keys and seamless language switching.
-* **Secure by Design**: Double-check authorization on sensitive actions (like log downloads) ensures safe operation.
+* **CQRS In-Memory Read/Write Architecture**: Ultra-low latency lookups via in-memory read projections (`FiatSnapshot`, `PriceSnapshot`, `UserView`), write-behind activity buffering (`UserActivityBuffer`), and a two-tier L1 (RAM) + L2 (Redis) cache (`TwoTierCache`).
+* **Administration Without Redeploy**: Fully control your bot via the interactive `/admin` panel. Change parsing intervals, toggle features, manage groups, trigger backups, or inspect background workers without touching the server.
+* **Built-in Observability & Healthchecks**: Real-time server diagnostics (CPU, RAM), supervised background workers (`TaskSupervisor`), database footprint tracking, in-app error log viewing, and a dedicated container healthcheck (`python -m app.health`).
+* **i18n-First Architecture**: Custom-built, deeply integrated localization engine supporting 7 languages (`en`, `uk`, `pl`, `cs`, `sk`, `de`, `fr`) with nested JSON keys and seamless switching.
+* **Secure by Design**: Fernet-encrypted exchange API keys, audited admin privilege management, HTML-sanitized broadcasts, and strict non-root Docker execution.
 
 ---
 
 ## ✨ Features
 
 ### 💱 Core Capabilities
-* **Async & High Performance**: Built on `aiogram` 3.x and `motor` for asynchronous MongoDB operations.
-* **Background Parser**: Custom `curl_cffi` based parser fetching live rates, with intervals configurable on the fly.
-* **Price Alerts & Volatility Monitor**: Set specific targets or track portfolio volatility with background schedulers.
-* **Localization System**: Fully localized interface using a custom dictionary-based i18n engine.
-* **State Caching & Logging**: Centralized error logging and resilient task tracking.
+* **Async & High Performance**: Built on `aiogram` 3.x and `motor` for asynchronous MongoDB operations with CQRS interception.
+* **Live Currency, Crypto & Stock Rates**: Instant fiat/crypto conversions (including direct `BTC`/`ETH` to fiat conversion), CoinMarketCap & Yahoo Finance tracking, and natural-language amount parsing (`100$`, `2.5 btc to eur`, `5k грн`).
+* **Portfolio & Exchange Sync**: Track crypto, stock, and fiat holdings with P&L calculations, sparklines, CSV import/export, and read-only Binance/Bybit API synchronization.
+* **Price Alerts & Volatility Monitor**: Set target price alerts (`/alert`) or track portfolio volatility (`1%`–`50%`) with background schedulers and weekly portfolio digests.
+* **Group & Inline Mode**: Automatic or `/rate`-triggered currency conversions in Telegram groups with per-group admin settings (`/group_settings`) and inline queries.
 
 ### 🔐 Admin Panel Modules (`/admin`)
 | Module | Description |
 |--------|-------------|
-| **Analytics & Statistics Dashboard** | Monitor daily/weekly active users, total lifetime requests, and parser cycles. |
-| **System Configuration** | Manage parser auto-updater state, update intervals, and core fiat currencies on the fly. |
-| **Server Diagnostics** | View real-time bot RAM allocation, total system RAM, CPU load, and database storage footprint. |
-| **Error Logs** | Read recent incidents directly in Telegram, export full `.log` files securely, or purge logs. |
-| **Mass Message Broadcast** | Push formatted HTML announcements to all registered bot users. |
-| **Restart Bot** | Interactive 2-step restart sequence directly from Telegram, persisting state across reboots. |
+| **Analytics & Statistics Dashboard** | Monitor daily/weekly/monthly active users (DAU/WAU/MAU), total lifetime requests, parser cycles, and export CSV/Markdown reports. |
+| **Database & Backups** | Inspect collection sizes, trigger low-memory streaming `.json.gz` backups on demand, or download the latest archive directly in Telegram. |
+| **System Configuration & Features** | Manage parser auto-updater state, update intervals, group/inline/mini-app feature flags, and draft loading thresholds on the fly. |
+| **Tasks & CQRS Status** | Inspect supervised background workers, uptime, restart counters, CQRS event bus metrics, and write-behind buffer stats. |
+| **Server Diagnostics & Error Logs** | View real-time bot RAM allocation, system RAM, CPU load, problematic data sources, and recent error logs. |
+| **Mass Message Broadcast** | Push HTML-sanitized announcements to all users or specific language segments with a 5-minute safety delay and abort button. |
 
 ---
 
 ## 🚀 Tech Stack
 
-* **Framework**: `aiogram` (v3.x) - Asynchronous Telegram Bot API wrapper.
-* **Database**: `motor` (MongoDB async driver).
-* **Networking**: `curl_cffi` (advanced anti-bot bypass) & `aiohttp`.
-* **Data Sources**: `yfinance`, `beautifulsoup4`, `pandas`.
-* **Monitoring**: `psutil` for system diagnostics.
+* **Framework**: `aiogram` (v3.x) — Asynchronous Telegram Bot API wrapper.
+* **Database & Cache**: `motor` (MongoDB async driver) + `redis` (`TwoTierCache` L1 in-memory + L2 Redis with automatic fallback).
+* **Networking & Parsing**: `curl_cffi` (TLS/JA3 browser impersonation), `aiohttp`, `yfinance`, `beautifulsoup4`, `pandas`.
+* **Security & Monitoring**: `cryptography` (Fernet encryption), `psutil` (system diagnostics), `app.health` (container healthcheck).
 
 ---
 
 ## 📂 Project Structure
 
 ```text
-finances-dev/
+finances/
 ├── app/
-│   ├── handlers/        # Message, callback, and admin routers
-│   ├── keyboards/       # Inline & Reply UI builders
-│   ├── services/        # Background parsers, alerts, exports
-│   ├── utils/           # Helper functions and text processing
+│   ├── cqrs/            # Event bus, DB interceptor, read projections & write-behind buffer
+│   ├── handlers/        # Message, callback, group, inline, and admin routers
+│   ├── keyboards/       # Inline, group admin, and Reply UI builders
+│   ├── middlewares/     # Error, rate-limit, throttle, group cooldown, and i18n interceptors
+│   ├── repositories/    # Data access layer for groups and communities
+│   ├── services/        # Background parsers, alerts, portfolio, digest, backups, security
+│   ├── utils/           # Text processing, resilience (circuit breaker), sparklines, ephemeral UI
 │   ├── bot.py           # Bot instance & dispatcher setup
-│   ├── config.py        # Configuration models
+│   ├── cache.py         # Asynchronous in-memory TTL cache (L1)
+│   ├── config.py        # Typed configuration dataclasses
 │   ├── db.py            # MongoDB connection & indexes
+│   ├── health.py        # Container healthcheck (Redis heartbeat, MongoDB ping, supervisor check)
 │   ├── i18n.py          # Custom localization engine
 │   ├── logger.py        # Centralized logging configuration
-│   └── __main__.py      # App entry point
-├── locales/             # JSON translation files (en.json, uk.json, etc.)
-├── config/              # Configuration files (settings.json)
-├── logs/                # Local log storage
+│   ├── redis_client.py  # Two-tier L1/L2 Redis cache client with transparent fallback
+│   └── __main__.py      # App entry point & background task orchestration
+├── locales/             # JSON translation files (en, uk, pl, cs, sk, de, fr)
+├── config/              # Configuration & currency metadata files
+├── docker/              # Container entrypoint scripts
 └── requirements.txt     # Python dependencies
 ```
 
@@ -75,26 +82,17 @@ finances-dev/
 
 ## 📚 Documentation
 
-The complete documentation for Finances is located in the `docs/` directory.
+Complete documentation is available in English and Ukrainian in the [`docs/`](docs/README.md) directory:
 
-*   **[Setup Guide](docs/setup.md)**: Installation, prerequisites, and running the bot.
-*   **[Architecture](docs/architecture.md)**: Core components, data flow, and background tasks.
-*   **[Configuration](docs/configuration.md)**: Environment setup and runtime `/admin` configuration.
-*   **[Admin Panel](docs/admin-panel.md)**: Guide to using the in-app `/admin` modules.
-*   **[Localization (i18n)](docs/i18n.md)**: How to manage translations and add languages.
-*   **[Deployment](docs/deployment.md)**: CI/CD workflows and production deployment.
-*   **[Database Schema](docs/database-schema.md)**: MongoDB collections and data structures.
-*   **[Contributing](docs/contributing.md)**: Guidelines for contributing to the project.
-*   **[FAQ & Troubleshooting](docs/faq-troubleshooting.md)**: Solutions to common issues.
+* **[Quick Start & Setup Guide](setup.md)** ([EN](docs/English/setup.md))
+* **[Architecture](docs/English/ARCHITECTURE.md)** ([UA](docs/Ukrainian/ARCHITECTURE.md)): CQRS layer, data flow, parsing engine, and background schedulers.
+* **[Modules Reference](docs/English/MODULES.md)** ([UA](docs/Ukrainian/MODULES.md)): Directory structure and core module breakdown.
+* **[Handlers](docs/English/HANDLERS.md)** ([UA](docs/Ukrainian/HANDLERS.md)) & **[Services](docs/English/SERVICES.md)** ([UA](docs/Ukrainian/SERVICES.md))
+* **[Admin Panel](docs/English/ADMIN_PANEL.md)** ([UA](docs/Ukrainian/ADMIN_PANEL.md)) & **[Background Tasks](docs/English/BACKGROUND_TASKS.md)** ([UA](docs/Ukrainian/BACKGROUND_TASKS.md))
+* **[Database Schema](docs/English/DATABASE.md)** ([UA](docs/Ukrainian/DATABASE.md)) & **[Localization (i18n)](docs/English/I18N.md)** ([UA](docs/Ukrainian/I18N.md))
+* **[CI/CD](docs/English/CI_CD.md)** ([UA](docs/Ukrainian/CI_CD.md)) & **[DevOps Guide](docs/English/DEVOPS.md)** ([UA](docs/Ukrainian/DEVOPS.md))
 
-For a full index, see the [Documentation Index](docs/README.md).
-
----
-
-## 🌐 Localization (i18n)
-
-Finances uses a custom JSON-based i18n system. All texts are stored in the `locales/` directory. 
-To add a new language, simply copy `locales/en.json`, translate the values, and add the new language code to your `settings.json` configuration. See [Setup Guide](setup.md) for more details.
+For the full index, see the **[Documentation Index](docs/README.md)**.
 
 ---
 
@@ -102,8 +100,8 @@ To add a new language, simply copy `locales/en.json`, translate the values, and 
 
 Contributions are always welcome! Feel free to open issues or submit Pull Requests for:
 - Adding new locales/languages.
-- Implementing new parsing sources for stocks.
-- Optimizing database queries.
+- Implementing new parsing sources for stocks or crypto.
+- Optimizing database queries and caching.
 
 ## 📄 License
-This project is open-source and available under the [MIT License](LICENSE).
+This project is free and open-source software licensed under the **[GNU General Public License v3.0 (GPL-3.0)](LICENSE)**.
