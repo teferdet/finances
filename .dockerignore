@@ -12,4 +12,6 @@ tests
 node_modules
 .venv
 logs
+backups
+
 

@@ -55,6 +55,8 @@ jobs:
             else
               echo "🔄 Pulling latest changes..."
               cd "$APP_DIR"
+              sudo chown -R "$(id -u):$(id -g)" "$APP_DIR/config" 2>/dev/null || true
+              sudo chmod 770 "$APP_DIR/config" 2>/dev/null || true
               git remote set-url origin "$REPO_URL"
               find .git -name "*.lock" -delete 2>/dev/null || true
               if ! git fetch --force origin main; then
@@ -95,6 +97,9 @@ jobs:
             
             # Clean up legacy dashboard leftovers (dashboard was removed)
             sudo rm -rf "$APP_DIR/dashboard" 2>/dev/null || rm -rf "$APP_DIR/dashboard" 2>/dev/null || true
+            mkdir -p "$APP_DIR/config"
+            sudo chown -R "$(id -u):$(id -g)" "$APP_DIR/config" 2>/dev/null || true
+            sudo chmod 770 "$APP_DIR/config" 2>/dev/null || true
 
             cat > "$APP_DIR/.env" << EOF
             BOT_TOKEN=${BOT_TOKEN}
@@ -209,10 +214,11 @@ jobs:
                 json.dump(settings, f, indent=2, ensure_ascii=False)
             print('✅ settings.json generated successfully')
             "
-            chown 1000:1000 "$APP_DIR/config" "$APP_DIR/config/settings.json" 2>/dev/null || \
-              sudo chown 1000:1000 "$APP_DIR/config" "$APP_DIR/config/settings.json"
-            chmod 700 "$APP_DIR/config" 2>/dev/null || sudo chmod 700 "$APP_DIR/config"
-            chmod 600 "$APP_DIR/config/settings.json" 2>/dev/null || sudo chmod 600 "$APP_DIR/config/settings.json"
+            HOST_GID="$(id -g)"
+            chown -R "1000:${HOST_GID}" "$APP_DIR/config" 2>/dev/null || \
+              sudo chown -R "1000:${HOST_GID}" "$APP_DIR/config"
+            chmod 770 "$APP_DIR/config" 2>/dev/null || sudo chmod 770 "$APP_DIR/config"
+            chmod 660 "$APP_DIR/config/settings.json" 2>/dev/null || sudo chmod 660 "$APP_DIR/config/settings.json"
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           MONGO_URI: ${{ secrets.MONGO_URI }}
@@ -246,8 +252,13 @@ jobs:
             
             echo "📁 Ensuring log/backup directories and permissions..."
             mkdir -p "$APP_DIR/logs/bot" "$APP_DIR/config" "$APP_DIR/backups"
-            chown -R 1000:1000 "$APP_DIR/logs" "$APP_DIR/backups" 2>/dev/null || true
-            chmod -R 750 "$APP_DIR/logs" "$APP_DIR/backups" 2>/dev/null || true
+            HOST_GID="$(id -g)"
+            chown -R "1000:${HOST_GID}" "$APP_DIR/logs" "$APP_DIR/backups" "$APP_DIR/config" 2>/dev/null || \
+              sudo chown -R "1000:${HOST_GID}" "$APP_DIR/logs" "$APP_DIR/backups" "$APP_DIR/config" 2>/dev/null || true
+            chmod -R 770 "$APP_DIR/logs" "$APP_DIR/backups" "$APP_DIR/config" 2>/dev/null || \
+              sudo chmod -R 770 "$APP_DIR/logs" "$APP_DIR/backups" "$APP_DIR/config" 2>/dev/null || true
+            chmod 660 "$APP_DIR/config/settings.json" 2>/dev/null || \
+              sudo chmod 660 "$APP_DIR/config/settings.json" 2>/dev/null || true
 
             echo "🧹 Removing legacy dashboard / NGINX containers (if any)..."
             docker rm -f finances-backend finances-frontend 2>/dev/null || true

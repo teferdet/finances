@@ -12,7 +12,7 @@ mkdir -p /app/logs /app/config 2>/dev/null || true
 
 if [ -s "$SETTINGS_FILE" ]; then
   echo "==> $SETTINGS_FILE already exists, skipping generation."
-  chmod 600 "$SETTINGS_FILE" 2>/dev/null || true
+  chmod 660 "$SETTINGS_FILE" 2>/dev/null || true
 else
   echo "==> Generating settings.json from environment..."
 
@@ -87,10 +87,10 @@ with open("$SETTINGS_FILE", "w", encoding="utf-8") as f:
 print("settings.json written successfully")
 PYEOF
 
-  chmod 600 "$SETTINGS_FILE" 2>/dev/null || true
+  chmod 660 "$SETTINGS_FILE" 2>/dev/null || true
 fi
 
-chmod 700 "$CONFIG_DIR" 2>/dev/null || true
+chmod 770 "$CONFIG_DIR" 2>/dev/null || true
 
 echo "==> Starting finances bot..."
 exec python -m app "$@"

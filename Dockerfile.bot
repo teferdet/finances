@@ -38,7 +38,7 @@ COPY config/ ./config/
 COPY locales/ ./locales/
 
 # Create logs directory with correct ownership
-RUN mkdir -p /app/logs && chown -R finances:finances /app/logs
+RUN mkdir -p /app/logs && chown -R finances:finances /app/logs /app/config
 
 # Switch to non-root user
 USER finances
