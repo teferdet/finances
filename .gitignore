@@ -25,3 +25,11 @@ files/portfolios.json
 node_modules/
 .vitepress/dist/
 .vitepress/cache/
+
+
+requirements-dev.txt
+.ruff_cache 
+.pytest_cache
+app
+config
+LICENSE

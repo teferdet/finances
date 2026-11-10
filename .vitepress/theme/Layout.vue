@@ -119,11 +119,28 @@ watch(lang, () => {
 // ── Post-render: runs after Vue sets innerHTML via v-html ───────────────────
 // Uses watch + nextTick so DOM is fully updated before we touch it
 let mermaidCounter = 0
+const pendingHighlightHeading = ref(false)
+
+function flashHeadingElement(el: HTMLElement | null) {
+  if (!el) return
+  el.classList.remove('section-highlight-flash')
+  // Force reflow so re-clicking the same item restarts the animation
+  void el.offsetWidth
+  el.classList.add('section-highlight-flash')
+  setTimeout(() => {
+    el.classList.remove('section-highlight-flash')
+  }, 2000)
+}
 
 watch(docHtml, async () => {
   await nextTick()
   await postRender()
   initTocSpy()
+  if (pendingHighlightHeading.value) {
+    pendingHighlightHeading.value = false
+    const firstH1 = document.querySelector<HTMLElement>('#docs-content-area h1, #docs-content-area h2')
+    flashHeadingElement(firstH1)
+  }
 })
 
 async function postRender() {
@@ -182,24 +199,33 @@ async function postRender() {
     wrapper.appendChild(btn)
   })
 
-  // Internal .md link interception with capture to prevent VitePress router interference
+  // Internal .md link interception — rewrite href to #key so VitePress router never triggers 404
   area.querySelectorAll('a').forEach(a => {
     const href = a.getAttribute('href') ?? ''
-    if (!href.includes('.md') || href.startsWith('http')) return
+    if (!href || href.startsWith('http://') || href.startsWith('https://') || href.startsWith('mailto:')) return
+    if (href.includes('.md') || href.includes('.html')) {
+      const cleanHref = href.split('#')[0].replace(/\.html$/i, '')
+      const fileName = cleanHref.split('/').pop()?.toLowerCase() ?? ''
+      const matched = Object.keys(docs.value).find(k => {
+        const docFileName = docs.value[k].file.split('/').pop()?.toLowerCase() ?? ''
+        return docFileName === fileName || docFileName === `${fileName}.md` || k === fileName
+      })
+      if (matched) {
+        a.setAttribute('href', `#${matched}`)
+        ;(a as HTMLElement).dataset.docKey = matched
+      }
+    }
     if ((a as HTMLElement).dataset.intercepted) return
     ;(a as HTMLElement).dataset.intercepted = '1'
     a.addEventListener('click', e => {
-      e.preventDefault()
-      e.stopPropagation()
-      e.stopImmediatePropagation()
-      const cleanHref = href.split('#')[0]
-      const fileName = cleanHref.split('/').pop()?.toLowerCase() ?? ''
-      const matched = Object.keys(docs.value).find(k =>
-        docs.value[k].file.split('/').pop()?.toLowerCase() === fileName
-      )
-      if (matched) {
+      const docKey = (a as HTMLElement).dataset.docKey
+      if (docKey && docs.value[docKey]) {
+        e.preventDefault()
+        e.stopPropagation()
+        e.stopImmediatePropagation()
+        pendingHighlightHeading.value = true
         showPage('docs')
-        loadDoc(matched)
+        loadDoc(docKey)
       }
     }, true)
   })
@@ -371,7 +397,15 @@ function handleNav(page: 'home' | 'docs') {
 
 function handleSidebarSelect(key: string) {
   if (key === '__home__') { showPage('home'); return }
+  pendingHighlightHeading.value = true
   showPage('docs')
+  if (activeDocKey.value === key && currentPage.value === 'docs') {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+    const firstH1 = document.querySelector<HTMLElement>('#docs-content-area h1, #docs-content-area h2')
+    flashHeadingElement(firstH1)
+    pendingHighlightHeading.value = false
+    return
+  }
   loadDoc(key)
 }
 
@@ -443,26 +477,72 @@ function onGlobalClick(e: MouseEvent) {
   }
 }
 
-// ── TOC Scroll Spy ──────────────────────────────────────────────────────────
+// ── TOC Scroll Spy & Section Highlight ──────────────────────────────────────
 const activeTocId = ref('')
 let tocObserver: IntersectionObserver | null = null
+let isProgrammaticScroll = false
+let programmaticScrollTimer: ReturnType<typeof setTimeout> | null = null
+
+function updateTocOnScroll() {
+  if (isProgrammaticScroll || currentPage.value !== 'docs') return
+  const headings = Array.from(
+    document.querySelectorAll<HTMLElement>('#docs-content-area h2, #docs-content-area h3, #docs-content-area h4')
+  )
+  if (!headings.length) return
+
+  // If scrolled to the very bottom of the page, highlight the last heading
+  const nearBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 40
+  if (nearBottom) {
+    activeTocId.value = headings[headings.length - 1].id
+    return
+  }
+
+  const offset = 110
+  let currentId = headings[0].id
+  for (const h of headings) {
+    if (h.getBoundingClientRect().top <= offset) {
+      currentId = h.id
+    } else {
+      break
+    }
+  }
+  activeTocId.value = currentId
+}
+
+watch(activeTocId, async (newId) => {
+  if (!newId) return
+  await nextTick()
+  const tocEl = document.querySelector<HTMLElement>(`.docs-toc .toc-item[href="#${newId}"]`)
+  tocEl?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+})
 
 function initTocSpy() {
   tocObserver?.disconnect()
-  const headings = document.querySelectorAll('#docs-content-area h2, #docs-content-area h3, #docs-content-area h4')
-  tocObserver = new IntersectionObserver(entries => {
-    for (const e of entries) {
-      if (e.isIntersecting) { activeTocId.value = e.target.id; break }
-    }
-  }, { rootMargin: `-${64 + 24}px 0px -60% 0px` })
+  const headings = document.querySelectorAll<HTMLElement>('#docs-content-area h2, #docs-content-area h3, #docs-content-area h4')
+  if (headings.length > 0) {
+    activeTocId.value = headings[0].id
+  } else {
+    activeTocId.value = ''
+  }
+  tocObserver = new IntersectionObserver(() => {
+    updateTocOnScroll()
+  }, { rootMargin: `-${64 + 24}px 0px -55% 0px`, threshold: [0, 1] })
   headings.forEach(h => tocObserver!.observe(h))
 }
 
 function scrollToToc(id: string) {
   const el = document.getElementById(id)
   if (!el) return
+  activeTocId.value = id
+  isProgrammaticScroll = true
+  if (programmaticScrollTimer) clearTimeout(programmaticScrollTimer)
+  programmaticScrollTimer = setTimeout(() => {
+    isProgrammaticScroll = false
+  }, 850)
+
   const top = el.getBoundingClientRect().top + window.scrollY - 84
   window.scrollTo({ top, behavior: 'smooth' })
+  flashHeadingElement(el)
 }
 
 // ── Global keyboard shortcuts ───────────────────────────────────────────────
@@ -500,14 +580,16 @@ onMounted(() => {
   handleHash()
   window.addEventListener('hashchange', handleHash)
   window.addEventListener('keydown', onGlobalKey)
-  document.addEventListener('click', onGlobalClick, true)
+  window.addEventListener('scroll', updateTocOnScroll, { passive: true })
+  window.addEventListener('click', onGlobalClick, true)
   preloadAllDocs()
 })
 
 onUnmounted(() => {
   window.removeEventListener('hashchange', handleHash)
   window.removeEventListener('keydown', onGlobalKey)
-  document.removeEventListener('click', onGlobalClick, true)
+  window.removeEventListener('scroll', updateTocOnScroll)
+  window.removeEventListener('click', onGlobalClick, true)
   if (typeof document !== 'undefined') {
     document.body.classList.remove('sidebar-open')
   }

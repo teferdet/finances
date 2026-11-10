@@ -1,22 +1,49 @@
 <script setup lang="ts">
+import { ref, watch, nextTick } from 'vue'
 import { useLang } from '../composables/useLang'
 
 const props = defineProps<{ activeKey: string }>()
 const emit = defineEmits<{ 'select': [key: string] }>()
 
 const { strings, categories } = useLang()
+const sidebarRef = ref<HTMLElement | null>(null)
+const flashKey = ref('')
+let flashTimer: ReturnType<typeof setTimeout> | null = null
+
+function triggerSelect(key: string) {
+  flashKey.value = key
+  if (flashTimer) clearTimeout(flashTimer)
+  flashTimer = setTimeout(() => { flashKey.value = '' }, 1400)
+  emit('select', key)
+}
+
+watch(() => props.activeKey, async (newKey) => {
+  await nextTick()
+  const container = sidebarRef.value
+  if (!container) return
+  const activeEl = container.querySelector<HTMLElement>(`.sidebar-item[data-key="${newKey}"]`)
+  if (activeEl) {
+    activeEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+  }
+})
 </script>
 
 <template>
-  <aside class="docs-sidebar">
+  <aside ref="sidebarRef" class="docs-sidebar">
     <nav>
       <!-- Mobile-only top nav links -->
       <div class="sidebar-top-nav">
         <div class="sidebar-group-title">{{ strings.navHome }} / {{ strings.navDocs }}</div>
-        <a class="sidebar-item" href="#" @click.prevent="emit('select', '__home__')">
+        <a class="sidebar-item" href="#" @click.prevent="triggerSelect('__home__')">
           <span>🏠</span> <span>{{ strings.navHome }}</span>
         </a>
-        <a class="sidebar-item" href="#readme" @click.prevent="emit('select', 'readme')">
+        <a
+          class="sidebar-item"
+          :class="{ active: props.activeKey === 'readme', 'sidebar-item-flash': flashKey === 'readme' }"
+          data-key="readme"
+          href="#readme"
+          @click.prevent="triggerSelect('readme')"
+        >
           <span>📚</span> <span>{{ strings.navDocs }}</span>
         </a>
       </div>
@@ -27,10 +54,14 @@ const { strings, categories } = useLang()
         <a
           v-for="item in items"
           :key="item.key"
+          :data-key="item.key"
           class="sidebar-item"
-          :class="{ active: item.key === props.activeKey }"
+          :class="{
+            active: item.key === props.activeKey,
+            'sidebar-item-flash': flashKey === item.key,
+          }"
           :href="`#${item.key}`"
-          @click.prevent="emit('select', item.key)"
+          @click.prevent="triggerSelect(item.key)"
         >
           <span>{{ item.icon }}</span>
           <span>{{ item.title }}</span>

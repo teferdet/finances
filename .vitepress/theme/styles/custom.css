@@ -244,17 +244,33 @@ body {
   display: flex; align-items: center; gap: 0.65rem;
   padding: 0.55rem 0.75rem;
   border-radius: 6px;
+  border-left: 3px solid transparent;
   color: var(--text-muted);
   text-decoration: none;
   font-size: 0.9rem; font-weight: 500;
-  transition: all 0.15s ease;
+  transition: all 0.2s ease;
   cursor: pointer; margin-bottom: 2px;
 }
 .sidebar-item:hover { color: var(--text-main); background: var(--bg-secondary); }
 .sidebar-item.active {
   color: var(--accent-primary);
   background: var(--accent-subtle);
+  border-left-color: var(--accent-primary);
   font-weight: 600;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+}
+.sidebar-item.sidebar-item-flash {
+  animation: sidebarPulse 1.2s ease-out;
+}
+
+@keyframes sidebarPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(29, 209, 161, 0.55);
+    background: rgba(29, 209, 161, 0.28);
+  }
+  100% {
+    box-shadow: 0 0 0 8px rgba(29, 209, 161, 0);
+  }
 }
 
 /* ── Docs Layout (5% wider center column on large displays) ────────────── */
@@ -462,9 +478,66 @@ body {
   border-left: 1px solid var(--border-color);
 }
 .toc-title { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--text-dim); margin-bottom: 0.95rem; letter-spacing: 0.06em; }
-.toc-item { display: block; color: var(--text-muted); font-size: 0.84rem; text-decoration: none; padding: 0.3rem 0; transition: color 0.15s ease; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.toc-item:hover, .toc-item.active { color: var(--accent-primary); }
-.toc-item.toc-sub { padding-left: 0.85rem; }
+.toc-item {
+  display: block;
+  color: var(--text-muted);
+  font-size: 0.84rem;
+  text-decoration: none;
+  padding: 0.35rem 0.6rem;
+  margin-bottom: 2px;
+  border-left: 2px solid transparent;
+  border-radius: 0 6px 6px 0;
+  transition: all 0.18s ease;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.toc-item:hover {
+  color: var(--text-main);
+  background: var(--bg-secondary);
+}
+.toc-item.active {
+  color: var(--accent-primary);
+  background: var(--accent-subtle);
+  border-left-color: var(--accent-primary);
+  font-weight: 600;
+}
+.toc-item.toc-sub { padding-left: 1.15rem; }
+.toc-item.toc-sub-2 { padding-left: 1.65rem; }
+
+/* ── Section Heading Scroll Highlight ─────────────────────────────────── */
+.markdown-body .section-highlight-flash {
+  animation: sectionHeadingFlash 1.9s cubic-bezier(0.16, 1, 0.3, 1);
+  border-radius: 6px;
+}
+
+@keyframes sectionHeadingFlash {
+  0% {
+    background: rgba(29, 209, 161, 0.26);
+    box-shadow: -6px 0 0 0 var(--accent-primary), 0 0 0 6px rgba(29, 209, 161, 0.18);
+  }
+  40% {
+    background: rgba(29, 209, 161, 0.16);
+    box-shadow: -4px 0 0 0 var(--accent-primary), 0 0 0 4px rgba(29, 209, 161, 0.1);
+  }
+  100% {
+    background: transparent;
+    box-shadow: none;
+  }
+}
+[data-theme='light'] .markdown-body .section-highlight-flash {
+  animation: sectionHeadingFlashLight 1.9s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes sectionHeadingFlashLight {
+  0% {
+    background: rgba(0, 119, 204, 0.2);
+    box-shadow: -6px 0 0 0 var(--accent-primary), 0 0 0 6px rgba(0, 119, 204, 0.14);
+  }
+  100% {
+    background: transparent;
+    box-shadow: none;
+  }
+}
 
 /* ── Mermaid ───────────────────────────────────────────────────────────── */
 .mermaid-container {
