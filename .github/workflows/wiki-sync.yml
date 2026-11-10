@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - 'docs/**'
+      - '.github/workflows/wiki-sync.yml'
   workflow_dispatch:
 
 permissions:
@@ -23,10 +24,9 @@ jobs:
       - name: Sync to GitHub Wiki
         run: |
           echo "🚀 Synchronizing docs/ with GitHub Wiki..."
-          
-          # Clone the wiki repository using GITHUB_TOKEN
+
           WIKI_URL="https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.wiki.git"
-          
+
           git clone "$WIKI_URL" wiki_temp || {
             echo "❌ Failed to clone Wiki repository. Make sure GitHub Wiki is enabled in Repo Settings and has at least one initial page created."
             exit 1
@@ -35,30 +35,75 @@ jobs:
           # Clean all existing files in wiki_temp except the .git directory
           find wiki_temp -mindepth 1 -not -path 'wiki_temp/.git*' -delete
 
-          # Copy fresh docs files and subdirectories into wiki repository
-          cp -r docs/* wiki_temp/
-          
-          # GitHub Wiki uses Home.md as the main landing page
-          if [ -f "wiki_temp/README.md" ]; then
-            cp wiki_temp/README.md wiki_temp/Home.md
-          fi
+          # Flatten docs/English and docs/Ukrainian into root Wiki pages (GitHub Wiki does not support '/' in page URLs)
+          python3 - << 'PYEOF'
+          import re
+          from pathlib import Path
 
-          # Adapt links for GitHub Wiki across all markdown files recursively
-          find wiki_temp -type f -name "*.md" -exec sed -i 's/(README.md)/(Home)/g' {} +
-          find wiki_temp -type f -name "*.md" -exec sed -i 's/(README.md#/(Home#/g' {} +
-          
-          # Strip .md extension from inline Markdown links for seamless Wiki routing
-          find wiki_temp -type f -name "*.md" -exec sed -i -E 's/\(([^)]+)\.md\)/(\1)/g' {} +
-          find wiki_temp -type f -name "*.md" -exec sed -i -E 's/\(([^)]+)\.md#/\(\1#/g' {} +
+          docs_dir = Path("docs")
+          wiki_dir = Path("wiki_temp")
+
+          def rewrite_root_links(text: str) -> str:
+              # Convert (English/) or (English/README.md) -> (English)
+              text = re.sub(r"\((?:English|Ukrainian)/?\)", lambda m: f"({m.group(0)[1:-1].rstrip('/')})", text)
+              text = re.sub(r"\((English|Ukrainian)/README\.md(#[^)]*)?\)", lambda m: f"({m.group(1)}{m.group(2) or ''})", text)
+              # Convert (English/PAGE.md) -> (English-PAGE)
+              text = re.sub(
+                  r"\((English|Ukrainian)/([^)#/]+)\.md(#[^)]*)?\)",
+                  lambda m: f"({m.group(1)}-{m.group(2)}{m.group(3) or ''})",
+                  text,
+              )
+              return text
+
+          def rewrite_lang_links(text: str, lang_prefix: str) -> str:
+              def _repl(m: re.Match) -> str:
+                  target = m.group(1)
+                  anchor = m.group(2) or ""
+                  if target.startswith(("http://", "https://", "mailto:")):
+                      return m.group(0)
+                  if target == "README":
+                      return f"({lang_prefix}{anchor})"
+                  return f"({lang_prefix}-{target}{anchor})"
+
+              return re.sub(r"\(([^)#/]+)\.md(#[^)]*)?\)", _repl, text)
+
+          # 1. Root Home.md and _Sidebar.md
+          if (docs_dir / "README.md").exists():
+              content = (docs_dir / "README.md").read_text(encoding="utf-8")
+              (wiki_dir / "Home.md").write_text(rewrite_root_links(content), encoding="utf-8")
+
+          if (docs_dir / "_Sidebar.md").exists():
+              content = (docs_dir / "_Sidebar.md").read_text(encoding="utf-8")
+              (wiki_dir / "_Sidebar.md").write_text(rewrite_root_links(content), encoding="utf-8")
+
+          # 2. Language directories (English, Ukrainian)
+          for lang in ("English", "Ukrainian"):
+              lang_dir = docs_dir / lang
+              if not lang_dir.is_dir():
+                  continue
+              for md_file in lang_dir.glob("*.md"):
+                  if md_file.name == "_Sidebar.md":
+                      continue
+                  raw = md_file.read_text(encoding="utf-8")
+                  adapted = rewrite_lang_links(raw, lang)
+                  if md_file.name == "README.md":
+                      out_path = wiki_dir / f"{lang}.md"
+                      out_path.write_text(adapted, encoding="utf-8")
+                  else:
+                      stem = md_file.stem
+                      (wiki_dir / f"{lang}-{stem}.md").write_text(adapted, encoding="utf-8")
+                      # Also write unprefixed English page as fallback for direct /wiki/PAGE links
+                      if lang == "English":
+                          (wiki_dir / f"{stem}.md").write_text(adapted, encoding="utf-8")
+          PYEOF
 
           cd wiki_temp
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          # Stage all additions AND deletions
           git add -A
           if [ -n "$(git status --porcelain)" ]; then
-            git commit -m "docs: auto-sync clean documentation to GitHub Wiki [skip ci]"
+            git commit -m "docs: auto-sync flattened documentation to GitHub Wiki [skip ci]"
             git push
             echo "✅ Successfully updated GitHub Wiki!"
           else

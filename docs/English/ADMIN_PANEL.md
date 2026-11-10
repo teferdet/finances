@@ -37,12 +37,8 @@ Invoking `/admin` opens an interactive inline dashboard:
    - Toggles global `maintenance_mode` in database. Blocks normal user commands while active.
 
 6. **Manage Admins & Broadcast**
-   - Add/remove dynamic admin IDs via FSM (`AdminManageStates`).
-   - Trigger mass broadcasts (`/broadcast`).
-
-## Web Dashboard
-
-In addition to the in-Telegram `/admin` panel, the project includes a full **web-based dashboard** at `dashboard/`. It provides the same monitoring and configuration capabilities through a browser interface, with additional data visualization (charts, tables, collection stats). See [Dashboard](DASHBOARD.md) for details.
+   - Add/remove dynamic admin IDs via FSM (`AdminManagementStates`).
+   - Trigger mass broadcasts (`/admin` → Broadcast).
 
 ## Group Administration System (`/group_settings`, `/rate`, `/group_stats`)
 

@@ -2,13 +2,13 @@
 
 ## 🇬🇧 English
 
-Full documentation in English is available in the [**English/**](English/) directory.
+Full documentation in English is available in the [**English/**](English/README.md) directory.
 
 → **[Open English Documentation](English/README.md)**
 
 ## 🇺🇦 Українська
 
-Повна документація українською мовою доступна в директорії [**Ukrainian/**](Ukrainian/).
+Повна документація українською мовою доступна в директорії [**Ukrainian/**](Ukrainian/README.md).
 
 → **[Відкрити українську документацію](Ukrainian/README.md)**
 
