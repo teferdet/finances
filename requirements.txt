@@ -9,7 +9,7 @@ cryptography>=50.0.2,<51.0
 python-dotenv>=1.2.4,<2.0
 colorama>=0.4.6,<1.0
 # Stocks Data
-yfinance>=1.7.0,<2.0
+yfinance>=1.8.0,<2.0
 pandas>=3.1.1,<4.0
 
 # System Monitoring (Admin panel)
